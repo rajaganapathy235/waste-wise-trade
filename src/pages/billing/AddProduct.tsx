@@ -142,7 +142,7 @@ export default function AddProduct() {
 
         <div
           className="flex items-center gap-3 cursor-pointer"
-          onClick={() => navigate("/billing/tax-details", { state: { totalPrice: 0 } })}
+          onClick={() => navigate("/billing/tax-details", { state: { totalPrice: 0, returnTo: `/billing/add-product${editId ? `?edit=${editId}` : ''}`, formData: { name, buyingPrice, sellPrice, mrp, unit, hsn } } })}
         >
           <div className="shrink-0 w-10 flex justify-center">
             <Film className="h-5 w-5 text-muted-foreground/40" />
