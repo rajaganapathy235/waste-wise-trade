@@ -189,7 +189,7 @@ const MOCK_BANK_ACCOUNTS: BankAccount[] = [
 
 const MOCK_INVOICES: GSTInvoice[] = [
   {
-    id: "inv1", type: "sale-invoice", invoiceNo: "SHB/456/20", date: "20-Dec-20",
+    id: "inv1", type: "sale-invoice", invoiceNo: "SHB/456/20", date: "2026-03-01",
     status: "unpaid",
     irn: "fef1df90406b928db28a62f816debc9bb5256d9375e6-0dc4226653cc23a8c595",
     ackNo: "112010036563310", ackDate: "21-Dec-20",
