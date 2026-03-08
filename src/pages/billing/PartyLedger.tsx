@@ -120,7 +120,16 @@ export default function PartyLedger() {
         </div>
         {/* Closing balance + PDF */}
         <div className="flex items-center justify-between px-4 py-2.5">
-          <button className="flex items-center gap-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg px-4 py-2">
+          <button
+            onClick={() => {
+              try {
+                const doc = generateLedgerPDF(entries, { name: partyName });
+                doc.save(`Ledger_${partyName.replace(/\s+/g, "_")}.pdf`);
+                toast.success("Ledger PDF downloaded");
+              } catch { toast.error("Failed to generate PDF"); }
+            }}
+            className="flex items-center gap-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg px-4 py-2"
+          >
             <span className="text-sm font-bold">PDF</span>
             <TrendingUp className="h-4 w-4" />
           </button>
