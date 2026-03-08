@@ -121,6 +121,14 @@ export default function PartyTab() {
       <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20">
         <Plus className="h-7 w-7" />
       </button>
+
+      {/* Statement Dialog */}
+      <StatementDialog
+        open={!!statementParty}
+        onOpenChange={(v) => !v && setStatementParty(null)}
+        partyName={statementParty?.name || ""}
+        partyId={statementParty?.id || ""}
+      />
     </div>
   );
 }
