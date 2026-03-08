@@ -708,6 +708,7 @@ const translations: Record<Language, Record<string, string>> = {
     "jobWork.kgDay": "किलो/दिन",
     "jobWork.minOrderLabel": "न्यूनतम",
     "jobWork.contact": "संपर्क",
+    "jobWork.chat": "चैट",
     "jobWork.premiumOnly": "जॉब वर्कर से संपर्क के लिए प्रीमियम लें",
     "jobWork.offers": "ऑफर",
     "jobWork.requests": "अनुरोध",
