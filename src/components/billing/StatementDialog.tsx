@@ -18,8 +18,7 @@ import {
 import { toast } from "sonner";
 import { getAllEntries } from "@/lib/ledgerData";
 import { parseFlexibleDate } from "@/components/DateRangeFilter";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateStatementPDF } from "@/lib/pdfGenerator";
 
 type Step = "duration" | "actions";
 type QuickRange = "This Month" | "This Quarter" | "This Year" | "Custom";
@@ -65,16 +64,13 @@ export default function StatementDialog({ open, onOpenChange, partyName, partyId
     onOpenChange(v);
   };
 
-  const handleGenerate = () => {
-    setStep("actions");
-  };
+  const handleGenerate = () => setStep("actions");
 
   const getFilteredEntries = () => {
     const allEntries = getAllEntries(partyId);
     const { from, to } = getDateRange(quickRange, fromDate, toDate);
     from.setHours(0, 0, 0, 0);
     to.setHours(23, 59, 59, 999);
-
     return allEntries.filter((entry) => {
       const d = parseFlexibleDate(entry.date);
       if (!d) return true;
@@ -90,82 +86,24 @@ export default function StatementDialog({ open, onOpenChange, partyName, partyId
     return `${format(from, "dd MMM yyyy")} - ${format(to, "dd MMM yyyy")}`;
   };
 
-  const generatePDF = () => {
-    const entries = getFilteredEntries();
-    const periodLabel = getPeriodLabel();
-    const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
-    const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
-    const closing = totalCredit - totalDebit;
-
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-    // Header
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text("STATEMENT OF ACCOUNT", 105, 20, { align: "center" });
-
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Party: ${partyName}`, 14, 32);
-    doc.text(`Period: ${periodLabel}`, 14, 39);
-    doc.text(`Generated: ${format(new Date(), "dd MMM yyyy")}`, 14, 46);
-
-    // Table
-    const tableData = entries.map((e, i) => [
-      String(i + 1),
-      e.date,
-      e.type,
-      String(e.invoiceNo),
-      e.credit > 0 ? e.credit.toFixed(2) : "-",
-      e.debit > 0 ? e.debit.toFixed(2) : "-",
-    ]);
-
-    autoTable(doc, {
-      startY: 52,
-      head: [["#", "Date", "Type", "Invoice", "Credit (₹)", "Debit (₹)"]],
-      body: tableData,
-      foot: [["", "", "", "Total", totalCredit.toFixed(2), totalDebit.toFixed(2)]],
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold", fontSize: 9 },
-      footStyles: { fillColor: [243, 244, 246], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 9 },
-      bodyStyles: { fontSize: 8.5 },
-      columnStyles: {
-        0: { cellWidth: 10, halign: "center" },
-        4: { halign: "right" },
-        5: { halign: "right" },
-      },
-    });
-
-    // Closing balance
-    const finalY = (doc as any).lastAutoTable?.finalY || 120;
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(
-      `Closing Balance: ₹${Math.abs(closing).toFixed(2)} ${closing < 0 ? "DR" : "CR"}`,
-      196, finalY + 10, { align: "right" }
-    );
-
-    return doc;
-  };
-
   const handleDownloadPDF = () => {
     try {
-      const doc = generatePDF();
+      const entries = getFilteredEntries();
+      const doc = generateStatementPDF(entries, { name: partyName });
       doc.save(`Statement_${partyName.replace(/\s+/g, "_")}.pdf`);
       toast.success(`Statement PDF downloaded for ${partyName}`);
       handleOpenChange(false);
-    } catch (err) {
+    } catch {
       toast.error("Failed to generate PDF");
     }
   };
 
   const handleShareWhatsApp = () => {
     try {
-      const doc = generatePDF();
+      const entries = getFilteredEntries();
+      const doc = generateStatementPDF(entries, { name: partyName });
       const pdfBlob = doc.output("blob");
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      
-      // Open PDF in new tab for user to save/share
       window.open(pdfUrl, "_blank");
 
       const text = encodeURIComponent(
@@ -173,7 +111,7 @@ export default function StatementDialog({ open, onOpenChange, partyName, partyId
       );
       window.open(`https://wa.me/?text=${text}`, "_blank");
       handleOpenChange(false);
-    } catch (err) {
+    } catch {
       toast.error("Failed to share statement");
     }
   };
@@ -191,7 +129,6 @@ export default function StatementDialog({ open, onOpenChange, partyName, partyId
 
             <p className="text-xs text-muted-foreground text-center -mt-2">Select duration</p>
 
-            {/* Quick range chips */}
             <div className="flex flex-wrap gap-2 justify-center mt-2">
               {quickRanges.map((r) => (
                 <button
@@ -208,7 +145,6 @@ export default function StatementDialog({ open, onOpenChange, partyName, partyId
               ))}
             </div>
 
-            {/* Custom date pickers */}
             {quickRange === "Custom" && (
               <div className="flex gap-3 mt-3">
                 <div className="flex-1">
