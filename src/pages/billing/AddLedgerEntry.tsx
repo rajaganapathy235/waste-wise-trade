@@ -36,6 +36,19 @@ export default function AddLedgerEntry() {
       toast.error("Please enter a valid amount");
       return;
     }
+    const parsedAmount = parseFloat(amount);
+    const newEntry = {
+      id: `l_${Date.now()}`,
+      date: new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      type: entryType.toUpperCase() as string,
+      invoiceNo: vchNo ? parseInt(vchNo) : Math.floor(Math.random() * 900) + 100,
+      credit: isDebit ? 0 : parsedAmount,
+      debit: isDebit ? parsedAmount : 0,
+    };
+    const storageKey = `ledger_entries_${partyId}`;
+    const existing = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    existing.push(newEntry);
+    localStorage.setItem(storageKey, JSON.stringify(existing));
     toast.success(`Ledger entry added: ${entryType} ₹${amount}`);
     goBack();
   };
