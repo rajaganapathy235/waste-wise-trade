@@ -98,7 +98,13 @@ export interface GSTInvoice {
   referenceInvoiceNo?: string;
   transportMode?: string;
   vehicleNo?: string;
+  vehicleType?: string;
+  transporterName?: string;
+  transporterId?: string;
+  lrNo?: string;
+  lrDate?: string;
   eWayBillNo?: string;
+  eWayBillDate?: string;
   notes?: string;
   paymentTerms?: string;
   declaration?: string;
