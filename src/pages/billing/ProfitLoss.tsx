@@ -8,6 +8,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function ProfitLoss() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { payments, expenses } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
