@@ -20,9 +20,7 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <I18nProvider>
           <AppProvider>
-            <BillingProvider>
               <App />
-            </BillingProvider>
           </AppProvider>
         </I18nProvider>
       </BrowserRouter>

@@ -48,32 +48,6 @@ function AppRoutes() {
       <Route path="/transport" element={<Transport />} />
       <Route path="/tneb" element={<TNEB />} />
       <Route path="/billing" element={<Billing />} />
-      <Route path="/billing/create-party" element={<CreateParty />} />
-      <Route path="/billing/party/:partyId" element={<PartyLedger />} />
-      <Route path="/billing/create-item" element={<CreateItem />} />
-      <Route path="/billing/payment-in" element={<PaymentIn />} />
-      <Route path="/billing/payment-out" element={<PaymentOut />} />
-      <Route path="/billing/expenses" element={<ExpensePage />} />
-      <Route path="/billing/reports" element={<Reports />} />
-      <Route path="/billing/sales-summary" element={<SalesSummary />} />
-      <Route path="/billing/stock-summary" element={<StockSummary />} />
-      <Route path="/billing/profit-loss" element={<ProfitLoss />} />
-      <Route path="/billing/cash-bank" element={<CashBank />} />
-      <Route path="/billing/gst-reports" element={<GSTReports />} />
-      <Route path="/billing/daybook" element={<Daybook />} />
-      <Route path="/billing/recurring" element={<RecurringInvoices />} />
-      <Route path="/billing/reminders" element={<PaymentReminders />} />
-      <Route path="/billing/balance-sheet" element={<BalanceSheet />} />
-      <Route path="/billing/party-reports" element={<PartyReports />} />
-      <Route path="/billing/item-reports" element={<ItemReports />} />
-      <Route path="/billing/transaction-reports" element={<TransactionReports />} />
-      <Route path="/billing/all-invoices" element={<AllInvoices />} />
-      <Route path="/billing/sales-invoices" element={<SalesInvoices />} />
-      <Route path="/billing/purchase-invoices" element={<PurchaseInvoices />} />
-      <Route path="/billing/bill-wise-profit" element={<BillWiseProfit />} />
-      <Route path="/billing/expense-category" element={<ExpenseCategoryReport />} />
-      <Route path="/billing/purchase-summary" element={<PurchaseSummary />} />
-      <Route path="/billing/hsn-summary" element={<HSNSummary />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
