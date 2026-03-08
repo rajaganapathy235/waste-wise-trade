@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
-import { useBilling, type GSTInvoice, type InvoiceItem } from "@/lib/billingContext";
+import { useBilling, type GSTInvoice, type InvoiceItem, type BillingParty } from "@/lib/billingContext";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -24,8 +24,6 @@ import {
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { exportToCSV } from "@/lib/csvExport";
-
-// Types are now imported from billingContext
 
 // ─── Helpers ──────────────────────────────────────────────
 const UNITS = ["KG", "MTR", "PCS", "BAG", "BALE", "BOX", "TON", "LTR", "NOS", "SET"];
@@ -69,14 +67,27 @@ function numberToWords(num: number): string {
   return result + " Only";
 }
 
-function generateInvoiceNo(type: string): string {
+const SALE_TYPES = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"];
+const PURCHASE_TYPES = ["purchase-invoice", "purchase-order", "debit-note"];
+
+function generateInvoiceNo(type: string, existingInvoices: GSTInvoice[]): string {
   const prefixMap: Record<string, string> = {
     "sale-invoice": "SI", "purchase-invoice": "PI", "quotation": "QT",
     "delivery-challan": "DC", "proforma": "PF", "purchase-order": "PO",
     "sale-order": "SO", "job-work": "JW", "credit-note": "CN", "debit-note": "DN"
   };
   const prefix = prefixMap[type] || "INV";
-  return `${prefix}/${new Date().getFullYear()}-${new Date().getFullYear() + 1}/${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
+  const year = new Date().getFullYear();
+  const yearStr = `${year}-${year + 1}`;
+  // Find max existing number for this prefix
+  const existing = existingInvoices
+    .filter(i => i.invoiceNo.startsWith(prefix + "/"))
+    .map(i => {
+      const parts = i.invoiceNo.split("/");
+      return parseInt(parts[parts.length - 1]) || 0;
+    });
+  const next = (existing.length > 0 ? Math.max(...existing) : 0) + 1;
+  return `${prefix}/${yearStr}/${String(next).padStart(4, "0")}`;
 }
 
 const statusConfig = {
@@ -86,7 +97,7 @@ const statusConfig = {
 };
 
 // ─── Quick Links Config ──────────────────────────────────
-const QUICK_LINKS: { key: string; label: string; icon: any; type: GSTInvoice["type"]; color: string }[] = [
+const QUICK_LINKS: { key: string; label: string; icon: any; type: GSTInvoice["type"]; color: string; action?: string }[] = [
   { key: "sale", label: "Sale Invoice", icon: Receipt, type: "sale-invoice", color: "text-emerald" },
   { key: "purchase", label: "Purchase Invoice", icon: ShoppingCart, type: "purchase-invoice", color: "text-primary" },
   { key: "quotation", label: "Quotation", icon: FileCheck, type: "quotation", color: "text-gold" },
@@ -97,8 +108,8 @@ const QUICK_LINKS: { key: string; label: string; icon: any; type: GSTInvoice["ty
   { key: "jobwork", label: "Job Work", icon: Briefcase, type: "job-work", color: "text-emerald" },
   { key: "cn", label: "Credit Note", icon: FileMinus, type: "credit-note", color: "text-destructive" },
   { key: "dn", label: "Debit Note", icon: FilePlus, type: "debit-note", color: "text-gold" },
-  { key: "inward", label: "Inward Payment", icon: IndianRupee, type: "sale-invoice", color: "text-emerald" },
-  { key: "outward", label: "Outward Payment", icon: CreditCard, type: "purchase-invoice", color: "text-destructive" },
+  { key: "inward", label: "Payment In", icon: IndianRupee, type: "sale-invoice", color: "text-emerald", action: "payment-in" },
+  { key: "outward", label: "Payment Out", icon: CreditCard, type: "purchase-invoice", color: "text-destructive", action: "payment-out" },
 ];
 
 // ─── Component ──────────────────────────────────────────
@@ -106,28 +117,31 @@ export default function Billing() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, setUser } = useApp();
-  const { parties: billingParties, setParties: setBillingParties, items: billingItems, payments: billingPayments, setPayments, expenses: billingExpenses, invoices, setInvoices } = useBilling();
+  const { parties: billingParties, setParties: setBillingParties, items: billingItems, setItems: setBillingItems, payments: billingPayments, setPayments, expenses: billingExpenses, invoices, setInvoices } = useBilling();
   const i18n = useI18n();
   const { t, lang, setLang, languages } = i18n;
 
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Handle navigation state (e.g., from AllInvoices page)
   useEffect(() => {
     const state = location.state as { tab?: string } | null;
     if (state?.tab) {
       setActiveTab(state.tab);
-      // Clear the state so refreshing doesn't keep switching
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<GSTInvoice | null>(null);
   const [docType, setDocType] = useState<GSTInvoice["type"]>("sale-invoice");
   const [partyFilter, setPartyFilter] = useState<"all" | "collect" | "pay">("all");
+  const [itemFilter, setItemFilter] = useState<"all" | "lowstock">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  const [partySearchQuery, setPartySearchQuery] = useState("");
+  const [showPartyDropdown, setShowPartyDropdown] = useState(false);
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
 
   // ─── Form State ──────────────────────────────────
   const [buyerName, setBuyerName] = useState("");
@@ -175,6 +189,42 @@ export default function Billing() {
       setItems(updated);
     }
   };
+
+  // Select existing item from catalog
+  const selectCatalogItem = (index: number, catalogItemId: string) => {
+    const catItem = billingItems.find(i => i.id === catalogItemId);
+    if (!catItem) return;
+    const isSale = SALE_TYPES.includes(docType);
+    const updated = [...items];
+    updated[index] = {
+      ...updated[index],
+      description: catItem.name,
+      hsnSac: catItem.hsnSac,
+      unit: catItem.unit,
+      per: catItem.unit,
+      rate: isSale ? catItem.salesPrice : catItem.purchasePrice,
+      gstRate: catItem.gstRate,
+      qty: updated[index].qty || 1,
+      amount: (updated[index].qty || 1) * (isSale ? catItem.salesPrice : catItem.purchasePrice),
+    };
+    setItems(updated);
+  };
+
+  // Select existing party
+  const selectParty = (party: BillingParty) => {
+    setBuyerName(party.name);
+    setBuyerGstin(party.gstin);
+    setBuyerAddress(party.address);
+    setBuyerState(party.state);
+    setShowPartyDropdown(false);
+    setPartySearchQuery("");
+  };
+
+  const filteredPartyList = useMemo(() => {
+    const q = (partySearchQuery || buyerName).toLowerCase();
+    if (!q) return billingParties.slice(0, 10);
+    return billingParties.filter(p => p.name.toLowerCase().includes(q) || p.gstin.toLowerCase().includes(q));
+  }, [partySearchQuery, buyerName, billingParties]);
 
   const selectedBuyerState = STATES.find((s) => s.name === buyerState);
   const selectedSupplyState = STATES.find((s) => s.name === placeOfSupply);
@@ -236,20 +286,24 @@ export default function Billing() {
     toast.success("Party deleted");
   };
 
+  // ─── Delete Item ──────────────────────────────────
+  const deleteItem = (id: string) => {
+    setBillingItems(prev => prev.filter(i => i.id !== id));
+    toast.success("Item deleted");
+  };
+
   // ─── Change Invoice Status ──────────────────────────
   const changeStatus = (id: string, status: GSTInvoice["status"]) => {
     const inv = invoices.find(i => i.id === id);
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, status } : i));
     if (previewInvoice?.id === id) setPreviewInvoice(prev => prev ? { ...prev, status } : null);
 
-    // When marking as paid, record a payment and reduce party outstanding
     if (status === "paid" && inv) {
-      const isSaleType = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"].includes(inv.type);
+      const isSaleType = SALE_TYPES.includes(inv.type);
       const existingParty = billingParties.find(
         p => p.name.toLowerCase() === inv.buyerName.toLowerCase() || (inv.buyerGstin && p.gstin === inv.buyerGstin)
       );
 
-      // Auto-create payment record
       const payment: import("@/lib/billingContext").Payment = {
         id: "autopay_" + Date.now().toString(),
         type: isSaleType ? "in" : "out",
@@ -266,6 +320,35 @@ export default function Billing() {
     toast.success(`Status changed to ${statusConfig[status].label}`);
   };
 
+  // ─── Compute party outstanding dynamically ──────────
+  const getPartyOutstanding = (party: BillingParty) => {
+    // Sum of unpaid/partial invoices for this party
+    const partyInvoices = invoices.filter(inv => {
+      const match = inv.buyerName.toLowerCase() === party.name.toLowerCase() || 
+        (party.gstin && inv.buyerGstin === party.gstin);
+      return match && inv.status !== "paid";
+    });
+    
+    const saleTotal = partyInvoices
+      .filter(i => SALE_TYPES.includes(i.type))
+      .reduce((s, i) => s + i.totalAmount, 0);
+    const purchaseTotal = partyInvoices
+      .filter(i => PURCHASE_TYPES.includes(i.type))
+      .reduce((s, i) => s + i.totalAmount, 0);
+    
+    const paymentsIn = billingPayments
+      .filter(p => p.partyId === party.id && p.type === "in")
+      .reduce((s, p) => s + p.amount, 0);
+    const paymentsOut = billingPayments
+      .filter(p => p.partyId === party.id && p.type === "out")
+      .reduce((s, p) => s + p.amount, 0);
+
+    const toCollect = Math.max(0, party.openingBalance * (party.balanceType === "collect" ? 1 : 0) + saleTotal - paymentsIn);
+    const toPay = Math.max(0, party.openingBalance * (party.balanceType === "pay" ? 1 : 0) + purchaseTotal - paymentsOut);
+    
+    return { toCollect, toPay, net: toCollect - toPay };
+  };
+
   const handleCreate = () => {
     const needsGstin = !["quotation", "proforma", "delivery-challan"].includes(docType);
     if (!buyerName || (needsGstin && !buyerGstin) || !buyerState || items.some((i) => !i.description)) {
@@ -278,7 +361,6 @@ export default function Billing() {
     }
 
     const taxableAmount = items.reduce((s, i) => s + i.amount, 0);
-    // Per-item GST calculation
     let totalCgst = 0, totalSgst = 0, totalIgst = 0;
     const needsTaxCalc = !["delivery-challan", "quotation"].includes(docType);
     if (needsTaxCalc) {
@@ -294,7 +376,6 @@ export default function Billing() {
     }
     const total = taxableAmount + totalCgst + totalSgst + totalIgst;
     const taxTotal = totalCgst + totalSgst + totalIgst;
-    // Primary rate for display (from first item or global)
     const primaryRate = items[0]?.gstRate || gstRate;
     const halfRate = primaryRate / 2;
 
@@ -305,7 +386,7 @@ export default function Billing() {
     const invoice: GSTInvoice = {
       id: editingInvoiceId || Date.now().toString(),
       type: docType,
-      invoiceNo: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.invoiceNo || generateInvoiceNo(docType) : generateInvoiceNo(docType),
+      invoiceNo: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.invoiceNo || generateInvoiceNo(docType, invoices) : generateInvoiceNo(docType, invoices),
       date: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.date || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
       status: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.status || "unpaid" : "unpaid",
       sellerName: user.businessName,
@@ -354,16 +435,15 @@ export default function Billing() {
       setInvoices((prev) => [invoice, ...prev]);
       toast.success(`${docType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())} created!`);
 
-      // Auto-create or link party when creating a new invoice
-      const isSaleType = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"].includes(docType);
-      const isPurchaseType = ["purchase-invoice", "purchase-order", "debit-note"].includes(docType);
+      // Auto-create party if not exists
+      const isSaleType = SALE_TYPES.includes(docType);
+      const isPurchaseType = PURCHASE_TYPES.includes(docType);
       const existingParty = billingParties.find(
         p => p.name.toLowerCase() === buyerName.toLowerCase() || (buyerGstin && p.gstin === buyerGstin)
       );
 
       if (!existingParty) {
-        // Auto-create party from invoice details
-        const newParty: import("@/lib/billingContext").BillingParty = {
+        const newParty: BillingParty = {
           id: "auto_" + Date.now().toString(),
           name: buyerName,
           gstin: buyerGstin,
@@ -372,30 +452,36 @@ export default function Billing() {
           state: buyerState,
           stateCode: selectedBuyerState?.code || "",
           type: isSaleType ? "customer" : isPurchaseType ? "supplier" : "both",
-          openingBalance: total,
+          openingBalance: 0,
           balanceType: isSaleType ? "collect" : "pay",
           createdAt: new Date().toISOString().slice(0, 10),
         };
         setBillingParties(prev => [newParty, ...prev]);
-        toast.info(`Party "${buyerName}" auto-created from invoice`);
-      } else {
-        // Update existing party's opening balance to include invoice amount
-        setBillingParties(prev => prev.map(p => {
-          if (p.id === existingParty.id) {
-            if (isSaleType) {
-              return { ...p, openingBalance: p.openingBalance + total, balanceType: "collect" as const };
-            } else if (isPurchaseType) {
-              return { ...p, openingBalance: p.openingBalance + total, balanceType: "pay" as const };
-            }
+        toast.info(`Party "${buyerName}" auto-created`);
+      }
+
+      // Update stock for sale/purchase invoices
+      if (docType === "sale-invoice" || docType === "delivery-challan") {
+        // Decrease stock
+        items.forEach(invItem => {
+          const catItem = billingItems.find(bi => bi.name.toLowerCase() === invItem.description.toLowerCase() || bi.hsnSac === invItem.hsnSac);
+          if (catItem) {
+            setBillingItems(prev => prev.map(bi => bi.id === catItem.id ? { ...bi, stockQty: Math.max(0, bi.stockQty - invItem.qty) } : bi));
           }
-          return p;
-        }));
+        });
+      } else if (docType === "purchase-invoice") {
+        // Increase stock
+        items.forEach(invItem => {
+          const catItem = billingItems.find(bi => bi.name.toLowerCase() === invItem.description.toLowerCase() || bi.hsnSac === invItem.hsnSac);
+          if (catItem) {
+            setBillingItems(prev => prev.map(bi => bi.id === catItem.id ? { ...bi, stockQty: bi.stockQty + invItem.qty } : bi));
+          }
+        });
       }
     }
 
-    // E-Way Bill warning
     if (total > 50000 && !["quotation", "proforma"].includes(docType)) {
-      toast.info("⚠️ E-Way Bill required for goods value > ₹50,000. Generate from GST portal.", { duration: 6000 });
+      toast.info("⚠️ E-Way Bill required for goods value > ₹50,000", { duration: 6000 });
     }
 
     setCreateOpen(false);
@@ -412,6 +498,7 @@ export default function Billing() {
     setTransporterName(""); setTransporterId(""); setLrNo(""); setLrDate(""); setEWayBillNo(""); setEWayBillDate("");
     setNotes(""); setPaymentTerms(""); setPlaceOfSupply("");
     setItems([{ slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0, gstRate: 18 }]);
+    setPartySearchQuery(""); setShowPartyDropdown(false); setItemSearchQuery("");
   };
 
   const typeLabel = (type: GSTInvoice["type"]) => {
@@ -446,17 +533,9 @@ export default function Billing() {
 
   const needsTax = !["delivery-challan", "quotation"].includes(docType);
 
-  // Dashboard stats from billing context
-  const collectParties = billingParties.filter(p => p.balanceType === "collect");
-  const payParties = billingParties.filter(p => p.balanceType === "pay");
-  const totalCollect = collectParties.reduce((s, p) => {
-    const received = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((a, pay) => a + pay.amount, 0);
-    return s + Math.max(0, p.openingBalance - received);
-  }, 0);
-  const totalPay = payParties.reduce((s, p) => {
-    const paid = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((a, pay) => a + pay.amount, 0);
-    return s + Math.max(0, p.openingBalance - paid);
-  }, 0);
+  // Dashboard stats computed dynamically
+  const totalCollect = billingParties.reduce((s, p) => s + getPartyOutstanding(p).toCollect, 0);
+  const totalPay = billingParties.reduce((s, p) => s + getPartyOutstanding(p).toPay, 0);
   const thisWeekSales = billingPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
   const stockValue = billingItems.filter(i => i.itemType === "product").reduce((s, i) => s + i.salesPrice * i.stockQty, 0);
 
@@ -517,7 +596,7 @@ export default function Billing() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background relative">
-      {/* HiTex-style Header */}
+      {/* Header */}
       <header className="sticky top-0 z-30 bg-navy text-navy-foreground px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -549,7 +628,6 @@ export default function Billing() {
             </button>
           </div>
         </div>
-        {/* Global Search Bar */}
         {searchOpen && (
           <div className="mt-2">
             <Input
@@ -566,7 +644,6 @@ export default function Billing() {
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-32">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-        {/* Hidden TabsList — nav is at bottom */}
         <TabsList className="hidden">
           <TabsTrigger value="dashboard" />
           <TabsTrigger value="quicklinks" />
@@ -577,7 +654,6 @@ export default function Billing() {
 
         {/* ─── Dashboard Tab ─── */}
         <TabsContent value="dashboard" className="mt-4 space-y-4">
-          {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3">
             <Card className="border-l-4 border-l-emerald cursor-pointer hover:shadow-md transition-all" onClick={() => { setPartyFilter("collect"); setActiveTab("parties"); }}>
               <CardContent className="p-3">
@@ -600,7 +676,7 @@ export default function Billing() {
             <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/sales-summary")}>
               <CardContent className="p-3">
                 <p className="text-xs font-bold">₹ {thisWeekSales.toLocaleString("en-IN")}</p>
-                <p className="text-[10px] text-muted-foreground">This week's sale</p>
+                <p className="text-[10px] text-muted-foreground">Total Received</p>
               </CardContent>
             </Card>
             <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/cash-bank")}>
@@ -630,7 +706,7 @@ export default function Billing() {
             </Button>
           </div>
 
-          {/* New Feature Cards */}
+          {/* Feature Cards */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/recurring")}>
               <CardContent className="p-3 flex items-center gap-2">
@@ -680,7 +756,7 @@ export default function Billing() {
                         const reader = new FileReader();
                         reader.onload = () => {
                           setUser((u: any) => ({ ...u, companyLogo: reader.result as string }));
-                          toast.success("Logo uploaded! It will appear on all PDF invoices.");
+                          toast.success("Logo uploaded!");
                         };
                         reader.readAsDataURL(file);
                       }
@@ -754,8 +830,12 @@ export default function Billing() {
           </div>
           <p className="text-sm font-bold mb-3">Purchase & Payments</p>
           <div className="grid grid-cols-4 gap-3 mb-5">
-            {QUICK_LINKS.filter((_, i) => i >= 8).map(({ key, label, icon: Icon, type, color }) => (
-              <button key={key} className="flex flex-col items-center gap-1.5 cursor-pointer" onClick={() => openCreateForType(type)}>
+            {QUICK_LINKS.filter((_, i) => i >= 8).map(({ key, label, icon: Icon, type, color, action }) => (
+              <button key={key} className="flex flex-col items-center gap-1.5 cursor-pointer" onClick={() => {
+                if (action === "payment-in") navigate("/billing/payment-in");
+                else if (action === "payment-out") navigate("/billing/payment-out");
+                else openCreateForType(type);
+              }}>
                 <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center hover:shadow-md transition-all">
                   <Icon className={`h-5 w-5 ${color}`} />
                 </div>
@@ -865,23 +945,27 @@ export default function Billing() {
             </button>
           </div>
           {(() => {
-            let fp = partyFilter === "all" ? billingParties : billingParties.filter(p => p.balanceType === partyFilter);
+            let fp = billingParties;
+            if (partyFilter !== "all") {
+              fp = fp.filter(p => {
+                const out = getPartyOutstanding(p);
+                if (partyFilter === "collect") return out.toCollect > 0;
+                if (partyFilter === "pay") return out.toPay > 0;
+                return true;
+              });
+            }
             if (sq) fp = fp.filter(p => p.name.toLowerCase().includes(sq) || p.gstin.toLowerCase().includes(sq));
             return fp.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-sm font-semibold text-muted-foreground">No Parties Found</p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {partyFilter !== "all" ? `No "${partyFilter === "collect" ? "To Collect" : "To Pay"}" parties.` : "Create a new party to get started."}
-                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">Create a new party to get started.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {fp.map(p => {
-                  const partyReceived = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
-                  const partyPaid = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
-                  const outstanding = p.balanceType === "collect"
-                    ? Math.max(0, p.openingBalance - partyReceived)
-                    : Math.max(0, p.openingBalance - partyPaid);
+                  const out = getPartyOutstanding(p);
+                  const outstanding = out.toCollect > 0 ? out.toCollect : out.toPay;
+                  const isCollect = out.toCollect >= out.toPay;
                   return (
                     <Card key={p.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate(`/billing/party/${p.id}`)}>
                       <CardContent className="p-3 flex items-center gap-3">
@@ -890,21 +974,22 @@ export default function Billing() {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-bold">{p.name}</p>
-                          <p className="text-[10px] text-muted-foreground capitalize">{p.type}</p>
+                          <p className="text-[10px] text-muted-foreground capitalize">{p.type} {p.gstin ? `• ${p.gstin}` : ""}</p>
                         </div>
                         <div className="text-right">
-                          <p className={`text-sm font-bold flex items-center gap-0.5 ${p.balanceType === "collect" ? "text-emerald" : "text-destructive"}`}>
+                          <p className={`text-sm font-bold flex items-center gap-0.5 ${isCollect ? "text-emerald" : "text-destructive"}`}>
                             ₹ {outstanding.toLocaleString("en-IN")}
-                            {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                            {isCollect ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                           </p>
                           <div className="flex gap-1 items-center justify-end mt-0.5">
-                            <button onClick={(e) => {
-                              e.stopPropagation();
-                              const phone = p.phone.replace(/[^0-9]/g, "");
-                              const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${outstanding.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
-                              window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
-                              toast.success("Opening WhatsApp...");
-                            }} className="text-[10px] text-primary font-semibold">Remind</button>
+                            {p.phone && (
+                              <button onClick={(e) => {
+                                e.stopPropagation();
+                                const phone = p.phone.replace(/[^0-9]/g, "");
+                                const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${outstanding.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
+                                window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
+                              }} className="text-[10px] text-primary font-semibold">Remind</button>
+                            )}
                             <button onClick={e => { e.stopPropagation(); deleteParty(p.id); }} className="p-0.5 hover:bg-secondary rounded"><Trash2 className="h-3 w-3 text-destructive" /></button>
                           </div>
                         </div>
@@ -924,17 +1009,32 @@ export default function Billing() {
         <TabsContent value="items" className="mt-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-2 overflow-x-auto">
-              <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">Low Stock</button>
-              <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">All Items</button>
+              <button 
+                onClick={() => setItemFilter("lowstock")}
+                className={`px-3 py-1 rounded-full text-[10px] font-medium transition-colors ${itemFilter === "lowstock" ? "bg-destructive text-destructive-foreground" : "bg-secondary text-muted-foreground"}`}
+              >
+                Low Stock
+              </button>
+              <button 
+                onClick={() => setItemFilter("all")}
+                className={`px-3 py-1 rounded-full text-[10px] font-medium transition-colors ${itemFilter === "all" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
+              >
+                All Items
+              </button>
             </div>
             <button onClick={handleExportItems} className="text-[10px] font-semibold text-primary flex items-center gap-1">
               <FileDown className="h-3 w-3" /> CSV
             </button>
           </div>
           {(() => {
-            const filteredItems = sq ? billingItems.filter(i => i.name.toLowerCase().includes(sq) || i.hsnSac.toLowerCase().includes(sq)) : billingItems;
+            let filteredItems = sq ? billingItems.filter(i => i.name.toLowerCase().includes(sq) || i.hsnSac.toLowerCase().includes(sq)) : billingItems;
+            if (itemFilter === "lowstock") {
+              filteredItems = filteredItems.filter(i => i.itemType === "product" && i.stockQty <= i.lowStockAlert && i.lowStockAlert > 0);
+            }
             return filteredItems.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">No items yet. Create an item to get started.</div>
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                {itemFilter === "lowstock" ? "No low stock items 🎉" : "No items yet. Create an item to get started."}
+              </div>
             ) : (
               <div className="space-y-3">
                 {filteredItems.map(item => (
@@ -952,8 +1052,11 @@ export default function Billing() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold">{item.stockQty}</p>
+                        <p className={`text-sm font-bold ${item.stockQty <= item.lowStockAlert && item.lowStockAlert > 0 ? "text-destructive" : ""}`}>{item.stockQty}</p>
                         <p className="text-[10px] text-muted-foreground">{item.unit}</p>
+                        <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="p-0.5 hover:bg-secondary rounded mt-1">
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1045,7 +1148,7 @@ export default function Billing() {
       {/* ═══════════════════════════════════════════════════════
           CREATE INVOICE DIALOG
          ═══════════════════════════════════════════════════════ */}
-      <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) setEditingInvoiceId(null); }}>
+      <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) { setEditingInvoiceId(null); setShowPartyDropdown(false); } }}>
         <DialogContent className="max-w-[400px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base">{editingInvoiceId ? "Edit" : "Create"} {typeLabel(docType)}</DialogTitle>
@@ -1060,15 +1163,37 @@ export default function Billing() {
               </div>
             )}
 
-            {/* Buyer / Bill To */}
+            {/* Buyer / Bill To with Party Autocomplete */}
             <div className="border rounded-lg p-3 space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Buyer (Bill to)</p>
-              <div>
+              <div className="relative">
                 <Label className="text-xs">Party Name *</Label>
-                <Input value={buyerName} onChange={(e) => setBuyerName(e.target.value)} placeholder="Business name" />
+                <Input 
+                  value={buyerName} 
+                  onChange={(e) => { setBuyerName(e.target.value); setShowPartyDropdown(true); }} 
+                  onFocus={() => setShowPartyDropdown(true)}
+                  placeholder="Search or type party name" 
+                />
+                {showPartyDropdown && filteredPartyList.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredPartyList.map(p => (
+                      <button
+                        key={p.id}
+                        className="w-full text-left px-3 py-2 hover:bg-secondary/50 text-xs border-b border-border last:border-0 flex justify-between items-center"
+                        onClick={() => selectParty(p)}
+                      >
+                        <div>
+                          <p className="font-semibold">{p.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{p.gstin || "No GSTIN"} • {p.state}</p>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground capitalize">{p.type}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
-                <Label className="text-xs">GSTIN/UIN *</Label>
+                <Label className="text-xs">GSTIN/UIN {!["quotation", "proforma", "delivery-challan"].includes(docType) ? "*" : ""}</Label>
                 <Input value={buyerGstin} onChange={(e) => setBuyerGstin(e.target.value.toUpperCase())} placeholder="29XXXXX1234X1Z5" maxLength={15} />
               </div>
               <div>
@@ -1142,7 +1267,7 @@ export default function Billing() {
               )}
             </div>
 
-            {/* Items with per-item GST */}
+            {/* Items with catalog selection */}
             <div className="border rounded-lg p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Item Details</p>
@@ -1158,7 +1283,18 @@ export default function Billing() {
                     </div>
                     <div className="flex-1">
                       <Label className="text-[10px]">Description *</Label>
-                      <Input className="h-8 text-xs" value={item.description} onChange={(e) => updateItem(idx, "description", e.target.value)} placeholder="Cotton Comber Noil" />
+                      {/* Item catalog dropdown */}
+                      {billingItems.length > 0 && !item.description && (
+                        <Select onValueChange={(v) => selectCatalogItem(idx, v)}>
+                          <SelectTrigger className="h-8 text-xs mb-1"><SelectValue placeholder="Select from catalog..." /></SelectTrigger>
+                          <SelectContent>
+                            {billingItems.map(bi => (
+                              <SelectItem key={bi.id} value={bi.id}>{bi.name} (₹{SALE_TYPES.includes(docType) ? bi.salesPrice : bi.purchasePrice}/{bi.unit})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <Input className="h-8 text-xs" value={item.description} onChange={(e) => updateItem(idx, "description", e.target.value)} placeholder="Or type item name" />
                     </div>
                     <div className="w-20">
                       <Label className="text-[10px]">HSN/SAC</Label>
@@ -1243,7 +1379,7 @@ export default function Billing() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-[10px]">Vehicle No. *</Label>
+                  <Label className="text-[10px]">Vehicle No.</Label>
                   <Input className="h-8 text-xs" value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} placeholder="TN 39 AB 1234" />
                 </div>
                 <div>
@@ -1253,7 +1389,7 @@ export default function Billing() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-[10px]">Transporter ID (GSTIN)</Label>
+                  <Label className="text-[10px]">Transporter ID</Label>
                   <Input className="h-8 text-xs" value={transporterId} onChange={(e) => setTransporterId(e.target.value.toUpperCase())} placeholder="33XXXXX1234X1Z5" maxLength={15} />
                 </div>
                 <div>
@@ -1299,7 +1435,6 @@ export default function Billing() {
                     <span>Taxable Value</span>
                     <span>₹{ts.taxableAmount.toLocaleString("en-IN")}</span>
                   </div>
-                  {/* Per-rate breakdown */}
                   {Array.from(new Set(items.map(i => i.gstRate))).sort((a, b) => a - b).map(rate => {
                     const rateItems = items.filter(i => i.gstRate === rate);
                     const rateTotal = rateItems.reduce((s, i) => s + i.amount, 0);
@@ -1350,7 +1485,7 @@ export default function Billing() {
         <DialogContent className="max-w-[440px] max-h-[95vh] overflow-y-auto p-0">
           {previewInvoice && (
             <div className="bg-background">
-              {/* Status Bar + Actions at top */}
+              {/* Status Bar + Actions */}
               <div className="px-3 pt-3 pb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Badge className={`${statusConfig[previewInvoice.status].color} text-[10px]`}>
@@ -1382,12 +1517,10 @@ export default function Billing() {
 
               {/* Tally-style bordered invoice */}
               <div className="border-2 border-foreground/80 m-3 text-[10px] leading-tight">
-                {/* Title */}
                 <div className="text-center border-b border-foreground/80 py-2">
                   <p className="text-sm font-bold tracking-wide">{typeLabel(previewInvoice.type).toUpperCase()}</p>
                 </div>
 
-                {/* IRN & e-Invoice */}
                 {previewInvoice.irn && (
                   <div className="border-b border-foreground/80 px-2 py-1.5 space-y-0.5">
                     <p><span className="font-semibold">IRN</span> : {previewInvoice.irn}</p>
@@ -1415,116 +1548,60 @@ export default function Billing() {
                         <p className="font-bold">{previewInvoice.date}</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-0.5">
-                      <p className="font-semibold">{previewInvoice.deliveryNote || "Delivery Note"}</p>
-                      <p className="font-semibold">{previewInvoice.modeOfPayment || "Mode/Terms of Payment"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-0.5">
-                      <p className="font-semibold">Reference No. & Date.</p>
-                      <p className="font-semibold">{previewInvoice.otherReferences || "Other References"}</p>
-                    </div>
                   </div>
                 </div>
 
-                {/* Consignee (Ship to) */}
-                <div className="border-b border-foreground/80 grid grid-cols-12">
-                  <div className="col-span-7 border-r border-foreground/80 p-2">
-                    <p className="text-[9px] text-muted-foreground">Consignee (Ship to)</p>
-                    <p className="font-bold">{previewInvoice.consigneeName}</p>
-                    <p>{previewInvoice.consigneeAddress}</p>
-                    <p>GSTIN/UIN : {previewInvoice.consigneeGstin}</p>
-                    <p>State Name : {previewInvoice.consigneeState}, Code : {previewInvoice.consigneeStateCode}</p>
-                  </div>
-                  <div className="col-span-5 p-1 space-y-0.5">
-                    <div className="grid grid-cols-2 gap-0.5">
-                      <p className="font-semibold">Buyer's Order No.</p>
-                      <p className="font-semibold">Dated</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-0.5">
-                      <p className="font-semibold">Dispatch Doc No.</p>
-                      <p className="font-semibold">Delivery Note Date</p>
-                    </div>
-                  </div>
+                {/* Consignee */}
+                <div className="border-b border-foreground/80 p-2">
+                  <p className="text-[9px] text-muted-foreground">Consignee (Ship to)</p>
+                  <p className="font-bold">{previewInvoice.consigneeName}</p>
+                  <p>{previewInvoice.consigneeAddress}</p>
+                  <p>GSTIN/UIN : {previewInvoice.consigneeGstin}</p>
+                  <p>State Name : {previewInvoice.consigneeState}, Code : {previewInvoice.consigneeStateCode}</p>
                 </div>
 
-                {/* Buyer (Bill to) */}
-                <div className="border-b border-foreground/80 grid grid-cols-12">
-                  <div className="col-span-7 border-r border-foreground/80 p-2">
-                    <p className="text-[9px] text-muted-foreground">Buyer (Bill to)</p>
-                    <p className="font-bold">{previewInvoice.buyerName}</p>
-                    <p>{previewInvoice.buyerAddress}</p>
-                    <p>GSTIN/UIN : {previewInvoice.buyerGstin}</p>
-                    <p>State Name : {previewInvoice.buyerState}, Code : {previewInvoice.buyerStateCode}</p>
-                  </div>
-                  <div className="col-span-5 p-1 space-y-0.5">
-                    <div className="grid grid-cols-2 gap-0.5">
-                      <div>
-                        <p className="font-semibold">Dispatched through</p>
-                        <p>{previewInvoice.transporterName || "-"}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Destination</p>
-                        <p>{previewInvoice.consigneeState || "-"}</p>
-                      </div>
-                    </div>
-                    <p className="font-semibold">Terms of Delivery</p>
-                    {previewInvoice.termsOfDelivery && <p>{previewInvoice.termsOfDelivery}</p>}
-                  </div>
+                {/* Buyer */}
+                <div className="border-b border-foreground/80 p-2">
+                  <p className="text-[9px] text-muted-foreground">Buyer (Bill to)</p>
+                  <p className="font-bold">{previewInvoice.buyerName}</p>
+                  <p>{previewInvoice.buyerAddress}</p>
+                  <p>GSTIN/UIN : {previewInvoice.buyerGstin}</p>
+                  <p>State Name : {previewInvoice.buyerState}, Code : {previewInvoice.buyerStateCode}</p>
                 </div>
 
-                {/* Transport Details Row */}
+                {/* Transport */}
                 {(previewInvoice.vehicleNo || previewInvoice.transporterName || previewInvoice.lrNo || previewInvoice.eWayBillNo) && (
                   <div className="border-b border-foreground/80 px-2 py-1.5">
                     <p className="text-[9px] text-muted-foreground font-semibold mb-0.5">Transport Details</p>
                     <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
-                      {previewInvoice.transportMode && (
-                        <p><span className="font-semibold">Mode:</span> {previewInvoice.transportMode}</p>
-                      )}
-                      {previewInvoice.vehicleNo && (
-                        <p><span className="font-semibold">Vehicle No:</span> {previewInvoice.vehicleNo}</p>
-                      )}
-                      {previewInvoice.vehicleType && (
-                        <p><span className="font-semibold">Vehicle Type:</span> {previewInvoice.vehicleType}</p>
-                      )}
-                      {previewInvoice.transporterName && (
-                        <p><span className="font-semibold">Transporter:</span> {previewInvoice.transporterName}</p>
-                      )}
-                      {previewInvoice.transporterId && (
-                        <p><span className="font-semibold">Transporter ID:</span> {previewInvoice.transporterId}</p>
-                      )}
-                      {previewInvoice.lrNo && (
-                        <p><span className="font-semibold">LR/GR No:</span> {previewInvoice.lrNo} {previewInvoice.lrDate ? `(${previewInvoice.lrDate})` : ""}</p>
-                      )}
-                      {previewInvoice.eWayBillNo && (
-                        <p><span className="font-semibold">E-Way Bill:</span> {previewInvoice.eWayBillNo} {previewInvoice.eWayBillDate ? `(${previewInvoice.eWayBillDate})` : ""}</p>
-                      )}
+                      {previewInvoice.transportMode && <p><span className="font-semibold">Mode:</span> {previewInvoice.transportMode}</p>}
+                      {previewInvoice.vehicleNo && <p><span className="font-semibold">Vehicle No:</span> {previewInvoice.vehicleNo}</p>}
+                      {previewInvoice.transporterName && <p><span className="font-semibold">Transporter:</span> {previewInvoice.transporterName}</p>}
+                      {previewInvoice.lrNo && <p><span className="font-semibold">LR/GR:</span> {previewInvoice.lrNo}</p>}
+                      {previewInvoice.eWayBillNo && <p><span className="font-semibold">E-Way Bill:</span> {previewInvoice.eWayBillNo}</p>}
                     </div>
                   </div>
                 )}
 
-                {/* Items Table Header */}
+                {/* Items Table */}
                 <div className="border-b border-foreground/80">
-                  <div className="grid grid-cols-24 text-[9px] font-bold border-b border-foreground/80">
-                    <div className="col-span-2 p-1 border-r border-foreground/30 text-center">Sl No.</div>
-                    <div className="col-span-7 p-1 border-r border-foreground/30">Description of Goods</div>
-                    <div className="col-span-3 p-1 border-r border-foreground/30 text-center">HSN/SAC</div>
-                    <div className="col-span-3 p-1 border-r border-foreground/30 text-right">Quantity</div>
-                    <div className="col-span-3 p-1 border-r border-foreground/30 text-right">Rate</div>
-                    <div className="col-span-2 p-1 border-r border-foreground/30 text-center">per</div>
-                    <div className="col-span-1 p-1 border-r border-foreground/30 text-center">Disc.%</div>
-                    <div className="col-span-3 p-1 text-right">Amount</div>
+                  <div className="grid grid-cols-12 text-[9px] font-bold border-b border-foreground/80 bg-secondary/30">
+                    <div className="col-span-1 p-1 border-r border-foreground/30 text-center">Sl</div>
+                    <div className="col-span-4 p-1 border-r border-foreground/30">Description</div>
+                    <div className="col-span-1 p-1 border-r border-foreground/30 text-center">HSN</div>
+                    <div className="col-span-2 p-1 border-r border-foreground/30 text-right">Qty</div>
+                    <div className="col-span-2 p-1 border-r border-foreground/30 text-right">Rate</div>
+                    <div className="col-span-2 p-1 text-right">Amount</div>
                   </div>
 
                   {previewInvoice.items.map((item, i) => (
-                    <div key={i} className="grid grid-cols-24 text-[10px]">
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{item.slNo}</div>
-                      <div className="col-span-7 p-1 border-r border-foreground/30 font-semibold">{item.description}</div>
-                      <div className="col-span-3 p-1 border-r border-foreground/30 text-center">{item.hsnSac}</div>
-                      <div className="col-span-3 p-1 border-r border-foreground/30 text-right font-bold">{item.qty} {item.unit}</div>
-                      <div className="col-span-3 p-1 border-r border-foreground/30 text-right">{item.rate.toFixed(2)}</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{item.per}</div>
-                      <div className="col-span-1 p-1 border-r border-foreground/30 text-center">{item.discount || ""}</div>
-                      <div className="col-span-3 p-1 text-right font-medium">{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                    <div key={i} className="grid grid-cols-12 text-[10px] border-b border-foreground/20">
+                      <div className="col-span-1 p-1 border-r border-foreground/30 text-center">{item.slNo}</div>
+                      <div className="col-span-4 p-1 border-r border-foreground/30 font-semibold">{item.description}</div>
+                      <div className="col-span-1 p-1 border-r border-foreground/30 text-center">{item.hsnSac}</div>
+                      <div className="col-span-2 p-1 border-r border-foreground/30 text-right">{item.qty} {item.unit}</div>
+                      <div className="col-span-2 p-1 border-r border-foreground/30 text-right">{item.rate.toFixed(2)}</div>
+                      <div className="col-span-2 p-1 text-right font-medium">{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                     </div>
                   ))}
 
@@ -1532,37 +1609,19 @@ export default function Billing() {
                   {previewInvoice.type !== "delivery-challan" && (
                     <>
                       {previewInvoice.isIgst ? (
-                        <div className="grid grid-cols-24 text-[10px]">
-                          <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                          <div className="col-span-7 p-1 border-r border-foreground/30"></div>
-                          <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                          <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                          <div className="col-span-3 p-1 border-r border-foreground/30 text-right font-bold">IGST</div>
-                          <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                          <div className="col-span-1 p-1 border-r border-foreground/30"></div>
-                          <div className="col-span-3 p-1 text-right">{previewInvoice.igstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                        <div className="grid grid-cols-12 text-[10px]">
+                          <div className="col-span-8 p-1 border-r border-foreground/30 text-right font-bold">IGST @ {previewInvoice.igstRate}%</div>
+                          <div className="col-span-4 p-1 text-right">{previewInvoice.igstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                         </div>
                       ) : (
                         <>
-                          <div className="grid grid-cols-24 text-[10px]">
-                            <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-7 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 border-r border-foreground/30 text-right font-bold">CGST</div>
-                            <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-1 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 text-right">{previewInvoice.cgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                          <div className="grid grid-cols-12 text-[10px]">
+                            <div className="col-span-8 p-1 border-r border-foreground/30 text-right font-bold">CGST @ {previewInvoice.cgstRate}%</div>
+                            <div className="col-span-4 p-1 text-right">{previewInvoice.cgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                           </div>
-                          <div className="grid grid-cols-24 text-[10px]">
-                            <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-7 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 border-r border-foreground/30 text-right font-bold">SGST</div>
-                            <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-1 p-1 border-r border-foreground/30"></div>
-                            <div className="col-span-3 p-1 text-right">{previewInvoice.sgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                          <div className="grid grid-cols-12 text-[10px]">
+                            <div className="col-span-8 p-1 border-r border-foreground/30 text-right font-bold">SGST @ {previewInvoice.sgstRate}%</div>
+                            <div className="col-span-4 p-1 text-right">{previewInvoice.sgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                           </div>
                         </>
                       )}
@@ -1570,93 +1629,25 @@ export default function Billing() {
                   )}
 
                   {/* Total Row */}
-                  <div className="grid grid-cols-24 text-[10px] border-t border-foreground/80 font-bold">
-                    <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                    <div className="col-span-7 p-1 border-r border-foreground/30 text-right">Total</div>
-                    <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                    <div className="col-span-3 p-1 border-r border-foreground/30 text-right">{previewInvoice.items.reduce((s, i) => s + i.qty, 0)} {previewInvoice.items[0]?.unit}</div>
-                    <div className="col-span-3 p-1 border-r border-foreground/30"></div>
-                    <div className="col-span-2 p-1 border-r border-foreground/30"></div>
-                    <div className="col-span-1 p-1 border-r border-foreground/30"></div>
-                    <div className="col-span-3 p-1 text-right text-xs">₹ {previewInvoice.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                  <div className="grid grid-cols-12 text-[10px] border-t border-foreground/80 font-bold">
+                    <div className="col-span-8 p-1 border-r border-foreground/30 text-right">Total</div>
+                    <div className="col-span-4 p-1 text-right text-xs">₹ {previewInvoice.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                   </div>
                 </div>
 
-                {/* Amount Chargeable (in words) */}
+                {/* Amount in words */}
                 <div className="border-b border-foreground/80 px-2 py-1.5">
                   <p className="text-[9px] text-muted-foreground">Amount Chargeable (in words)</p>
                   <p className="font-bold text-[11px]">{previewInvoice.amountInWords}</p>
-                  <p className="text-right text-[9px] text-muted-foreground">E. & O.E</p>
                 </div>
-
-                {/* HSN/SAC Tax Summary Table */}
-                {previewInvoice.type !== "delivery-challan" && (
-                  <div className="border-b border-foreground/80">
-                    <div className="grid grid-cols-12 text-[8px] font-bold border-b border-foreground/30 bg-secondary/30">
-                      <div className="col-span-2 p-1 border-r border-foreground/30">HSN/SAC</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-right">Taxable Value</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">Central Tax<br/>Rate | Amt</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">State Tax<br/>Rate | Amt</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{previewInvoice.isIgst ? "IGST" : "Total Tax"}<br/>Rate | Amt</div>
-                      <div className="col-span-2 p-1 text-right">Total Tax Amount</div>
-                    </div>
-                    {Array.from(new Set(previewInvoice.items.map(i => i.hsnSac))).map(hsn => {
-                      const hsnItems = previewInvoice.items.filter(i => i.hsnSac === hsn);
-                      const hsnTaxable = hsnItems.reduce((s, i) => s + i.amount, 0);
-                      const totalTax = previewInvoice.isIgst
-                        ? Math.round(hsnTaxable * previewInvoice.igstRate / 100)
-                        : Math.round(hsnTaxable * previewInvoice.cgstRate / 100) + Math.round(hsnTaxable * previewInvoice.sgstRate / 100);
-                      return (
-                        <div key={hsn} className="grid grid-cols-12 text-[9px] border-b border-foreground/20">
-                          <div className="col-span-2 p-1 border-r border-foreground/30">{hsn}</div>
-                          <div className="col-span-2 p-1 border-r border-foreground/30 text-right">{hsnTaxable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                          <div className="col-span-2 p-1 border-r border-foreground/30 text-center">
-                            {previewInvoice.isIgst ? "-" : `${previewInvoice.cgstRate}% | ${Math.round(hsnTaxable * previewInvoice.cgstRate / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
-                          </div>
-                          <div className="col-span-2 p-1 border-r border-foreground/30 text-center">
-                            {previewInvoice.isIgst ? "-" : `${previewInvoice.sgstRate}% | ${Math.round(hsnTaxable * previewInvoice.sgstRate / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
-                          </div>
-                          <div className="col-span-2 p-1 border-r border-foreground/30 text-center">
-                            {previewInvoice.isIgst
-                              ? `${previewInvoice.igstRate}% | ${Math.round(hsnTaxable * previewInvoice.igstRate / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-                              : `${totalTax.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
-                            }
-                          </div>
-                          <div className="col-span-2 p-1 text-right">{totalTax.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                        </div>
-                      );
-                    })}
-                    <div className="grid grid-cols-12 text-[9px] font-bold border-t border-foreground/50">
-                      <div className="col-span-2 p-1 border-r border-foreground/30">Total</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-right">{previewInvoice.taxableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{previewInvoice.cgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{previewInvoice.sgstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                      <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{(previewInvoice.cgstAmount + previewInvoice.sgstAmount + previewInvoice.igstAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                      <div className="col-span-2 p-1 text-right">{(previewInvoice.cgstAmount + previewInvoice.sgstAmount + previewInvoice.igstAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tax Amount in Words */}
-                {previewInvoice.taxAmountInWords && (
-                  <div className="border-b border-foreground/80 px-2 py-1">
-                    <p className="text-[9px]"><span className="font-semibold">Tax Amount (in words) :</span> <span className="font-bold">{previewInvoice.taxAmountInWords}</span></p>
-                  </div>
-                )}
 
                 {/* Declaration + Signatory */}
                 <div className="grid grid-cols-2">
                   <div className="p-2 border-r border-foreground/80">
                     <p className="text-[9px] font-semibold underline">Declaration</p>
-                    <p className="text-[8px] text-muted-foreground mt-0.5">
-                      {previewInvoice.declaration || "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct."}
-                    </p>
-                    {previewInvoice.paymentTerms && (
-                      <p className="text-[8px] mt-1"><span className="font-semibold">Payment Terms:</span> {previewInvoice.paymentTerms}</p>
-                    )}
-                    {previewInvoice.notes && (
-                      <p className="text-[8px] mt-1"><span className="font-semibold">Notes:</span> {previewInvoice.notes}</p>
-                    )}
+                    <p className="text-[8px] text-muted-foreground mt-0.5">{previewInvoice.declaration}</p>
+                    {previewInvoice.paymentTerms && <p className="text-[8px] mt-1"><span className="font-semibold">Payment Terms:</span> {previewInvoice.paymentTerms}</p>}
+                    {previewInvoice.notes && <p className="text-[8px] mt-1"><span className="font-semibold">Notes:</span> {previewInvoice.notes}</p>}
                   </div>
                   <div className="p-2 text-right">
                     <p className="text-[9px] font-semibold">for {previewInvoice.sellerName}</p>
@@ -1665,7 +1656,6 @@ export default function Billing() {
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="border-t border-foreground/80 text-center py-1">
                   <p className="text-[8px] text-muted-foreground">This is a Computer Generated Invoice</p>
                 </div>
@@ -1690,7 +1680,7 @@ export default function Billing() {
                     <AlertTriangle className="h-4 w-4 text-gold mt-0.5 shrink-0" />
                     <div>
                       <p className="text-xs font-bold text-gold">E-Way Bill Required</p>
-                      <p className="text-[10px] text-muted-foreground">Goods value exceeds ₹50,000. Generate E-Way Bill from the GST portal before dispatch.</p>
+                      <p className="text-[10px] text-muted-foreground">Goods value exceeds ₹50,000.</p>
                       {previewInvoice.eWayBillNo && <p className="text-[10px] font-semibold mt-1">E-Way Bill: {previewInvoice.eWayBillNo}</p>}
                     </div>
                   </div>
@@ -1707,15 +1697,13 @@ export default function Billing() {
                   className="w-full gap-1 text-xs text-emerald border-emerald/30"
                   onClick={() => {
                     const msg = encodeURIComponent(
-                      `📄 *${typeLabel(previewInvoice!.type)}*\n\nInvoice: ${previewInvoice!.invoiceNo}\nDate: ${previewInvoice!.date}\nAmount: ₹${previewInvoice!.totalAmount.toLocaleString("en-IN")}\n\nFrom: ${previewInvoice!.sellerName}\nGSTIN: ${previewInvoice!.sellerGstin}\n\nPlease find the invoice details above. PDF copy available on request.\n\nThank you! 🙏`
+                      `📄 *${typeLabel(previewInvoice!.type)}*\n\nInvoice: ${previewInvoice!.invoiceNo}\nDate: ${previewInvoice!.date}\nAmount: ₹${previewInvoice!.totalAmount.toLocaleString("en-IN")}\n\nFrom: ${previewInvoice!.sellerName}\nGSTIN: ${previewInvoice!.sellerGstin}\n\nThank you! 🙏`
                     );
                     window.open(`https://wa.me/?text=${msg}`, "_blank");
-                    toast.success("Opening WhatsApp...");
                   }}
                 >
                   <MessageCircle className="h-3.5 w-3.5" /> Share via WhatsApp
                 </Button>
-                {/* Create Credit/Debit Note from this invoice */}
                 {(previewInvoice!.type === "sale-invoice" || previewInvoice!.type === "purchase-invoice") && (
                   <div className="flex gap-2">
                     <Button
@@ -1733,7 +1721,6 @@ export default function Billing() {
                         setGstRate(previewInvoice!.isIgst ? previewInvoice!.igstRate : previewInvoice!.cgstRate * 2);
                         setItems(previewInvoice!.items.map(i => ({ ...i })));
                         setCreateOpen(true);
-                        toast.info("Creating Credit Note against " + previewInvoice!.invoiceNo);
                       }}
                     >
                       <FileMinus className="h-3 w-3" /> Credit Note
@@ -1753,7 +1740,6 @@ export default function Billing() {
                         setGstRate(previewInvoice!.isIgst ? previewInvoice!.igstRate : previewInvoice!.cgstRate * 2);
                         setItems(previewInvoice!.items.map(i => ({ ...i })));
                         setCreateOpen(true);
-                        toast.info("Creating Debit Note against " + previewInvoice!.invoiceNo);
                       }}
                     >
                       <FilePlus className="h-3 w-3" /> Debit Note

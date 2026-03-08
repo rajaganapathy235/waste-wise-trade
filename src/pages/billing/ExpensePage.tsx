@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, Wallet } from "lucide-react";
+import { ArrowLeft, Plus, Wallet, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const EXPENSE_CATEGORIES = ["Transport", "Office", "Labour", "Electricity", "Rent", "Maintenance", "Packaging", "Commission", "Other"];
@@ -35,6 +35,11 @@ export default function ExpensePage() {
     toast.success("Expense recorded!");
     setShowForm(false);
     setCategory(""); setAmount(0); setNote("");
+  };
+
+  const deleteExpense = (id: string) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    toast.success("Expense deleted");
   };
 
   return (
@@ -99,7 +104,12 @@ export default function ExpensePage() {
                 <p className="text-[10px] text-muted-foreground">{exp.date} • {exp.paymentMode.toUpperCase()}</p>
                 {exp.note && <p className="text-[10px] text-muted-foreground">{exp.note}</p>}
               </div>
-              <p className="text-sm font-bold text-destructive">₹{exp.amount.toLocaleString("en-IN")}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-destructive">₹{exp.amount.toLocaleString("en-IN")}</p>
+                <button onClick={() => deleteExpense(exp.id)} className="p-1 hover:bg-secondary rounded">
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </button>
+              </div>
             </CardContent>
           </Card>
         ))}
