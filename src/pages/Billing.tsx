@@ -1496,13 +1496,49 @@ export default function Billing() {
                   </div>
                   <div className="col-span-5 p-1 space-y-0.5">
                     <div className="grid grid-cols-2 gap-0.5">
-                      <p className="font-semibold">Dispatched through</p>
-                      <p className="font-semibold">Destination</p>
+                      <div>
+                        <p className="font-semibold">Dispatched through</p>
+                        <p>{previewInvoice.transporterName || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Destination</p>
+                        <p>{previewInvoice.consigneeState || "-"}</p>
+                      </div>
                     </div>
                     <p className="font-semibold">Terms of Delivery</p>
                     {previewInvoice.termsOfDelivery && <p>{previewInvoice.termsOfDelivery}</p>}
                   </div>
                 </div>
+
+                {/* Transport Details Row */}
+                {(previewInvoice.vehicleNo || previewInvoice.transporterName || previewInvoice.lrNo || previewInvoice.eWayBillNo) && (
+                  <div className="border-b border-foreground/80 px-2 py-1.5">
+                    <p className="text-[9px] text-muted-foreground font-semibold mb-0.5">Transport Details</p>
+                    <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                      {previewInvoice.transportMode && (
+                        <p><span className="font-semibold">Mode:</span> {previewInvoice.transportMode}</p>
+                      )}
+                      {previewInvoice.vehicleNo && (
+                        <p><span className="font-semibold">Vehicle No:</span> {previewInvoice.vehicleNo}</p>
+                      )}
+                      {previewInvoice.vehicleType && (
+                        <p><span className="font-semibold">Vehicle Type:</span> {previewInvoice.vehicleType}</p>
+                      )}
+                      {previewInvoice.transporterName && (
+                        <p><span className="font-semibold">Transporter:</span> {previewInvoice.transporterName}</p>
+                      )}
+                      {previewInvoice.transporterId && (
+                        <p><span className="font-semibold">Transporter ID:</span> {previewInvoice.transporterId}</p>
+                      )}
+                      {previewInvoice.lrNo && (
+                        <p><span className="font-semibold">LR/GR No:</span> {previewInvoice.lrNo} {previewInvoice.lrDate ? `(${previewInvoice.lrDate})` : ""}</p>
+                      )}
+                      {previewInvoice.eWayBillNo && (
+                        <p><span className="font-semibold">E-Way Bill:</span> {previewInvoice.eWayBillNo} {previewInvoice.eWayBillDate ? `(${previewInvoice.eWayBillDate})` : ""}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Items Table Header */}
                 <div className="border-b border-foreground/80">
