@@ -12,9 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ArrowLeft, Plus, FileText, Truck, RotateCcw, Download, Trash2,
+  ArrowLeft, ArrowDownLeft, ArrowUpRight, Plus, FileText, Truck, RotateCcw, Download, Trash2,
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
-  FileMinus, FilePlus, IndianRupee, CreditCard
+  FileMinus, FilePlus, IndianRupee, CreditCard, Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 
