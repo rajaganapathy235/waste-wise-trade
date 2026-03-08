@@ -64,8 +64,8 @@ export default function Billing() {
     { id: "products", label: "Products", icon: Package },
   ];
 
-  // ─── Send Tab (Home) ───
-  const renderSendTab = () => (
+  // ─── Home Tab (Default - Generate Bill) ───
+  const renderHomeTab = () => (
     <div className="space-y-4">
       <Card className="border-border shadow-sm">
         <CardContent className="p-4 space-y-4">
@@ -88,9 +88,7 @@ export default function Billing() {
               ))}
             </div>
           </div>
-          <Button
-            className="w-full h-12 text-base font-bold rounded-lg bg-gold hover:bg-gold/90 text-gold-foreground"
-          >
+          <Button className="w-full h-12 text-base font-bold rounded-lg bg-gold hover:bg-gold/90 text-gold-foreground">
             Generate Bill
           </Button>
         </CardContent>
@@ -147,6 +145,73 @@ export default function Billing() {
     </div>
   );
 
+  // ─── Send Tab (Party list for sending bills) ───
+  const filteredSendEntries = MOCK_SEND_ENTRIES.filter(e =>
+    !sendSearch || e.name.toLowerCase().includes(sendSearch.toLowerCase())
+  );
+
+  const renderSendTab = () => (
+    <div className="relative min-h-[60vh]">
+      {/* Search */}
+      <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
+        <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+        <Input
+          value={sendSearch}
+          onChange={e => setSendSearch(e.target.value)}
+          placeholder="Search Here"
+          className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto py-0 text-sm"
+        />
+      </div>
+
+      {/* Entries */}
+      <div className="space-y-1">
+        {filteredSendEntries.map((entry) => (
+          <div key={entry.id} className="flex items-center gap-3 py-3 cursor-pointer active:bg-muted/50 transition-colors">
+            <div className="h-11 w-11 rounded-full bg-gold flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="h-5 w-5 text-gold-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{entry.name}</p>
+              <p className="text-xs text-muted-foreground">{entry.month}</p>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-xs text-muted-foreground">{entry.date}</p>
+              <span className="h-5 min-w-[20px] rounded-full bg-emerald text-emerald-foreground text-[10px] font-bold flex items-center justify-center px-1.5">
+                {entry.billCount}
+              </span>
+            </div>
+          </div>
+        ))}
+        {filteredSendEntries.length === 0 && (
+          <p className="text-center text-muted-foreground text-sm py-8">No entries found</p>
+        )}
+      </div>
+
+      {/* Send / Overview toggle */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20">
+        <div className="flex border border-emerald rounded-full overflow-hidden">
+          <button
+            onClick={() => setSendSubTab("send")}
+            className={`px-6 py-2 text-sm font-semibold transition-colors ${sendSubTab === "send" ? "bg-emerald text-emerald-foreground" : "bg-card text-foreground"}`}
+          >
+            Send
+          </button>
+          <button
+            onClick={() => setSendSubTab("overview")}
+            className={`px-6 py-2 text-sm font-semibold transition-colors ${sendSubTab === "overview" ? "bg-emerald text-emerald-foreground" : "bg-card text-foreground"}`}
+          >
+            Overview
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Add Button */}
+      <button className="fixed bottom-28 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex items-center justify-center z-20">
+        <Plus className="h-7 w-7" />
+      </button>
+    </div>
+  );
+
   // ─── Products Tab ───
   const renderProductsTab = () => (
     <div className="relative min-h-[60vh]">
@@ -177,8 +242,6 @@ export default function Billing() {
           </div>
         ))}
       </div>
-
-      {/* Floating Add Button */}
       <button onClick={() => navigate("/billing/add-product")} className="fixed bottom-24 right-6 max-w-md h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
         <Plus className="h-7 w-7" />
       </button>
@@ -194,11 +257,11 @@ export default function Billing() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "home": return renderHomeTab();
       case "send": return renderSendTab();
       case "products": return renderProductsTab();
       case "party": return renderPlaceholder("Party");
       case "bills": return renderPlaceholder("Bills");
-      case "center": return renderPlaceholder("Center");
       default: return null;
     }
   };
