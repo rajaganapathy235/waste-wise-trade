@@ -94,7 +94,7 @@ export default function PartyTab() {
                     Statement
                   </button>
                   <button
-                    onClick={() => toast.info(`${party.name} ledger`)}
+                    onClick={() => navigate(`/billing/ledger/${party.id}`, { state: { partyId: party.id, partyName: party.name } })}
                     className="px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[10px] font-bold hover:bg-secondary/80"
                   >
                     Ledger
