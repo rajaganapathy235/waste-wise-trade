@@ -22,15 +22,22 @@ type GstType = "CGST/SGST" | "IGST";
 type DiscountSetting = "amount" | "amount_percent";
 type BillTitle = "Tax Invoice" | "Bill Of Supply";
 
+const BILL_CONFIG = {
+  Sales: { title: "Create Invoice", prefix: "Invoice", partyLabel: "Customer", storageKey: "last_sales_no", defaultNo: 62 },
+  Purchase: { title: "Purchase Entry", prefix: "Purchase", partyLabel: "Supplier", storageKey: "last_purchase_no", defaultNo: 9 },
+  Quotation: { title: "Quotation Bill", prefix: "Quotation", partyLabel: "Purchaser", storageKey: "last_quotation_no", defaultNo: 2 },
+} as const;
+
 export default function GenerateBill() {
   const navigate = useNavigate();
   const location = useLocation();
   const goBack = useSafeBack("/billing");
-  const billType = (location.state as any)?.billType || "Sales";
+  const billType = ((location.state as any)?.billType || "Sales") as keyof typeof BILL_CONFIG;
+  const config = BILL_CONFIG[billType];
 
   // Invoice info
   const [invoiceNo] = useState(() => {
-    const last = parseInt(localStorage.getItem("last_invoice_no") || "62", 10);
+    const last = parseInt(localStorage.getItem(config.storageKey) || String(config.defaultNo), 10);
     return last + 1;
   });
   const [billDate] = useState(format(new Date(), "dd/MM/yyyy"));
