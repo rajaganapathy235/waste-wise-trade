@@ -289,10 +289,9 @@ export default function Billing() {
                   onClick={() => navigate("/")}
                   className="relative -mt-7 flex flex-col items-center group"
                 >
-                  {/* Outer recycling arrows ring */}
-                  <svg className="absolute h-[78px] w-[78px] animate-[spin_10s_linear_infinite]" viewBox="0 0 78 78" fill="none">
+                  {/* Fixed recycling arrows ring */}
+                  <svg className="absolute h-[78px] w-[78px]" viewBox="0 0 78 78" fill="none">
                     <circle cx="39" cy="39" r="36" stroke="hsl(var(--emerald))" strokeWidth="2" strokeDasharray="8 6" opacity="0.35" />
-                    {/* 3 recycling arrows */}
                     {[0, 120, 240].map((deg) => (
                       <g key={deg} transform={`rotate(${deg} 39 39)`}>
                         <path d="M39 5 L43 12 L35 12Z" fill="hsl(var(--emerald))" opacity="0.6" />
