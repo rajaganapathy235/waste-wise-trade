@@ -41,6 +41,7 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default function Billing() {
   const navigate = useNavigate();
+  const { user } = useApp();
   const [activeTab, setActiveTab] = useState<BillingTab>("home");
   const [sendSearch, setSendSearch] = useState("");
   const [sendSubTab, setSendSubTab] = useState<"send" | "overview">("send");
