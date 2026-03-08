@@ -22,6 +22,7 @@ import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
 import PartyLedger from "./pages/billing/PartyLedger";
+import AddLedgerEntry from "./pages/billing/AddLedgerEntry";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
@@ -56,6 +57,7 @@ function AppRoutes() {
       <Route path="/billing/product/:productId" element={<ProductDetail />} />
       <Route path="/billing/tax-details" element={<TaxDetails />} />
       <Route path="/billing/ledger/:partyId" element={<PartyLedger />} />
+      <Route path="/billing/ledger/:partyId/add" element={<AddLedgerEntry />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
