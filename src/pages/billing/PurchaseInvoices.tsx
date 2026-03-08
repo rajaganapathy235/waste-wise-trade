@@ -18,6 +18,7 @@ const statusConfig = {
 
 export default function PurchaseInvoices() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { invoices } = useBilling();
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
