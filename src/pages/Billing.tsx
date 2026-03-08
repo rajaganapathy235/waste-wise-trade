@@ -110,7 +110,6 @@ export default function Billing() {
   const i18n = useI18n();
   const { t, lang, setLang, languages } = i18n;
 
-  const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Handle navigation state (e.g., from AllInvoices page)
