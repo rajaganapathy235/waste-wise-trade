@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { mockUser, UserProfile, UserRole, Lead, mockLeads, ChatThread, mockChatThreads } from "./mockData";
+import { mockUser, UserProfile, UserRole, Lead, mockLeads, ChatThread, mockChatThreads, Review, mockReviews, TransportRequest, mockTransportRequests } from "./mockData";
 
 interface AppContextType {
   user: UserProfile;
@@ -8,6 +8,10 @@ interface AppContextType {
   setLeads: React.Dispatch<React.SetStateAction<Lead[]>>;
   chatThreads: ChatThread[];
   setChatThreads: React.Dispatch<React.SetStateAction<ChatThread[]>>;
+  reviews: Review[];
+  setReviews: React.Dispatch<React.SetStateAction<Review[]>>;
+  transportRequests: TransportRequest[];
+  setTransportRequests: React.Dispatch<React.SetStateAction<TransportRequest[]>>;
   activeRole: UserRole;
   setActiveRole: React.Dispatch<React.SetStateAction<UserRole>>;
   isLoggedIn: boolean;
@@ -20,11 +24,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile>(mockUser);
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
   const [chatThreads, setChatThreads] = useState<ChatThread[]>(mockChatThreads);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  const [transportRequests, setTransportRequests] = useState<TransportRequest[]>(mockTransportRequests);
   const [activeRole, setActiveRole] = useState<UserRole>(mockUser.roles[0] || "Waste Trader");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   return (
-    <AppContext.Provider value={{ user, setUser, leads, setLeads, chatThreads, setChatThreads, activeRole, setActiveRole, isLoggedIn, setIsLoggedIn }}>
+    <AppContext.Provider value={{ user, setUser, leads, setLeads, chatThreads, setChatThreads, reviews, setReviews, transportRequests, setTransportRequests, activeRole, setActiveRole, isLoggedIn, setIsLoggedIn }}>
       {children}
     </AppContext.Provider>
   );

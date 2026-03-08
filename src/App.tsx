@@ -12,6 +12,8 @@ import Onboarding from "./pages/Onboarding";
 import ChatList, { ChatThread } from "./pages/Chat";
 import Analytics from "./pages/Analytics";
 import DemandHeatmap from "./pages/DemandHeatmap";
+import Transport from "./pages/Transport";
+import WriteReview from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
       <Route path="/chat/:leadId" element={<ChatThread />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/demand-heatmap" element={<DemandHeatmap />} />
+      <Route path="/transport" element={<Transport />} />
+      <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

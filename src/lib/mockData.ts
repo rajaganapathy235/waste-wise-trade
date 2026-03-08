@@ -44,6 +44,33 @@ export interface ChatThread {
   unreadCount: number;
 }
 
+export interface Review {
+  id: string;
+  reviewerId: string;
+  reviewerName: string;
+  revieweeId: string;
+  leadId: string;
+  rating: number; // 1-5
+  comment: string;
+  createdAt: string;
+}
+
+export interface TransportRequest {
+  id: string;
+  leadId: string;
+  materialType: string;
+  quantity: number;
+  fromDistrict: string;
+  toDistrict: string;
+  requestedDate: string;
+  vehicleType: "Tempo" | "Mini Truck" | "Full Truck";
+  status: "Pending" | "Accepted" | "In Transit" | "Delivered" | "Cancelled";
+  estimatedCost?: number;
+  providerName?: string;
+  providerPhone?: string;
+  createdAt: string;
+}
+
 export interface UserProfile {
   id: string;
   phone: string;
@@ -58,6 +85,8 @@ export interface UserProfile {
   blockedUsers: string[];
   verificationDocuments?: { selfie?: string; gstCert?: string; incorpCert?: string };
   verificationStatus: "none" | "pending" | "verified" | "rejected";
+  trustScore: number; // average rating
+  totalReviews: number;
 }
 
 export const MATERIAL_TYPES: Record<LeadCategory, string[]> = {
@@ -210,6 +239,36 @@ export const mockDemandData: { material: string; category: LeadCategory; distric
   { material: "Recycled Yarn", category: "Yarn", district: "Erode", searchCount: 65 },
 ];
 
+export const mockReviews: Review[] = [
+  { id: "r1", reviewerId: "u2", reviewerName: "Balaji Textiles", revieweeId: "u1", leadId: "1", rating: 5, comment: "Excellent buyer. Quick payment and smooth transaction.", createdAt: "2026-02-20" },
+  { id: "r2", reviewerId: "u4", reviewerName: "Murugan Fibers", revieweeId: "u1", leadId: "3", rating: 4, comment: "Good quality material. Slightly delayed delivery but overall satisfied.", createdAt: "2026-02-15" },
+  { id: "r3", reviewerId: "u1", reviewerName: "HiTex Demo Traders", revieweeId: "u2", leadId: "1", rating: 5, comment: "Top quality Comber Noil. Will buy again!", createdAt: "2026-02-21" },
+  { id: "r4", reviewerId: "u3", reviewerName: "Sri Ganesh Recyclers", revieweeId: "u5", leadId: "4", rating: 3, comment: "Decent yarn quality. Communication could be better.", createdAt: "2026-01-30" },
+  { id: "r5", reviewerId: "u7", reviewerName: "KPR Waste Traders", revieweeId: "u1", leadId: "6", rating: 5, comment: "Very professional. Fair pricing and honest quality description.", createdAt: "2026-01-25" },
+];
+
+export const mockTransportRequests: TransportRequest[] = [
+  {
+    id: "t1", leadId: "1", materialType: "Comber Noil", quantity: 5000,
+    fromDistrict: "Tiruppur", toDistrict: "Coimbatore", requestedDate: "2026-03-10",
+    vehicleType: "Full Truck", status: "Accepted", estimatedCost: 4500,
+    providerName: "RKV Transport", providerPhone: "+91 99001 12233",
+    createdAt: "2026-03-07",
+  },
+  {
+    id: "t2", leadId: "3", materialType: "Recycled Fiber", quantity: 10000,
+    fromDistrict: "Coimbatore", toDistrict: "Erode", requestedDate: "2026-03-12",
+    vehicleType: "Full Truck", status: "Pending",
+    createdAt: "2026-03-06",
+  },
+];
+
+export const VEHICLE_TYPES: { type: TransportRequest["vehicleType"]; capacity: string; baseRate: number }[] = [
+  { type: "Tempo", capacity: "Up to 2,000 kg", baseRate: 1500 },
+  { type: "Mini Truck", capacity: "2,000 — 5,000 kg", baseRate: 3000 },
+  { type: "Full Truck", capacity: "5,000 — 15,000 kg", baseRate: 5000 },
+];
+
 export const mockUser: UserProfile = {
   id: "u1",
   phone: "+91 99887 76655",
@@ -223,4 +282,6 @@ export const mockUser: UserProfile = {
   ebConsumerNumber: "",
   blockedUsers: [],
   verificationStatus: "verified",
+  trustScore: 4.7,
+  totalReviews: 3,
 };
