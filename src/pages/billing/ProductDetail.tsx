@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
-import { ArrowLeft, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
+import BillingHeader from "@/components/BillingHeader";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Product {
