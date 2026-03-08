@@ -22,6 +22,7 @@ import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
 import PartyLedger from "./pages/billing/PartyLedger";
+import AddLedgerEntry from "./pages/billing/AddLedgerEntry";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
