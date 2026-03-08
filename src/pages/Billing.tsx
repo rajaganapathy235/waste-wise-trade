@@ -359,7 +359,7 @@ export default function Billing() {
     { key: "dashboard", label: "Dashboard", icon: Home },
     { key: "parties", label: "Parties", icon: Users },
     { key: "items", label: "Items", icon: Package },
-    { key: "marketplace", label: "HiTex", icon: ArrowRightLeft },
+    { key: "services", label: "Services", icon: BarChart3 },
   ];
 
   return (
