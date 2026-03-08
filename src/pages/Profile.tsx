@@ -11,7 +11,7 @@ import { ReviewsList } from "./Reviews";
 
 export default function Profile() {
   const { user, setUser, setIsLoggedIn, reviews } = useApp();
-  const { t, lang, setLang, languages } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const myReviews = reviews.filter((r) => r.revieweeId === user.id);
