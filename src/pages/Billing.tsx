@@ -287,11 +287,11 @@ export default function Billing() {
                 <button
                   key={id}
                   onClick={() => navigate("/")}
-                  className="relative -mt-6 flex flex-col items-center"
+                  className="relative -mt-7 flex flex-col items-center group"
                 >
-                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-navy via-navy to-emerald flex items-center justify-center shadow-[0_4px_20px_rgba(5,150,105,0.4)] ring-4 ring-card">
-                    <span className="text-sm font-extrabold text-navy-foreground tracking-tight leading-none">
-                      H<span className="text-emerald">T</span>
+                  <div className="h-[68px] w-[68px] rounded-[22px] rotate-45 bg-gradient-to-br from-emerald to-navy flex items-center justify-center shadow-[0_6px_24px_rgba(5,150,105,0.5)] ring-[5px] ring-card transition-transform group-active:scale-95">
+                    <span className="-rotate-45 text-base font-black text-navy-foreground tracking-tighter leading-none drop-shadow-sm">
+                      H<span className="text-gold">T</span>
                     </span>
                   </div>
                 </button>
