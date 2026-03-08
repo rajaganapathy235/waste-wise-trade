@@ -194,7 +194,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
 // ─── Component ──────────────────────────────────────────
 export default function Billing() {
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { user, setUser } = useApp();
   const { parties: billingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
   const { t } = useI18n();
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
