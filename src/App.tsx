@@ -24,6 +24,7 @@ import PartyLedger from "./pages/billing/PartyLedger";
 import AddLedgerEntry from "./pages/billing/AddLedgerEntry";
 import GenerateBill from "./pages/billing/GenerateBill";
 import Auth from "./pages/Auth";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
