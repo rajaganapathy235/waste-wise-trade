@@ -16,7 +16,8 @@ import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, Plus, FileText, Truck, RotateCcw, Download, Trash2,
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
   FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
-  Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search
+  Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search,
+  MessageCircle, Upload, Bell, Repeat, Share2, Image
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
