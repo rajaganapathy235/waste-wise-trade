@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AppProvider } from "./lib/appContext";
+import { BillingProvider } from "./lib/billingContext";
 import { I18nProvider } from "./lib/i18n";
 import App from "./App.tsx";
 import "./index.css";
