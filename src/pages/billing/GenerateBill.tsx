@@ -173,7 +173,7 @@ export default function GenerateBill() {
             ) : (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">To (जिसको बिल भेजना है)</p>
+                  <p className="text-xs text-muted-foreground">{config.partyLabel}</p>
                   <p className="text-sm font-bold text-accent">(click here)</p>
                 </div>
                 <span className="text-xs text-muted-foreground">Add</span>
