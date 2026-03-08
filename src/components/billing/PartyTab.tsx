@@ -4,7 +4,7 @@ import { Phone, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-
+import StatementDialog from "./StatementDialog";
 type PartyFilter = "Customers" | "Suppliers";
 
 interface Party {
