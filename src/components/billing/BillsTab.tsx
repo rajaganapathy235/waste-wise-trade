@@ -30,6 +30,7 @@ const MOCK_BILLS: Bill[] = [
 ];
 
 export default function BillsTab() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<BillFilter>("Sales");
   const filters: BillFilter[] = ["Sales", "Purchase", "Quotation"];
