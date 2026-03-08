@@ -409,6 +409,7 @@ export default function Billing() {
     setCreateOpen(false);
     setEditingInvoiceId(null);
     resetForm();
+    setActiveTab("dashboard");
   };
 
   const resetForm = () => {
