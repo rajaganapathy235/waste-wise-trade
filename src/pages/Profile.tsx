@@ -130,6 +130,17 @@ export default function Profile() {
         </Card>
       )}
 
+      {/* Admin Panel Link */}
+      {isAdmin && (
+        <Card className="mb-4 border-primary/20">
+          <CardContent className="p-4">
+            <Button onClick={() => navigate("/admin")} className="w-full" variant="outline">
+              <Shield className="h-4 w-4 mr-2" /> Admin Panel
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Subscription */}
       <Card className="mb-4">
         <CardContent className="p-4">
