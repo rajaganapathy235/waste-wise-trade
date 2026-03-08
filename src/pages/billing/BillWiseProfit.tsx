@@ -11,25 +11,35 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 export default function BillWiseProfit() {
   const navigate = useNavigate();
   const goBack = useSafeBack("/billing/reports");
-  const { invoices, payments } = useBilling();
+  const { invoices, payments, items: catalogItems } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   const salesInvoices = invoices.filter(i => i.type === "sale-invoice" && isInDateRange(i.date, dateRange));
 
   const billData = salesInvoices.map(inv => {
     const received = payments.filter(p => p.invoiceRef === inv.invoiceNo && p.type === "in").reduce((s, p) => s + p.amount, 0);
-    const costEstimate = inv.items.reduce((s, it) => s + (it.rate * 0.7 * it.qty), 0); // rough estimate
+    
+    // Calculate cost using actual purchase prices from catalog
+    const costEstimate = inv.items.reduce((s, it) => {
+      const catItem = catalogItems.find(ci => 
+        ci.name.toLowerCase() === it.description.toLowerCase() || ci.hsnSac === it.hsnSac
+      );
+      const purchasePrice = catItem ? catItem.purchasePrice : it.rate * 0.7; // fallback to 70% estimate
+      return s + (purchasePrice * it.qty);
+    }, 0);
+    
     const profit = inv.totalAmount - costEstimate;
     const margin = inv.totalAmount > 0 ? (profit / inv.totalAmount * 100) : 0;
     return { ...inv, received, costEstimate, profit, margin };
   });
 
   const totalSales = billData.reduce((s, b) => s + b.totalAmount, 0);
+  const totalCost = billData.reduce((s, b) => s + b.costEstimate, 0);
   const totalProfit = billData.reduce((s, b) => s + b.profit, 0);
   const avgMargin = totalSales > 0 ? (totalProfit / totalSales * 100) : 0;
 
   const handleExport = () => {
-    const headers = ["Invoice No", "Date", "Party", "Sales Amount", "Estimated Cost", "Profit", "Margin %"];
+    const headers = ["Invoice No", "Date", "Party", "Sales Amount", "Cost", "Profit", "Margin %"];
     const rows = billData.map(b => [b.invoiceNo, b.date, b.buyerName, b.totalAmount, b.costEstimate.toFixed(0), b.profit.toFixed(0), b.margin.toFixed(1)]);
     exportToCSV("bill_wise_profit.csv", headers, rows);
     toast.success("Bill Wise Profit exported!");

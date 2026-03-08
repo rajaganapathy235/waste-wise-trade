@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format, subDays, startOfMonth, endOfMonth, subMonths, startOfYear } from "date-fns";
+import { format, subDays, startOfMonth, endOfMonth, subMonths, startOfYear, parse } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -69,10 +69,48 @@ export function DateRangeFilter({ dateRange, onDateRangeChange }: DateRangeFilte
   );
 }
 
-/** Helper: check if a date string (YYYY-MM-DD) falls within range */
+/** Parse various date string formats into a Date object */
+export function parseFlexibleDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  
+  // ISO format: 2026-03-08
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d;
+  }
+  
+  // "08-Mar-26" or "20-Dec-20" format
+  try {
+    const d = parse(dateStr, "dd-MMM-yy", new Date());
+    if (!isNaN(d.getTime())) return d;
+  } catch {}
+  
+  // "08 Mar 26" format  
+  try {
+    const d = parse(dateStr, "dd MMM yy", new Date());
+    if (!isNaN(d.getTime())) return d;
+  } catch {}
+
+  // "08 Mar 2026" format  
+  try {
+    const d = parse(dateStr, "dd MMM yyyy", new Date());
+    if (!isNaN(d.getTime())) return d;
+  } catch {}
+  
+  // Last resort: native Date parsing
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d;
+  
+  return null;
+}
+
+/** Helper: check if a date string falls within range. Handles multiple date formats. */
 export function isInDateRange(dateStr: string, range: DateRange): boolean {
   if (!range.from && !range.to) return true;
-  const d = new Date(dateStr);
+  
+  const d = parseFlexibleDate(dateStr);
+  if (!d) return true; // If we can't parse, include it
+  
   if (range.from) {
     const from = new Date(range.from);
     from.setHours(0, 0, 0, 0);
@@ -84,4 +122,11 @@ export function isInDateRange(dateStr: string, range: DateRange): boolean {
     if (d > to) return false;
   }
   return true;
+}
+
+/** Format a date string for display */
+export function formatDisplayDate(dateStr: string): string {
+  const d = parseFlexibleDate(dateStr);
+  if (!d) return dateStr;
+  return format(d, "dd MMM yyyy");
 }

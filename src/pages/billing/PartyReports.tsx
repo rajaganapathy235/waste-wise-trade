@@ -9,41 +9,52 @@ import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
 import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
+const SALE_TYPES = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"];
+const PURCHASE_TYPES = ["purchase-invoice", "purchase-order", "debit-note"];
+
 export default function PartyReports() {
   const navigate = useNavigate();
   const goBack = useSafeBack("/billing/reports");
-  const { parties, payments } = useBilling();
+  const { parties, payments, invoices } = useBilling();
   const [filter, setFilter] = useState<"all" | "collect" | "pay">("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   const filteredPayments = payments.filter(p => isInDateRange(p.date, dateRange));
+  const filteredInvoices = invoices.filter(i => isInDateRange(i.date, dateRange));
 
-  const getOutstanding = (p: typeof parties[0]) => {
-    if (p.balanceType === "collect") {
-      const received = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
-      return Math.max(0, p.openingBalance - received);
-    } else {
-      const paid = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
-      return Math.max(0, p.openingBalance - paid);
-    }
+  const getPartyData = (p: typeof parties[0]) => {
+    const partyInvoices = filteredInvoices.filter(inv =>
+      inv.buyerName.toLowerCase() === p.name.toLowerCase() || (p.gstin && inv.buyerGstin === p.gstin)
+    );
+    const saleTotal = partyInvoices.filter(i => SALE_TYPES.includes(i.type) && i.status !== "paid").reduce((s, i) => s + i.totalAmount, 0);
+    const purchaseTotal = partyInvoices.filter(i => PURCHASE_TYPES.includes(i.type) && i.status !== "paid").reduce((s, i) => s + i.totalAmount, 0);
+    const paymentsIn = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
+    const paymentsOut = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
+    const toCollect = Math.max(0, (p.balanceType === "collect" ? p.openingBalance : 0) + saleTotal - paymentsIn);
+    const toPay = Math.max(0, (p.balanceType === "pay" ? p.openingBalance : 0) + purchaseTotal - paymentsOut);
+    const txnCount = filteredPayments.filter(pay => pay.partyId === p.id).length + partyInvoices.length;
+    const volume = partyInvoices.reduce((s, i) => s + i.totalAmount, 0);
+    return { toCollect, toPay, txnCount, volume };
   };
 
-  const getTxnCount = (partyId: string) => filteredPayments.filter(p => p.partyId === partyId).length;
-  const getTotalVolume = (partyId: string) => filteredPayments.filter(p => p.partyId === partyId).reduce((s, p) => s + p.amount, 0);
-
-  let filtered = filter === "all" ? parties : parties.filter(p => p.balanceType === filter);
+  let filtered = parties;
+  if (filter === "collect") filtered = filtered.filter(p => getPartyData(p).toCollect > 0);
+  else if (filter === "pay") filtered = filtered.filter(p => getPartyData(p).toPay > 0);
   if (search) {
     const sq = search.toLowerCase();
     filtered = filtered.filter(p => p.name.toLowerCase().includes(sq) || p.gstin.toLowerCase().includes(sq));
   }
 
-  const totalReceivable = parties.filter(p => p.balanceType === "collect").reduce((s, p) => s + getOutstanding(p), 0);
-  const totalPayable = parties.filter(p => p.balanceType === "pay").reduce((s, p) => s + getOutstanding(p), 0);
+  const totalReceivable = parties.reduce((s, p) => s + getPartyData(p).toCollect, 0);
+  const totalPayable = parties.reduce((s, p) => s + getPartyData(p).toPay, 0);
 
   const handleExport = () => {
-    const headers = ["Party Name", "GSTIN", "Type", "Outstanding (₹)", "Transactions", "Volume (₹)", "State"];
-    const rows = filtered.map(p => [p.name, p.gstin, p.type, getOutstanding(p), getTxnCount(p.id), getTotalVolume(p.id), p.state]);
+    const headers = ["Party Name", "GSTIN", "Type", "To Collect (₹)", "To Pay (₹)", "Transactions", "Volume (₹)"];
+    const rows = filtered.map(p => {
+      const d = getPartyData(p);
+      return [p.name, p.gstin, p.type, d.toCollect, d.toPay, d.txnCount, d.volume];
+    });
     exportToCSV("party_report.csv", headers, rows);
     toast.success("Party Report exported!");
   };
@@ -101,9 +112,9 @@ export default function PartyReports() {
       ) : (
         <div className="space-y-2">
           {filtered.map(p => {
-            const outstanding = getOutstanding(p);
-            const txnCount = getTxnCount(p.id);
-            const volume = getTotalVolume(p.id);
+            const d = getPartyData(p);
+            const outstanding = d.toCollect > d.toPay ? d.toCollect : d.toPay;
+            const isCollect = d.toCollect >= d.toPay;
             return (
               <Card key={p.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate(`/billing/party/${p.id}`)}>
                 <CardContent className="p-3">
@@ -116,15 +127,15 @@ export default function PartyReports() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-bold flex items-center gap-0.5 ${p.balanceType === "collect" ? "text-emerald" : "text-destructive"}`}>
+                      <p className={`text-sm font-bold flex items-center gap-0.5 ${isCollect ? "text-emerald" : "text-destructive"}`}>
                         ₹{outstanding.toLocaleString("en-IN")}
-                        {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                        {isCollect ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-4 text-[10px] text-muted-foreground mt-1">
-                    <span>{txnCount} transactions</span>
-                    <span>Volume: ₹{volume.toLocaleString("en-IN")}</span>
+                    <span>{d.txnCount} transactions</span>
+                    <span>Volume: ₹{d.volume.toLocaleString("en-IN")}</span>
                     <span className="capitalize">{p.type}</span>
                   </div>
                 </CardContent>
