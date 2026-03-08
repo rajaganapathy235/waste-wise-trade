@@ -1,4 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+// Icons for bottom navigation
 import { Home, FileText, Wrench, User, Grid3X3, MessageCircle } from "lucide-react";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
