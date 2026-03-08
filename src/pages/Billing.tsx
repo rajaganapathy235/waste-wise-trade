@@ -27,7 +27,6 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default function Billing() {
   const navigate = useNavigate();
-  const { lang, setLang, languages } = useI18n();
   const [billType, setBillType] = useState<BillType>("Sales");
   const [activeTab, setActiveTab] = useState<BillingTab>("send");
   const [products, setProducts] = useState<Product[]>(() => {
