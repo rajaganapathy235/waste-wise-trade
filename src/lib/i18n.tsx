@@ -44,6 +44,7 @@ const translations: Record<Language, Record<string, string>> = {
     "jobWork.kgDay": "kg/day",
     "jobWork.minOrderLabel": "Min",
     "jobWork.contact": "Contact",
+    "jobWork.chat": "Chat",
     "jobWork.premiumOnly": "Upgrade to Premium to contact job workers",
     "jobWork.offers": "Offers",
     "jobWork.requests": "Requests",
