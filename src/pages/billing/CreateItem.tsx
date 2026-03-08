@@ -4,144 +4,109 @@ import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling, BillingItem } from "@/lib/billingContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, LayoutGrid, Ticket } from "lucide-react";
 import { toast } from "sonner";
-
-const UNITS = ["KG", "MTR", "PCS", "BAG", "BALE", "BOX", "TON", "LTR", "NOS", "SET"];
-const GST_RATES = [0, 5, 12, 18, 28];
-const CATEGORIES = ["Waste", "Fiber", "Yarn", "Service", "Other"];
 
 export default function CreateItem() {
   const navigate = useNavigate();
   const goBack = useSafeBack("/billing");
   const { setItems } = useBilling();
   const [name, setName] = useState("");
-  const [itemType, setItemType] = useState<"product" | "service">("product");
-  const [unit, setUnit] = useState("PCS");
-  const [salesPrice, setSalesPrice] = useState(0);
   const [purchasePrice, setPurchasePrice] = useState(0);
-  const [gstRate, setGstRate] = useState(0);
+  const [salesPrice, setSalesPrice] = useState(0);
+  const [mrp, setMrp] = useState(0);
+  const [unit, setUnit] = useState("nos");
   const [hsnSac, setHsnSac] = useState("");
-  const [stockQty, setStockQty] = useState(0);
-  const [lowStockAlert, setLowStockAlert] = useState(0);
-  const [category, setCategory] = useState("");
-  const [pricingTab, setPricingTab] = useState("pricing");
+  const [gstRate, setGstRate] = useState(0);
 
-  const handleSave = (andNew = false) => {
-    if (!name) { toast.error("Item name is required"); return; }
+  const handleSave = () => {
+    if (!name) { toast.error("Product name is required"); return; }
     const item: BillingItem = {
-      id: Date.now().toString(), name, itemType, unit, salesPrice, purchasePrice,
-      gstRate, hsnSac, stockQty, lowStockAlert, category, createdAt: new Date().toISOString().slice(0, 10),
+      id: Date.now().toString(), name, itemType: "product", unit: unit.toUpperCase(),
+      salesPrice, purchasePrice, mrp, gstRate, hsnSac,
+      stockQty: 0, lowStockAlert: 0, category: "", createdAt: new Date().toISOString().slice(0, 10),
     };
     setItems(prev => [item, ...prev]);
-    toast.success("Item created!");
-    if (andNew) {
-      setName(""); setSalesPrice(0); setPurchasePrice(0); setHsnSac(""); setStockQty(0);
-    } else {
-      goBack();
-    }
+    toast.success("Product added!");
+    goBack();
   };
 
   return (
-    <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
+      {/* Header */}
+      <header className="bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3">
+        <button onClick={goBack}><ArrowLeft className="h-5 w-5" /></button>
+        <h1 className="text-base font-bold">Add Product</h1>
+      </header>
+
+      <div className="flex-1 px-4 pt-6 pb-8 space-y-5">
         <div className="flex items-center gap-3">
-          <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
-          <h1 className="text-lg font-bold">Create New Item</h1>
-        </div>
-        <Settings className="h-5 w-5 text-muted-foreground" />
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <Label className="text-xs">Item Name *</Label>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Cotton Comber Noil 40s" />
-        </div>
-
-        <div>
-          <Label className="text-xs">Item Type</Label>
-          <div className="flex gap-3 mt-1">
-            {(["product", "service"] as const).map(t => (
-              <button key={t} onClick={() => setItemType(t)} className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-colors ${itemType === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
+          <LayoutGrid className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-1">Product Name *</p>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="" className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 shadow-none" />
           </div>
         </div>
 
-        <Tabs value={pricingTab} onValueChange={setPricingTab}>
-          <TabsList className="w-full grid grid-cols-3 h-9">
-            <TabsTrigger value="pricing" className="text-xs">Pricing</TabsTrigger>
-            <TabsTrigger value="stock" className="text-xs">Stock</TabsTrigger>
-            <TabsTrigger value="other" className="text-xs">Other</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pricing" className="space-y-4 mt-4">
-            <div>
-              <Label className="text-xs">Unit</Label>
-              <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Sales Price</Label>
-              <div className="flex gap-2">
-                <Input type="number" value={salesPrice || ""} onChange={e => setSalesPrice(Number(e.target.value))} placeholder="₹ 0" className="flex-1" />
-                <span className="text-xs text-muted-foreground self-center">Without Tax</span>
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs">Purchase Price</Label>
-              <div className="flex gap-2">
-                <Input type="number" value={purchasePrice || ""} onChange={e => setPurchasePrice(Number(e.target.value))} placeholder="₹ 0" className="flex-1" />
-                <span className="text-xs text-muted-foreground self-center">Without Tax</span>
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs">GST</Label>
-              <Select value={String(gstRate)} onValueChange={v => setGstRate(Number(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{GST_RATES.map(r => <SelectItem key={r} value={String(r)}>{r === 0 ? "None" : `${r}%`}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">HSN</Label>
-              <Input value={hsnSac} onChange={e => setHsnSac(e.target.value)} placeholder="Ex: 5202" />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="stock" className="space-y-4 mt-4">
-            <div>
-              <Label className="text-xs">Opening Stock Quantity</Label>
-              <Input type="number" value={stockQty || ""} onChange={e => setStockQty(Number(e.target.value))} placeholder="0" />
-            </div>
-            <div>
-              <Label className="text-xs">Low Stock Alert at</Label>
-              <Input type="number" value={lowStockAlert || ""} onChange={e => setLowStockAlert(Number(e.target.value))} placeholder="0" />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="other" className="space-y-4 mt-4">
-            <div>
-              <Label className="text-xs">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex gap-3 pt-4">
-          <button onClick={() => handleSave(true)} className="text-sm font-semibold text-primary">
-            Save & New<br/><span className="text-[10px] text-muted-foreground font-normal">Create New Item</span>
-          </button>
-          <Button onClick={() => handleSave(false)} className="flex-1">Save</Button>
+        <div className="flex items-center gap-3">
+          <Ticket className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-1">Buying Price ( for Purchase Bill)*</p>
+            <Input type="number" value={purchasePrice || ""} onChange={e => setPurchasePrice(Number(e.target.value))} placeholder="" className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 shadow-none" />
+          </div>
         </div>
+
+        <div className="flex items-center gap-3">
+          <Ticket className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-1">Sell Price ( for Sales Bill ) *</p>
+            <Input type="number" value={salesPrice || ""} onChange={e => setSalesPrice(Number(e.target.value))} placeholder="" className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 shadow-none" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Ticket className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-1">Mrp</p>
+            <Input type="number" value={mrp || ""} onChange={e => setMrp(Number(e.target.value))} placeholder="" className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 shadow-none" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Ticket className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-1">Unit ( max 3 words ) ( nos = number of stock ) *</p>
+            <Input value={unit} onChange={e => setUnit(e.target.value)} placeholder="nos" className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 shadow-none font-bold" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Ticket className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-1">Product Code | HSN | HSC | HST ( optional )</p>
+            <Input value={hsnSac} onChange={e => setHsnSac(e.target.value)} placeholder="" className="border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 shadow-none" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Ticket className="h-5 w-5 text-muted-foreground/50 shrink-0" />
+          <div className="flex-1">
+            <div className="border border-primary/30 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm">Tax</span>
+              <div className="flex items-center gap-1">
+                <Input type="number" value={gstRate || ""} onChange={e => setGstRate(Number(e.target.value))} placeholder="0" className="border-0 w-16 text-right p-0 h-auto focus-visible:ring-0 shadow-none" />
+                <span className="text-sm">₹</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Submit */}
+      <div className="sticky bottom-0 bg-primary">
+        <Button onClick={handleSave} className="w-full h-14 text-lg font-bold rounded-none bg-primary hover:bg-primary/90 text-primary-foreground">
+          Add Product
+        </Button>
       </div>
     </div>
   );
