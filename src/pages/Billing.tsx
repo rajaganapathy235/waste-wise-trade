@@ -18,7 +18,7 @@ import {
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
   FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
   Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search,
-  MessageCircle, Upload, Bell, Repeat, Share2, Image
+  MessageCircle, Upload, Bell, Repeat, Share2, Image, Globe, User
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
