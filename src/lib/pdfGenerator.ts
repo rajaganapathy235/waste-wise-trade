@@ -13,12 +13,15 @@ const COMPANY = {
   contact: "8870796169",
 };
 
-interface PartyInfo {
+export interface PartyInfo {
   name: string;
   address?: string;
   city?: string;
   state?: string;
+  gstin?: string;
+  stateCode?: string;
   contact?: string;
+  email?: string;
 }
 
 /** Draw the common company + party header block and return the Y position after it */
