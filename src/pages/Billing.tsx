@@ -576,38 +576,38 @@ export default function Billing() {
               </button>
             ))}
           </div>
-          {/* Extract unique parties from invoices */}
-          {(() => {
-            const parties = Array.from(new Set(invoices.map(i => i.buyerName))).map(name => {
-              const partyInvoices = invoices.filter(i => i.buyerName === name);
-              const total = partyInvoices.reduce((s, i) => s + i.totalAmount, 0);
-              const isBuyer = partyInvoices.some(i => i.type.includes("sale"));
-              return { name, total, isBuyer, gstin: partyInvoices[0]?.buyerGstin };
-            });
-            return parties.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">No parties yet. Create an invoice to add parties.</div>
-            ) : (
-              <div className="space-y-3">
-                {parties.map(p => (
-                  <Card key={p.name} className="cursor-pointer hover:shadow-md transition-all">
-                    <CardContent className="p-3 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
-                        {p.name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold">{p.name}</p>
-                        <p className="text-[10px] text-muted-foreground">Customer</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-emerald flex items-center gap-0.5">₹ {p.total.toLocaleString("en-IN")} <ArrowDownLeft className="h-3 w-3" /></p>
-                        <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            );
-          })()}
+          {billingParties.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sm font-semibold text-muted-foreground">No Parties Found</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Please search for a different party or create a new party.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {billingParties.map(p => (
+                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate(`/billing/party/${p.id}`)}>
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                      {p.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold">{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground capitalize">{p.type}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-bold flex items-center gap-0.5 ${p.balanceType === "collect" ? "text-emerald" : "text-destructive"}`}>
+                        ₹ {p.openingBalance.toLocaleString("en-IN")}
+                        {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                      </p>
+                      <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          <Button onClick={() => navigate("/billing/create-party")} className="w-full mt-4 gap-1.5">
+            <Plus className="h-4 w-4" /> Create Party
+          </Button>
         </TabsContent>
 
         {/* ─── Items Tab ─── */}
