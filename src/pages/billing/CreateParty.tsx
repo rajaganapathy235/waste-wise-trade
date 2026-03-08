@@ -39,7 +39,7 @@ export default function CreateParty() {
     };
     setParties(prev => [party, ...prev]);
     toast.success("Party created!");
-    navigate(-1);
+    goBack();
   };
 
   return (
