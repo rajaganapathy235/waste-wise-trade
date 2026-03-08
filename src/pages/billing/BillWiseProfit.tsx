@@ -10,6 +10,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function BillWiseProfit() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { invoices, payments } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
