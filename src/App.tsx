@@ -34,6 +34,11 @@ import GSTReports from "./pages/billing/GSTReports";
 import Daybook from "./pages/billing/Daybook";
 import RecurringInvoices from "./pages/billing/RecurringInvoices";
 import PaymentReminders from "./pages/billing/PaymentReminders";
+import BalanceSheet from "./pages/billing/BalanceSheet";
+import PartyReports from "./pages/billing/PartyReports";
+import ItemReports from "./pages/billing/ItemReports";
+import TransactionReports from "./pages/billing/TransactionReports";
+import AllInvoices from "./pages/billing/AllInvoices";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
