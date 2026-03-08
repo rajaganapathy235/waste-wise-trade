@@ -899,7 +899,7 @@ export default function Billing() {
                           </div>
                           <div className="text-right">
                             {inv.totalAmount > 0 && <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>}
-                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(inv.date)}</p>
                           </div>
                         </div>
                         <div className="flex gap-1 mt-1 flex-wrap items-center">
