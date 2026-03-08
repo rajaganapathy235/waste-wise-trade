@@ -8,6 +8,9 @@ import { toast } from "sonner";
 
 export default function AddProduct() {
   const goBack = useSafeBack("/billing");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const incomingState = (location.state as any) || {};
   const [name, setName] = useState("");
   const [buyingPrice, setBuyingPrice] = useState("");
   const [sellPrice, setSellPrice] = useState("");
