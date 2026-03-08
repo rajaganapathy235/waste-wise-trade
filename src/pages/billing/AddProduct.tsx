@@ -59,7 +59,7 @@ export default function AddProduct() {
       setHsn(f.hsn || "");
     }
     if (incomingState?.taxData) {
-      setTax(String(incomingState.taxData.taxAmount || 0));
+      setTax(String(incomingState.taxData.gstTotal || 0));
     }
   }, []);
 
@@ -149,7 +149,7 @@ export default function AddProduct() {
           </div>
           <div className="flex-1 flex items-center border border-emerald rounded-md px-3 py-2">
             <span className="text-sm text-foreground flex-1">Tax</span>
-            <span className="text-sm font-semibold text-foreground">{tax} ₹</span>
+            <span className="text-sm font-semibold text-foreground">{tax} %</span>
           </div>
         </div>
       </div>
