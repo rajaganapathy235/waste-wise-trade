@@ -1,18 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useI18n } from "@/lib/i18n";
 import {
-  Globe, User, Send, Users, Smartphone, FileText, Package,
+  Send, Users, Smartphone, FileText, Package,
   FileSpreadsheet, TrendingUp, Plus
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import BillingHeader from "@/components/BillingHeader";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
 type BillingTab = "send" | "party" | "center" | "bills" | "products";
