@@ -26,6 +26,7 @@ const MOCK_PARTIES: Party[] = [
 ];
 
 export default function PartyTab() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<PartyFilter>("Customers");
   const [search, setSearch] = useState("");
   const filters: PartyFilter[] = ["Customers", "Suppliers"];
