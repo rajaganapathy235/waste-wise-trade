@@ -19,6 +19,7 @@ import Services from "./pages/Services";
 import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 import AddProduct from "./pages/billing/AddProduct";
+import ProductDetail from "./pages/billing/ProductDetail";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
