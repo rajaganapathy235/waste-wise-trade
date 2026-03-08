@@ -101,7 +101,7 @@ export default function AddProduct() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
-      <BillingHeader title="Add Product" showBack onBack={goBack} />
+      <BillingHeader title={editId ? "Edit Product" : "Add Product"} showBack onBack={goBack} />
 
       <div className="flex-1 px-4 pt-6 pb-8 space-y-6">
         {fields.map((f, i) => (
