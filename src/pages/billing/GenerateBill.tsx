@@ -164,7 +164,7 @@ export default function GenerateBill() {
           <CardContent className="p-4">
             {selectedPartyData ? (
               <div>
-                <p className="text-xs text-muted-foreground">To</p>
+                <p className="text-xs text-muted-foreground">{config.partyLabel}</p>
                 <p className="text-sm font-bold text-foreground">{selectedPartyData.name}</p>
                 {selectedPartyData.gstin && (
                   <p className="text-[10px] text-muted-foreground">{selectedPartyData.gstin}</p>
