@@ -19,6 +19,7 @@ import {
   Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search
 } from "lucide-react";
 import { toast } from "sonner";
+import { generateInvoicePdf } from "@/lib/invoicePdf";
 
 // ─── Types ──────────────────────────────────────────────
 export interface InvoiceItem {
