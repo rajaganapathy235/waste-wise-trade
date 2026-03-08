@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { MOCK_PARTIES } from "@/lib/partyData";
+import { generateInvoicePDF } from "@/lib/pdfGenerator";
 import { useSafeBack } from "@/hooks/use-safe-back";
 
 interface BillItem {
