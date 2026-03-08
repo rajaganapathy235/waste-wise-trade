@@ -4,7 +4,7 @@ import type { GSTInvoice } from "@/pages/Billing";
 
 const fmt = (n: number) => n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function generateInvoicePdf(inv: GSTInvoice) {
+export function generateInvoicePdf(inv: GSTInvoice, logoDataUrl?: string) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
   const M = 10; // margin
