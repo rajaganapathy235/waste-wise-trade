@@ -14,6 +14,7 @@ export default function Profile() {
   const { user, setUser, setIsLoggedIn, reviews } = useApp();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
 
   const myReviews = reviews.filter((r) => r.revieweeId === user.id);
   const avgRating = myReviews.length > 0 ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(1) : null;
