@@ -113,8 +113,8 @@ export default function GenerateBill() {
       toast.error("Please add at least one item");
       return;
     }
-    localStorage.setItem("last_invoice_no", String(invoiceNo));
-    toast.success(`Invoice ${invoiceNo} generated successfully!`);
+    localStorage.setItem(config.storageKey, String(invoiceNo));
+    toast.success(`${config.prefix}${invoiceNo} generated successfully!`);
     navigate("/billing");
   };
 
