@@ -69,7 +69,7 @@ export default function TaxDetails() {
           <CardContent className="p-3">
             <div className={rowClass}>
               <span className={labelClass}>GST Total (%)</span>
-              <Input value={gstTotal} onChange={e => setGstTotal(e.target.value)} type="text" className={inputClass} />
+              <Input value={gstTotal} onChange={e => handleGstTotalChange(e.target.value)} type="text" className={inputClass} />
             </div>
           </CardContent>
         </Card>
