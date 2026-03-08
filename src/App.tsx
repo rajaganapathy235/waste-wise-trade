@@ -71,6 +71,7 @@ function AppRoutes() {
       <Route path="/billing/generate-bill" element={<GenerateBill />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/admin" element={<AdminDashboard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
