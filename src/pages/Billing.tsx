@@ -393,30 +393,43 @@ export default function Billing() {
                 <p className="text-[10px] text-destructive font-semibold flex items-center gap-1">To Pay <ArrowUpRight className="h-3 w-3" /></p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/stock-summary")}>
               <CardContent className="p-3">
-                <p className="text-xs font-bold">Stock Value</p>
-                <p className="text-[10px] text-muted-foreground">Value of Items</p>
+                <p className="text-xs font-bold">₹ {stockValue.toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-muted-foreground">Stock Value</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/sales-summary")}>
               <CardContent className="p-3">
                 <p className="text-xs font-bold">₹ {thisWeekSales.toLocaleString("en-IN")}</p>
                 <p className="text-[10px] text-muted-foreground">This week's sale</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/cash-bank")}>
               <CardContent className="p-3">
                 <p className="text-xs font-bold">Total Balance</p>
                 <p className="text-[10px] text-muted-foreground">Cash + Bank Balance</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/reports")}>
               <CardContent className="p-3">
-                <p className="text-xs font-bold">Reports</p>
+                <p className="text-xs font-bold flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Reports</p>
                 <p className="text-[10px] text-muted-foreground">Sales, Party, GST...</p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex gap-2 mb-4">
+            <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/payment-in")}>
+              <ArrowDownLeft className="h-3 w-3 text-emerald" /> Payment In
+            </Button>
+            <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/payment-out")}>
+              <ArrowUpRight className="h-3 w-3 text-destructive" /> Payment Out
+            </Button>
+            <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/expenses")}>
+              <Wallet className="h-3 w-3 text-gold" /> Expense
+            </Button>
           </div>
 
           {/* Recent Transactions */}
