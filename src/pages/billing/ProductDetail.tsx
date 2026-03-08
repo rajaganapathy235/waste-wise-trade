@@ -75,7 +75,7 @@ export default function ProductDetail() {
         title={truncatedName}
         showBack
         onBack={goBack}
-        rightAction={<button className="text-xs font-semibold text-navy-foreground">Edit</button>}
+        rightAction={<button onClick={() => navigate(`/billing/add-product?edit=${product.id}`)} className="text-xs font-semibold text-navy-foreground">Edit</button>}
       />
 
       <div className="flex-1 px-4 pt-4 pb-8 space-y-4">
