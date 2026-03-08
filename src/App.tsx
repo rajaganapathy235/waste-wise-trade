@@ -32,6 +32,8 @@ import ProfitLoss from "./pages/billing/ProfitLoss";
 import CashBank from "./pages/billing/CashBank";
 import GSTReports from "./pages/billing/GSTReports";
 import Daybook from "./pages/billing/Daybook";
+import RecurringInvoices from "./pages/billing/RecurringInvoices";
+import PaymentReminders from "./pages/billing/PaymentReminders";
 
 function App() {
   const { isLoggedIn } = useApp();
