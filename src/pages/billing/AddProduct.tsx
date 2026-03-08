@@ -47,8 +47,17 @@ export default function AddProduct() {
     }
   }, [editId]);
 
-  // Receive tax data back from TaxDetails page
+  // Restore form data when returning from TaxDetails
   useEffect(() => {
+    if (incomingState?.formData) {
+      const f = incomingState.formData;
+      setName(f.name || "");
+      setBuyingPrice(f.buyingPrice || "");
+      setSellPrice(f.sellPrice || "");
+      setMrp(f.mrp || "");
+      setUnit(f.unit || "nos");
+      setHsn(f.hsn || "");
+    }
     if (incomingState?.taxData) {
       setTax(String(incomingState.taxData.taxAmount || 0));
     }
