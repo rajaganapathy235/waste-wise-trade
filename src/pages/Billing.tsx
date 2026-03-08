@@ -422,7 +422,7 @@ export default function Billing() {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 flex-wrap">
             <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/payment-in")}>
               <ArrowDownLeft className="h-3 w-3 text-emerald" /> Payment In
             </Button>
@@ -433,6 +433,70 @@ export default function Billing() {
               <Wallet className="h-3 w-3 text-gold" /> Expense
             </Button>
           </div>
+
+          {/* New Feature Cards */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/recurring")}>
+              <CardContent className="p-3 flex items-center gap-2">
+                <Repeat className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-xs font-bold">Recurring</p>
+                  <p className="text-[10px] text-muted-foreground">Auto invoices</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/reminders")}>
+              <CardContent className="p-3 flex items-center gap-2">
+                <Bell className="h-4 w-4 text-gold" />
+                <div>
+                  <p className="text-xs font-bold">Reminders</p>
+                  <p className="text-[10px] text-muted-foreground">Payment alerts</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Logo Upload */}
+          <Card className="mb-4">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {user.companyLogo ? (
+                    <img src={user.companyLogo} alt="Logo" className="h-8 w-8 rounded object-contain border border-border" />
+                  ) : (
+                    <div className="h-8 w-8 rounded bg-secondary flex items-center justify-center">
+                      <Image className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-bold">Company Logo</p>
+                    <p className="text-[10px] text-muted-foreground">{user.companyLogo ? "Logo set — appears on PDF" : "Upload to show on invoices"}</p>
+                  </div>
+                </div>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setUser((u: any) => ({ ...u, companyLogo: reader.result as string }));
+                          toast.success("Logo uploaded! It will appear on all PDF invoices.");
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <span className="text-[10px] text-primary font-semibold flex items-center gap-1">
+                    <Upload className="h-3 w-3" /> {user.companyLogo ? "Change" : "Upload"}
+                  </span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Recent Transactions */}
           <div>
