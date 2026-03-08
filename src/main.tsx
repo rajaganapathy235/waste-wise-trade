@@ -9,6 +9,7 @@ import { I18nProvider } from "./lib/i18n";
 import App from "./App.tsx";
 import "./index.css";
 
+
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
