@@ -24,6 +24,7 @@ interface Reminder {
 
 export default function PaymentReminders() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { parties, payments } = useBilling();
 
   const [reminders, setReminders] = useState<Reminder[]>(() => {
