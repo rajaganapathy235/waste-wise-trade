@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSafeBack } from "@/hooks/use-safe-back";
 import { useLocation, useNavigate } from "react-router-dom";
+import BillingHeader from "@/components/BillingHeader";
 import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
