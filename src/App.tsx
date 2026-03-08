@@ -39,6 +39,12 @@ import PartyReports from "./pages/billing/PartyReports";
 import ItemReports from "./pages/billing/ItemReports";
 import TransactionReports from "./pages/billing/TransactionReports";
 import AllInvoices from "./pages/billing/AllInvoices";
+import SalesInvoices from "./pages/billing/SalesInvoices";
+import PurchaseInvoices from "./pages/billing/PurchaseInvoices";
+import BillWiseProfit from "./pages/billing/BillWiseProfit";
+import ExpenseCategoryReport from "./pages/billing/ExpenseCategoryReport";
+import PurchaseSummary from "./pages/billing/PurchaseSummary";
+import HSNSummary from "./pages/billing/HSNSummary";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
@@ -89,6 +95,12 @@ function AppRoutes() {
       <Route path="/billing/item-reports" element={<ItemReports />} />
       <Route path="/billing/transaction-reports" element={<TransactionReports />} />
       <Route path="/billing/all-invoices" element={<AllInvoices />} />
+      <Route path="/billing/sales-invoices" element={<SalesInvoices />} />
+      <Route path="/billing/purchase-invoices" element={<PurchaseInvoices />} />
+      <Route path="/billing/bill-wise-profit" element={<BillWiseProfit />} />
+      <Route path="/billing/expense-category" element={<ExpenseCategoryReport />} />
+      <Route path="/billing/purchase-summary" element={<PurchaseSummary />} />
+      <Route path="/billing/hsn-summary" element={<HSNSummary />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
