@@ -25,90 +25,7 @@ import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { exportToCSV } from "@/lib/csvExport";
 
-// ─── Types ──────────────────────────────────────────────
-export interface InvoiceItem {
-  slNo: number;
-  description: string;
-  hsnSac: string;
-  qty: number;
-  unit: string;
-  rate: number;
-  per: string;
-  discount: number;
-  amount: number;
-  gstRate: number;
-}
-
-export interface GSTInvoice {
-  id: string;
-  type: "sale-invoice" | "purchase-invoice" | "quotation" | "delivery-challan" | "proforma" | "purchase-order" | "sale-order" | "job-work" | "credit-note" | "debit-note";
-  invoiceNo: string;
-  date: string;
-  status: "unpaid" | "partial" | "paid";
-  // IRN / Ack
-  irn?: string;
-  ackNo?: string;
-  ackDate?: string;
-  // Seller
-  sellerName: string;
-  sellerGstin: string;
-  sellerAddress: string;
-  sellerState: string;
-  sellerStateCode: string;
-  // Consignee (Ship to)
-  consigneeName: string;
-  consigneeAddress: string;
-  consigneeGstin: string;
-  consigneeState: string;
-  consigneeStateCode: string;
-  // Buyer (Bill to)
-  buyerName: string;
-  buyerGstin: string;
-  buyerAddress: string;
-  buyerState: string;
-  buyerStateCode: string;
-  // Delivery info
-  deliveryNote?: string;
-  modeOfPayment?: string;
-  referenceNo?: string;
-  otherReferences?: string;
-  buyerOrderNo?: string;
-  buyerOrderDate?: string;
-  dispatchDocNo?: string;
-  deliveryNoteDate?: string;
-  dispatchedThrough?: string;
-  destination?: string;
-  termsOfDelivery?: string;
-  // Items
-  items: InvoiceItem[];
-  // Tax
-  placeOfSupply: string;
-  isIgst: boolean;
-  taxableAmount: number;
-  cgstRate: number;
-  sgstRate: number;
-  igstRate: number;
-  cgstAmount: number;
-  sgstAmount: number;
-  igstAmount: number;
-  totalAmount: number;
-  amountInWords: string;
-  taxAmountInWords: string;
-  // Optional
-  referenceInvoiceNo?: string;
-  transportMode?: string;
-  vehicleNo?: string;
-  vehicleType?: string;
-  transporterName?: string;
-  transporterId?: string;
-  lrNo?: string;
-  lrDate?: string;
-  eWayBillNo?: string;
-  eWayBillDate?: string;
-  notes?: string;
-  paymentTerms?: string;
-  declaration?: string;
-}
+// Types are now imported from billingContext
 
 // ─── Helpers ──────────────────────────────────────────────
 const UNITS = ["KG", "MTR", "PCS", "BAG", "BALE", "BOX", "TON", "LTR", "NOS", "SET"];
@@ -182,32 +99,6 @@ const QUICK_LINKS: { key: string; label: string; icon: any; type: GSTInvoice["ty
   { key: "dn", label: "Debit Note", icon: FilePlus, type: "debit-note", color: "text-gold" },
   { key: "inward", label: "Inward Payment", icon: IndianRupee, type: "sale-invoice", color: "text-emerald" },
   { key: "outward", label: "Outward Payment", icon: CreditCard, type: "purchase-invoice", color: "text-destructive" },
-];
-
-// ─── Mock Data ──────────────────────────────────────────
-const MOCK_INVOICES: GSTInvoice[] = [
-  {
-    id: "inv1", type: "sale-invoice", invoiceNo: "SHB/456/20", date: "20-Dec-20",
-    status: "unpaid",
-    irn: "fef1df90406b928db28a62f816debc9bb5256d9375e6-0dc4226653cc23a8c595",
-    ackNo: "112010036563310", ackDate: "21-Dec-20",
-    sellerName: "Surabhi Hardwares, Bangalore", sellerGstin: "29AACCT3705E000",
-    sellerAddress: "HSR Layout, Bangalore", sellerState: "Karnataka", sellerStateCode: "29",
-    consigneeName: "Kiran Enterprises", consigneeAddress: "12th Cross",
-    consigneeGstin: "29AAFFC8126N1ZZ", consigneeState: "Karnataka", consigneeStateCode: "29",
-    buyerName: "Kiran Enterprises", buyerGstin: "29AAFFC8126N1ZZ",
-    buyerAddress: "12th Cross", buyerState: "Karnataka", buyerStateCode: "29",
-    deliveryNote: "Delivery Note", modeOfPayment: "Other References",
-    placeOfSupply: "Karnataka",
-    items: [
-      { slNo: 1, description: "12MM**", hsnSac: "1005", qty: 7, unit: "No", rate: 500, per: "No", discount: 0, amount: 3500, gstRate: 18 },
-    ],
-    isIgst: false, taxableAmount: 3500, cgstRate: 9, sgstRate: 9, igstRate: 0,
-    cgstAmount: 315, sgstAmount: 315, igstAmount: 0, totalAmount: 4130,
-    amountInWords: "Indian Rupee Four Thousand One Hundred Thirty Only",
-    taxAmountInWords: "Indian Rupee Six Hundred Thirty Only",
-    declaration: "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
-  },
 ];
 
 // ─── Component ──────────────────────────────────────────
