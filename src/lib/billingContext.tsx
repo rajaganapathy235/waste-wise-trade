@@ -25,6 +25,7 @@ export interface BillingItem {
   unit: string;
   salesPrice: number;
   purchasePrice: number;
+  mrp?: number;
   gstRate: number;
   hsnSac: string;
   stockQty: number;
