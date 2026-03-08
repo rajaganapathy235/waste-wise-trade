@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling, BillingItem } from "@/lib/billingContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
