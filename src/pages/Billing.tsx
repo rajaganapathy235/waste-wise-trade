@@ -289,10 +289,16 @@ export default function Billing() {
                   onClick={() => navigate("/")}
                   className="relative -mt-7 flex flex-col items-center group"
                 >
-                  <div className="h-[68px] w-[68px] rounded-[22px] rotate-45 bg-gradient-to-br from-emerald to-navy flex items-center justify-center shadow-[0_6px_24px_rgba(5,150,105,0.5)] ring-[5px] ring-card transition-transform group-active:scale-95">
-                    <span className="-rotate-45 text-base font-black text-navy-foreground tracking-tighter leading-none drop-shadow-sm">
-                      H<span className="text-gold">T</span>
-                    </span>
+                  {/* Outer spinning recycle ring */}
+                  <div className="absolute h-[76px] w-[76px] rounded-full border-[3px] border-dashed border-emerald/40 animate-[spin_12s_linear_infinite]" />
+                  <div className="h-[68px] w-[68px] rounded-full bg-gradient-to-br from-emerald via-emerald to-navy flex items-center justify-center shadow-[0_6px_24px_rgba(5,150,105,0.5)] ring-[5px] ring-card transition-transform group-active:scale-95">
+                    {/* Recycle symbol ♻ with HT overlay */}
+                    <div className="relative flex items-center justify-center">
+                      <span className="absolute text-[32px] text-emerald-foreground/20 leading-none">♻</span>
+                      <span className="relative text-base font-black text-navy-foreground tracking-tighter leading-none drop-shadow-md z-10">
+                        H<span className="text-gold">T</span>
+                      </span>
+                    </div>
                   </div>
                 </button>
               );
