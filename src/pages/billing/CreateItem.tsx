@@ -41,7 +41,7 @@ export default function CreateItem() {
     if (andNew) {
       setName(""); setSalesPrice(0); setPurchasePrice(0); setHsnSac(""); setStockQty(0);
     } else {
-      navigate(-1);
+      goBack();
     }
   };
 
