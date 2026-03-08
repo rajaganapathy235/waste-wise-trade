@@ -4,6 +4,7 @@ import { useApp } from "@/lib/appContext";
 import { useBilling } from "@/lib/billingContext";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ import {
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
   FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
   Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search,
-  MessageCircle, Upload, Bell, Repeat, Share2, Image
+  MessageCircle, Upload, Bell, Repeat, Share2, Image, Globe, User
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
@@ -196,7 +197,8 @@ export default function Billing() {
   const navigate = useNavigate();
   const { user, setUser } = useApp();
   const { parties: billingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
-  const { t } = useI18n();
+  const { t, lang, setLang, languages } = useI18n();
+  
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [createOpen, setCreateOpen] = useState(false);
@@ -357,17 +359,41 @@ export default function Billing() {
     { key: "dashboard", label: "Dashboard", icon: Home },
     { key: "parties", label: "Parties", icon: Users },
     { key: "items", label: "Items", icon: Package },
-    { key: "marketplace", label: "HiTex", icon: ArrowRightLeft },
+    { key: "services", label: "Services", icon: BarChart3 },
   ];
 
   return (
-    <div className="px-4 pt-3 pb-32 max-w-lg mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold">GST Billing</h1>
-        <button onClick={() => setActiveTab("quicklinks")} className="flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground rounded-full px-3 py-1.5">
-          <Plus className="h-3.5 w-3.5" /> Create
-        </button>
-      </div>
+    <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background relative">
+      {/* HiTex-style Header */}
+      <header className="sticky top-0 z-30 bg-navy text-navy-foreground px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold tracking-tight">Hi<span className="text-emerald">Tex</span></span>
+          <span className="text-[10px] bg-navy-foreground/10 rounded-full px-2 py-0.5 font-medium">Billing</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setActiveTab("quicklinks")} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+            <Plus className="h-3.5 w-3.5" /> Create
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+              <Globe className="h-3.5 w-3.5" />
+              <span>{languages.find((l) => l.code === lang)?.label?.slice(0, 2).toUpperCase()}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[120px]">
+              {languages.map(({ code, label }) => (
+                <DropdownMenuItem key={code} onClick={() => setLang(code)} className={lang === code ? "bg-accent/10 font-semibold" : ""}>
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button onClick={() => navigate("/profile")} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+            <User className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 overflow-y-auto px-4 pt-3 pb-32">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
         {/* Hidden TabsList — nav is at bottom */}
@@ -756,15 +782,16 @@ export default function Billing() {
           </TabsContent>
         ))}
       </Tabs>
+      </main>
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-card border-t border-border z-30">
         <div className="flex items-center justify-around py-2">
           {BILLING_NAV.map(({ key, label, icon: Icon }) => {
             const isActive = activeTab === key;
-            if (key === "marketplace") {
+            if (key === "services") {
               return (
-                <button key={key} onClick={() => navigate("/")} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                <button key={key} onClick={() => navigate("/services", { state: { from: "billing" } })} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                   <Icon className="h-5 w-5" />
                   <span className="text-[10px] font-medium">{label}</span>
                 </button>
