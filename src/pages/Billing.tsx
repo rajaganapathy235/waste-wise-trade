@@ -193,6 +193,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
 export default function Billing() {
   const navigate = useNavigate();
   const { user } = useApp();
+  const { parties, items, payments, expenses } = useBilling();
   const { t } = useI18n();
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState("dashboard");
