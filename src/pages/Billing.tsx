@@ -297,6 +297,14 @@ export default function Billing() {
     setPlaceOfSupply(inv.placeOfSupply);
     setRefInvoice(inv.referenceInvoiceNo || "");
     setVehicleNo(inv.vehicleNo || "");
+    setVehicleType(inv.vehicleType || "");
+    setTransportMode(inv.transportMode || "");
+    setTransporterName(inv.transporterName || "");
+    setTransporterId(inv.transporterId || "");
+    setLrNo(inv.lrNo || "");
+    setLrDate(inv.lrDate || "");
+    setEWayBillNo(inv.eWayBillNo || "");
+    setEWayBillDate(inv.eWayBillDate || "");
     setNotes(inv.notes || "");
     setPaymentTerms(inv.paymentTerms || "");
     setGstRate(inv.isIgst ? inv.igstRate : inv.cgstRate * 2);
