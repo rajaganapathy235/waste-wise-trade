@@ -44,7 +44,7 @@ export default function Billing() {
   const TABS: { id: BillingTab; label: string; icon: React.ElementType }[] = [
     { id: "send", label: "Send", icon: Send },
     { id: "party", label: "Party", icon: Users },
-    { id: "center", label: "", icon: Smartphone },
+    { id: "center", label: "", icon: Home },
     { id: "bills", label: "Bills", icon: FileText },
     { id: "products", label: "Products", icon: Package },
   ];
