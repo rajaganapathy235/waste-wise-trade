@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
 import {
-  Send, Users, Home, FileText, Package,
+  BarChart3, Users, Home, FileText, Package,
   FileSpreadsheet, TrendingUp, Plus, Search
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,23 +11,10 @@ import { Input } from "@/components/ui/input";
 import BillingHeader from "@/components/BillingHeader";
 import BillsTab from "@/components/billing/BillsTab";
 import PartyTab from "@/components/billing/PartyTab";
+import AnalyticsTab from "@/components/billing/AnalyticsTab";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
-type BillingTab = "home" | "send" | "party" | "center" | "bills" | "products";
-
-interface SendEntry {
-  id: string;
-  name: string;
-  month: string;
-  date: string;
-  billCount: number;
-}
-
-const MOCK_SEND_ENTRIES: SendEntry[] = [
-  { id: "s1", name: "Raja", month: "January-2026", date: "22 Jan,2026", billCount: 10 },
-  { id: "s2", name: "SR COTTON", month: "January-2026", date: "27 Jan,2026", billCount: 5 },
-  { id: "s3", name: "KMK TEXTILES", month: "February-2026", date: "15 Feb,2026", billCount: 3 },
-];
+type BillingTab = "home" | "analytics" | "party" | "center" | "bills" | "products";
 
 interface Product {
   id: string;
@@ -47,8 +34,6 @@ export default function Billing() {
   const navigate = useNavigate();
   const { user } = useApp();
   const [activeTab, setActiveTab] = useState<BillingTab>("home");
-  const [sendSearch, setSendSearch] = useState("");
-  const [sendSubTab, setSendSubTab] = useState<"send" | "overview">("send");
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
@@ -63,7 +48,7 @@ export default function Billing() {
   const billTypes: BillType[] = ["Sales", "Purchase", "Quotation"];
 
   const TABS: { id: BillingTab; label: string; icon: React.ElementType }[] = [
-    { id: "send", label: "Send", icon: Send },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "party", label: "Party", icon: Users },
     { id: "center", label: "", icon: Home },
     { id: "bills", label: "Bills", icon: FileText },
