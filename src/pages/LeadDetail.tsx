@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
+import { useI18n } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,13 +13,14 @@ export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { leads, user, setUser, reviews } = useApp();
+  const { t } = useI18n();
   const lead = leads.find((l) => l.id === id);
 
   if (!lead) {
     return (
       <div className="p-4 text-center text-muted-foreground">
-        Lead not found.
-        <Button variant="link" onClick={() => navigate("/")}>Go back</Button>
+        {t("lead.notFound")}
+        <Button variant="link" onClick={() => navigate("/")}>{t("lead.goBack")}</Button>
       </div>
     );
   }
@@ -26,63 +28,56 @@ export default function LeadDetail() {
   const isSubscribed = user.isSubscribed;
   const isOwnLead = lead.posterId === user.id;
   const isBlocked = user.blockedUsers.includes(lead.posterId);
-
-  // Poster review stats
   const posterReviews = reviews.filter((r) => r.revieweeId === lead.posterId);
   const avgRating = posterReviews.length > 0 ? (posterReviews.reduce((s, r) => s + r.rating, 0) / posterReviews.length).toFixed(1) : null;
 
   const handleBlock = () => {
     setUser((u) => ({ ...u, blockedUsers: [...u.blockedUsers, lead.posterId] }));
-    toast.success("User blocked");
+    toast.success(t("lead.userBlocked"));
   };
-
   const handleUnblock = () => {
     setUser((u) => ({ ...u, blockedUsers: u.blockedUsers.filter((bid) => bid !== lead.posterId) }));
-    toast.success("User unblocked");
+    toast.success(t("lead.userUnblocked"));
   };
-
   const handleChat = () => {
-    if (!isSubscribed) { toast.error("Premium subscription required for chat"); return; }
+    if (!isSubscribed) { toast.error(t("lead.premiumRequired")); return; }
     navigate(`/chat/${lead.id}`);
   };
 
   return (
     <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-4 w-4" /> {t("lead.back")}
       </button>
 
-      {/* Title */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
           {lead.leadType === "Buy" ? <ShoppingCart className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4 text-emerald" />}
           <h1 className="text-xl font-bold text-foreground">{lead.materialType}</h1>
           <Badge variant="outline" className="text-[10px]">{lead.category}</Badge>
-          {lead.status === "Sold" && <Badge variant="secondary" className="text-[10px]">Sold</Badge>}
+          {lead.status === "Sold" && <Badge variant="secondary" className="text-[10px]">{t("lead.sold")}</Badge>}
         </div>
         <p className="text-xs text-muted-foreground">
-          {lead.leadType === "Buy" ? "Buyer" : "Seller"} · Posted {lead.postedAt} · {lead.posterRole}
+          {lead.leadType === "Buy" ? t("lead.buyer") : t("lead.seller")} · {t("lead.posted")} {lead.postedAt} · {lead.posterRole}
         </p>
       </div>
 
-      {/* Lead Type Banner */}
       <div className={`rounded-lg p-3 mb-4 ${lead.leadType === "Buy" ? "bg-primary/10" : "bg-emerald/10"}`}>
         <p className={`text-xs font-semibold ${lead.leadType === "Buy" ? "text-primary" : "text-emerald"}`}>
-          {lead.leadType === "Buy" ? "🛒 This user wants to BUY this material" : "🏷️ This user wants to SELL this material"}
+          {lead.leadType === "Buy" ? t("lead.wantsBuy") : t("lead.wantsSell")}
         </p>
       </div>
 
-      {/* Price & Quantity */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">{lead.leadType === "Buy" ? "Offering" : "Asking"} Price</p>
-            <p className="text-2xl font-bold text-emerald">₹{lead.pricePerKg}<span className="text-xs font-normal text-muted-foreground">/kg</span></p>
+            <p className="text-xs text-muted-foreground mb-1">{lead.leadType === "Buy" ? t("lead.offeringPrice") : t("lead.askingPrice")}</p>
+            <p className="text-2xl font-bold text-emerald">₹{lead.pricePerKg}<span className="text-xs font-normal text-muted-foreground">{t("lead.perKg")}</span></p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Quantity</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("lead.quantity")}</p>
             <div className="flex items-center justify-center gap-1">
               <Package className="h-4 w-4 text-muted-foreground" />
               <p className="text-2xl font-bold">{lead.quantity.toLocaleString()}<span className="text-xs font-normal text-muted-foreground"> kg</span></p>
@@ -91,26 +86,25 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      {/* Specs */}
       <Card className="mb-4">
         <CardContent className="p-4">
-          <h2 className="text-sm font-semibold mb-3">Specifications</h2>
+          <h2 className="text-sm font-semibold mb-3">{t("lead.specs")}</h2>
           <div className="grid grid-cols-3 gap-3">
             {lead.specs.color && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.color")}</p>
                 <p className="text-sm font-medium">{lead.specs.color}</p>
               </div>
             )}
             {lead.specs.trashPercent !== undefined && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Trash %</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.trash")}</p>
                 <p className="text-sm font-medium">{lead.specs.trashPercent}%</p>
               </div>
             )}
             {lead.specs.count && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Count</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.count")}</p>
                 <p className="text-sm font-medium">{lead.specs.count}</p>
               </div>
             )}
@@ -118,7 +112,6 @@ export default function LeadDetail() {
         </CardContent>
       </Card>
 
-      {/* Location + Transport */}
       <Card className="mb-4">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -127,13 +120,12 @@ export default function LeadDetail() {
               <span className="text-sm">{lead.locationDistrict}, Tamil Nadu</span>
             </div>
             <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/transport")}>
-              <Truck className="h-3.5 w-3.5 mr-1" /> Book Transport
+              <Truck className="h-3.5 w-3.5 mr-1" /> {t("lead.bookTransport")}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Poster Trust Score */}
       {avgRating && (
         <Card className="mb-4">
           <CardContent className="p-4">
@@ -141,11 +133,11 @@ export default function LeadDetail() {
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 fill-gold text-gold" />
                 <span className="text-sm font-semibold">{avgRating}</span>
-                <span className="text-xs text-muted-foreground">({posterReviews.length} review{posterReviews.length !== 1 ? "s" : ""})</span>
+                <span className="text-xs text-muted-foreground">({posterReviews.length} {t("profile.reviews")})</span>
               </div>
               {!isOwnLead && lead.status === "Sold" && (
                 <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/review/${lead.id}`)}>
-                  <Star className="h-3.5 w-3.5 mr-1" /> Rate Deal
+                  <Star className="h-3.5 w-3.5 mr-1" /> {t("lead.rateDeal")}
                 </Button>
               )}
             </div>
@@ -153,13 +145,12 @@ export default function LeadDetail() {
         </Card>
       )}
 
-      {/* Contact Section */}
       <Card className="mb-4 overflow-hidden">
         <CardContent className="p-0">
           {isSubscribed ? (
             <div className="p-4 space-y-3">
               <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                <Crown className="h-4 w-4 text-gold" /> {lead.leadType === "Buy" ? "Buyer" : "Seller"} Contact
+                <Crown className="h-4 w-4 text-gold" /> {lead.leadType === "Buy" ? t("lead.buyerContact") : t("lead.sellerContact")}
               </h2>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -172,11 +163,11 @@ export default function LeadDetail() {
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleChat} className="flex-1 bg-emerald hover:bg-emerald/90 text-emerald-foreground">
-                  <MessageCircle className="h-4 w-4 mr-1" /> Chat
+                  <MessageCircle className="h-4 w-4 mr-1" /> {t("lead.chat")}
                 </Button>
                 {!isOwnLead && (
                   <Button variant="outline" className="flex-1" onClick={() => navigate(`/review/${lead.id}`)}>
-                    <Star className="h-4 w-4 mr-1" /> Review
+                    <Star className="h-4 w-4 mr-1" /> {t("lead.review")}
                   </Button>
                 )}
               </div>
@@ -192,10 +183,10 @@ export default function LeadDetail() {
               </div>
               <div className="absolute inset-0 bg-card/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
                 <Lock className="h-6 w-6 text-gold mb-2" />
-                <p className="text-sm font-semibold text-foreground mb-1">Contact Hidden</p>
-                <p className="text-xs text-muted-foreground text-center mb-3">Unlock contact details & chat with a Premium subscription</p>
+                <p className="text-sm font-semibold text-foreground mb-1">{t("lead.contactHidden")}</p>
+                <p className="text-xs text-muted-foreground text-center mb-3">{t("lead.unlockContact")}</p>
                 <Button className="bg-gold hover:bg-gold/90 text-gold-foreground font-semibold px-6">
-                  <Crown className="h-4 w-4 mr-1" /> Premium Unlock — ₹10,000/yr
+                  <Crown className="h-4 w-4 mr-1" /> {t("lead.premiumUnlock")}
                 </Button>
               </div>
             </div>
@@ -203,33 +194,30 @@ export default function LeadDetail() {
         </CardContent>
       </Card>
 
-      {/* Report / Block */}
       {!isOwnLead && (
         <div className="flex gap-2 mb-4">
-          <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => toast.success("Report submitted.")}>
-            <Flag className="h-3.5 w-3.5 mr-1" /> Report
+          <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => toast.success(t("lead.reportSubmitted"))}>
+            <Flag className="h-3.5 w-3.5 mr-1" /> {t("lead.report")}
           </Button>
           {isBlocked ? (
             <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={handleUnblock}>
-              <Shield className="h-3.5 w-3.5 mr-1" /> Unblock
+              <Shield className="h-3.5 w-3.5 mr-1" /> {t("lead.unblock")}
             </Button>
           ) : (
             <Button variant="outline" size="sm" className="flex-1 text-xs text-destructive" onClick={handleBlock}>
-              <Ban className="h-3.5 w-3.5 mr-1" /> Block User
+              <Ban className="h-3.5 w-3.5 mr-1" /> {t("lead.block")}
             </Button>
           )}
         </div>
       )}
 
-      {/* Reviews section */}
       <div className="mb-4">
-        <h2 className="text-sm font-semibold mb-2">Reviews for {lead.posterName}</h2>
+        <h2 className="text-sm font-semibold mb-2">{t("lead.reviewsFor")} {lead.posterName}</h2>
         <ReviewsList userId={lead.posterId} />
       </div>
 
-      {/* Demo toggle */}
       <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
-        <span className="text-xs text-muted-foreground">Demo: Toggle subscription</span>
+        <span className="text-xs text-muted-foreground">{t("lead.demoToggle")}</span>
         <Switch checked={isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
       </div>
     </div>
