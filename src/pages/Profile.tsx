@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Globe, ArrowLeft } from "lucide-react";
+import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ReviewsList } from "./Reviews";
