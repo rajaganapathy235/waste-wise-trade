@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { exportToCSV } from "@/lib/csvExport";
+import { formatDisplayDate } from "@/components/DateRangeFilter";
 
 // ─── Helpers ──────────────────────────────────────────────
 const UNITS = ["KG", "MTR", "PCS", "BAG", "BALE", "BOX", "TON", "LTR", "NOS", "SET"];
