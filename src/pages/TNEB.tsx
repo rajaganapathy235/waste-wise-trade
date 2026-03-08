@@ -1,14 +1,16 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Zap, Calendar, IndianRupee, Info } from "lucide-react";
+import { Zap, Calendar, IndianRupee, Info, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export default function TNEB() {
+  const navigate = useNavigate();
   const { user, setUser } = useApp();
   const { t } = useI18n();
   const [consumerNo, setConsumerNo] = useState(user.ebConsumerNumber || "");
@@ -23,7 +25,10 @@ export default function TNEB() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-8">
+    <div className="px-4 pt-3 pb-8">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+        <ArrowLeft className="h-4 w-4" /> Back
+      </button>
       <h1 className="text-lg font-bold mb-1">{t("tneb.title")}</h1>
       <p className="text-xs text-muted-foreground mb-4">{t("tneb.subtitle")}</p>
 
