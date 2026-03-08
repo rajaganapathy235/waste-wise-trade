@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function StockSummary() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { items } = useBilling();
 
   const productItems = items.filter(i => i.itemType === "product" && i.stockQty > 0);
