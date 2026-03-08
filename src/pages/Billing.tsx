@@ -1211,7 +1211,7 @@ export default function Billing() {
 
               {/* Download Button */}
               <div className="px-3 pb-3">
-                <Button variant="outline" className="w-full gap-1 text-xs" onClick={() => toast.success("PDF download coming soon!")}>
+                <Button variant="outline" className="w-full gap-1 text-xs" onClick={() => { generateInvoicePdf(previewInvoice!); toast.success("PDF downloaded!"); }}>
                   <Download className="h-3.5 w-3.5" /> Download PDF
                 </Button>
               </div>
