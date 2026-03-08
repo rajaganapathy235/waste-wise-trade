@@ -205,6 +205,7 @@ export default function Billing() {
   const [createOpen, setCreateOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<GSTInvoice | null>(null);
   const [docType, setDocType] = useState<GSTInvoice["type"]>("sale-invoice");
+  const [partyFilter, setPartyFilter] = useState<"all" | "collect" | "pay">("all");
 
   // ─── Form State ──────────────────────────────────
   const [buyerName, setBuyerName] = useState("");
