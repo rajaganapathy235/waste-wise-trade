@@ -10,6 +10,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function BalanceSheet() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { parties, items, payments, expenses, bankAccounts } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
