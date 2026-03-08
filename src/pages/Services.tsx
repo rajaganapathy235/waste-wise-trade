@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, BarChart3, Flame, Truck, Receipt, ShieldCheck, Landmark } from "lucide-react";
+import { TrendingUp, BarChart3, Flame, Truck, Receipt, ShieldCheck, Landmark, Zap } from "lucide-react";
 
 const SERVICES = [
   { key: "services.marketPulse", icon: TrendingUp, color: "text-emerald", path: "/market-pulse" },
