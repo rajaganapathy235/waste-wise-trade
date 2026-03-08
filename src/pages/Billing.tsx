@@ -16,7 +16,8 @@ import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, Plus, FileText, Truck, RotateCcw, Download, Trash2,
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
   FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
-  Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search
+  Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search,
+  MessageCircle, Upload, Bell, Repeat, Share2, Image
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
@@ -193,7 +194,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
 // ─── Component ──────────────────────────────────────────
 export default function Billing() {
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { user, setUser } = useApp();
   const { parties: billingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
   const { t } = useI18n();
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
@@ -421,7 +422,7 @@ export default function Billing() {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 flex-wrap">
             <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/payment-in")}>
               <ArrowDownLeft className="h-3 w-3 text-emerald" /> Payment In
             </Button>
@@ -432,6 +433,70 @@ export default function Billing() {
               <Wallet className="h-3 w-3 text-gold" /> Expense
             </Button>
           </div>
+
+          {/* New Feature Cards */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/recurring")}>
+              <CardContent className="p-3 flex items-center gap-2">
+                <Repeat className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-xs font-bold">Recurring</p>
+                  <p className="text-[10px] text-muted-foreground">Auto invoices</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/reminders")}>
+              <CardContent className="p-3 flex items-center gap-2">
+                <Bell className="h-4 w-4 text-gold" />
+                <div>
+                  <p className="text-xs font-bold">Reminders</p>
+                  <p className="text-[10px] text-muted-foreground">Payment alerts</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Logo Upload */}
+          <Card className="mb-4">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {user.companyLogo ? (
+                    <img src={user.companyLogo} alt="Logo" className="h-8 w-8 rounded object-contain border border-border" />
+                  ) : (
+                    <div className="h-8 w-8 rounded bg-secondary flex items-center justify-center">
+                      <Image className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-bold">Company Logo</p>
+                    <p className="text-[10px] text-muted-foreground">{user.companyLogo ? "Logo set — appears on PDF" : "Upload to show on invoices"}</p>
+                  </div>
+                </div>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setUser((u: any) => ({ ...u, companyLogo: reader.result as string }));
+                          toast.success("Logo uploaded! It will appear on all PDF invoices.");
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <span className="text-[10px] text-primary font-semibold flex items-center gap-1">
+                    <Upload className="h-3 w-3" /> {user.companyLogo ? "Change" : "Upload"}
+                  </span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Recent Transactions */}
           <div>
@@ -599,7 +664,13 @@ export default function Billing() {
                         ₹ {p.openingBalance.toLocaleString("en-IN")}
                         {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                       </p>
-                      <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                      <button onClick={(e) => {
+                        e.stopPropagation();
+                        const phone = p.phone.replace(/[^0-9]/g, "");
+                        const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${p.openingBalance.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
+                        window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
+                        toast.success("Opening WhatsApp...");
+                      }} className="text-[10px] text-primary font-semibold">Send Reminder</button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1209,11 +1280,70 @@ export default function Billing() {
                 </div>
               </div>
 
-              {/* Download Button */}
-              <div className="px-3 pb-3">
-                <Button variant="outline" className="w-full gap-1 text-xs" onClick={() => { generateInvoicePdf(previewInvoice!); toast.success("PDF downloaded!"); }}>
+              {/* Action Buttons */}
+              <div className="px-3 pb-3 space-y-2">
+                <Button variant="outline" className="w-full gap-1 text-xs" onClick={() => { generateInvoicePdf(previewInvoice!, user.companyLogo); toast.success("PDF downloaded!"); }}>
                   <Download className="h-3.5 w-3.5" /> Download PDF
                 </Button>
+                <Button
+                  variant="outline"
+                  className="w-full gap-1 text-xs text-emerald border-emerald/30"
+                  onClick={() => {
+                    const phone = previewInvoice!.buyerGstin ? "" : "";
+                    const msg = encodeURIComponent(
+                      `📄 *${typeLabel(previewInvoice!.type)}*\n\nInvoice: ${previewInvoice!.invoiceNo}\nDate: ${previewInvoice!.date}\nAmount: ₹${previewInvoice!.totalAmount.toLocaleString("en-IN")}\n\nFrom: ${previewInvoice!.sellerName}\nGSTIN: ${previewInvoice!.sellerGstin}\n\nPlease find the invoice details above. PDF copy available on request.\n\nThank you! 🙏`
+                    );
+                    window.open(`https://wa.me/?text=${msg}`, "_blank");
+                    toast.success("Opening WhatsApp...");
+                  }}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> Share via WhatsApp
+                </Button>
+                {/* Create Credit/Debit Note from this invoice */}
+                {(previewInvoice!.type === "sale-invoice" || previewInvoice!.type === "purchase-invoice") && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 gap-1 text-[10px] text-destructive border-destructive/30"
+                      onClick={() => {
+                        setPreviewInvoice(null);
+                        setDocType("credit-note");
+                        setBuyerName(previewInvoice!.buyerName);
+                        setBuyerGstin(previewInvoice!.buyerGstin);
+                        setBuyerAddress(previewInvoice!.buyerAddress);
+                        setBuyerState(previewInvoice!.buyerState);
+                        setRefInvoice(previewInvoice!.invoiceNo);
+                        setGstRate(previewInvoice!.isIgst ? previewInvoice!.igstRate : previewInvoice!.cgstRate * 2);
+                        setItems(previewInvoice!.items.map(i => ({ ...i })));
+                        setCreateOpen(true);
+                        toast.info("Creating Credit Note against " + previewInvoice!.invoiceNo);
+                      }}
+                    >
+                      <FileMinus className="h-3 w-3" /> Credit Note
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 gap-1 text-[10px] text-gold border-gold/30"
+                      onClick={() => {
+                        setPreviewInvoice(null);
+                        setDocType("debit-note");
+                        setBuyerName(previewInvoice!.buyerName);
+                        setBuyerGstin(previewInvoice!.buyerGstin);
+                        setBuyerAddress(previewInvoice!.buyerAddress);
+                        setBuyerState(previewInvoice!.buyerState);
+                        setRefInvoice(previewInvoice!.invoiceNo);
+                        setGstRate(previewInvoice!.isIgst ? previewInvoice!.igstRate : previewInvoice!.cgstRate * 2);
+                        setItems(previewInvoice!.items.map(i => ({ ...i })));
+                        setCreateOpen(true);
+                        toast.info("Creating Debit Note against " + previewInvoice!.invoiceNo);
+                      }}
+                    >
+                      <FilePlus className="h-3 w-3" /> Debit Note
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}

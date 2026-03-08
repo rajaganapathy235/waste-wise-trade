@@ -85,8 +85,9 @@ export interface UserProfile {
   blockedUsers: string[];
   verificationDocuments?: { selfie?: string; gstCert?: string; incorpCert?: string };
   verificationStatus: "none" | "pending" | "verified" | "rejected";
-  trustScore: number; // average rating
+  trustScore: number;
   totalReviews: number;
+  companyLogo?: string; // base64 data URL
 }
 
 export const MATERIAL_TYPES: Record<LeadCategory, string[]> = {

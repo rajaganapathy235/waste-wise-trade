@@ -32,6 +32,8 @@ import ProfitLoss from "./pages/billing/ProfitLoss";
 import CashBank from "./pages/billing/CashBank";
 import GSTReports from "./pages/billing/GSTReports";
 import Daybook from "./pages/billing/Daybook";
+import RecurringInvoices from "./pages/billing/RecurringInvoices";
+import PaymentReminders from "./pages/billing/PaymentReminders";
 
 function App() {
   const { isLoggedIn } = useApp();
@@ -75,6 +77,8 @@ function App() {
       <Route path="/billing/cash-bank" element={<CashBank />} />
       <Route path="/billing/gst-reports" element={<GSTReports />} />
       <Route path="/billing/daybook" element={<Daybook />} />
+      <Route path="/billing/recurring" element={<RecurringInvoices />} />
+      <Route path="/billing/reminders" element={<PaymentReminders />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
