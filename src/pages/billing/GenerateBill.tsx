@@ -407,7 +407,7 @@ export default function GenerateBill() {
         {/* GST Type */}
         <div className="px-2 py-3">
           <div className="flex items-center gap-4">
-            <p className="text-sm font-bold text-foreground">बिल का प्रकार</p>
+            <p className="text-sm font-bold text-foreground">Bill Type</p>
             {(["CGST/SGST", "IGST"] as GstType[]).map((type) => (
               <label key={type} className="flex items-center gap-1.5 cursor-pointer" onClick={() => setGstType(type)}>
                 <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${gstType === type ? "border-accent" : "border-muted-foreground"}`}>
