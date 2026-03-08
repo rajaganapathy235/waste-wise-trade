@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSafeBack } from "@/hooks/use-safe-back";
 import { useLocation, useNavigate } from "react-router-dom";
+import BillingHeader from "@/components/BillingHeader";
 import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,11 +42,7 @@ export default function TaxDetails() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-muted/30">
-      {/* Header */}
-      <header className="bg-emerald text-emerald-foreground px-4 py-3 flex items-center gap-3">
-        <button onClick={goBack}><ArrowLeft className="h-5 w-5" /></button>
-        <h1 className="text-base font-bold">Tax Details</h1>
-      </header>
+      <BillingHeader title="Tax Details" showBack onBack={goBack} />
 
       <div className="flex-1 px-4 pt-4 pb-8 space-y-3">
         {/* Total Price */}

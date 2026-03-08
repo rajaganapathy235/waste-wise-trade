@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
-import { ArrowLeft, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
+import BillingHeader from "@/components/BillingHeader";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Product {
@@ -58,10 +59,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
-        <header className="bg-emerald text-emerald-foreground px-4 py-3 flex items-center gap-3">
-          <button onClick={goBack}><ArrowLeft className="h-5 w-5" /></button>
-          <h1 className="text-base font-bold">Product Not Found</h1>
-        </header>
+        <BillingHeader title="Not Found" showBack onBack={goBack} />
       </div>
     );
   }
@@ -73,14 +71,12 @@ export default function ProductDetail() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
-      {/* Header */}
-      <header className="bg-emerald text-emerald-foreground px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={goBack}><ArrowLeft className="h-5 w-5" /></button>
-          <h1 className="text-base font-bold truncate max-w-[200px]">{truncatedName}</h1>
-        </div>
-        <button className="text-sm font-semibold">Edit</button>
-      </header>
+      <BillingHeader
+        title={truncatedName}
+        showBack
+        onBack={goBack}
+        rightAction={<button className="text-xs font-semibold text-navy-foreground">Edit</button>}
+      />
 
       <div className="flex-1 px-4 pt-4 pb-8 space-y-4">
         {/* Product Info Card */}
