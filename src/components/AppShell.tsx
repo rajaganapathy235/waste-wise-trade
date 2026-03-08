@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, FileText, Zap, Grid3X3, MessageCircle, User } from "lucide-react";
+import { Home, FileText, Wrench, User, Grid3X3, MessageCircle } from "lucide-react";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
 
