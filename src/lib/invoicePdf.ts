@@ -43,14 +43,40 @@ export function generateInvoicePdf(inv: GSTInvoice, logoDataUrl?: string) {
   // ─── Seller + Invoice Meta ───
   const sellerY = y;
   const midX = M + cW * 0.58;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.text(inv.sellerName, M + 2, y + 4.5);
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.text(inv.sellerAddress, M + 2, y + 8);
-  doc.text(`GSTIN/UIN: ${inv.sellerGstin}`, M + 2, y + 11.5);
-  doc.text(`State Name : ${inv.sellerState}, Code : ${inv.sellerStateCode}`, M + 2, y + 15);
+
+  // Logo
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, "PNG", M + 2, y + 1, 14, 14);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text(inv.sellerName, M + 18, y + 5.5);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text(inv.sellerAddress, M + 18, y + 9);
+      doc.text(`GSTIN/UIN: ${inv.sellerGstin}`, M + 18, y + 12.5);
+      doc.text(`State Name : ${inv.sellerState}, Code : ${inv.sellerStateCode}`, M + 2, y + 17);
+    } catch {
+      // Fallback without logo
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text(inv.sellerName, M + 2, y + 4.5);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text(inv.sellerAddress, M + 2, y + 8);
+      doc.text(`GSTIN/UIN: ${inv.sellerGstin}`, M + 2, y + 11.5);
+      doc.text(`State Name : ${inv.sellerState}, Code : ${inv.sellerStateCode}`, M + 2, y + 15);
+    }
+  } else {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(inv.sellerName, M + 2, y + 4.5);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.text(inv.sellerAddress, M + 2, y + 8);
+    doc.text(`GSTIN/UIN: ${inv.sellerGstin}`, M + 2, y + 11.5);
+    doc.text(`State Name : ${inv.sellerState}, Code : ${inv.sellerStateCode}`, M + 2, y + 15);
+  }
 
   // Right side — invoice meta
   doc.setFontSize(7);
