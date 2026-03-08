@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, FileText, Search, FileDown, Truck, XCircle, Clock, CheckCircle2 } from "lucide-react";
 import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 const statusConfig = {
   unpaid: { label: "Unpaid", color: "bg-destructive/10 text-destructive", icon: XCircle },
@@ -35,8 +36,9 @@ export default function AllInvoices() {
   const { invoices } = useBilling();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "sale" | "purchase" | "challan" | "cn-dn" | "other">("all");
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
-  let filtered = invoices;
+  let filtered = invoices.filter(i => isInDateRange(i.date, dateRange));
   if (filter === "sale") filtered = filtered.filter(i => i.type === "sale-invoice");
   else if (filter === "purchase") filtered = filtered.filter(i => i.type === "purchase-invoice");
   else if (filter === "challan") filtered = filtered.filter(i => i.type === "delivery-challan");
@@ -71,7 +73,8 @@ export default function AllInvoices() {
         </button>
       </div>
 
-      {/* Summary */}
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+
       <div className="grid grid-cols-3 gap-3 mb-4">
         <Card>
           <CardContent className="p-3 text-center">
@@ -93,13 +96,11 @@ export default function AllInvoices() {
         </Card>
       </div>
 
-      {/* Search */}
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search invoices..." className="pl-9 h-8 text-xs" />
       </div>
 
-      {/* Filters */}
       <div className="flex gap-2 mb-4 overflow-x-auto">
         {([
           { val: "all" as const, label: `All (${invoices.length})` },
@@ -116,7 +117,6 @@ export default function AllInvoices() {
         ))}
       </div>
 
-      {/* Invoice List */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
           <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />

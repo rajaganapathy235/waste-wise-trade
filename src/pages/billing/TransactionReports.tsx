@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Search, FileDown, ShoppingCart, Wallet } from "lucide-react";
 import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function TransactionReports() {
   const navigate = useNavigate();
   const { payments, expenses } = useBilling();
   const [filter, setFilter] = useState<"all" | "in" | "out" | "expense">("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
-  // Combine all
   const allTxns = [
     ...payments.map(p => ({
       id: p.id, date: p.date, label: p.type === "in" ? "Payment Received" : "Payment Made",
@@ -27,19 +28,19 @@ export default function TransactionReports() {
     })),
   ].sort((a, b) => b.date.localeCompare(a.date));
 
-  let filtered = filter === "all" ? allTxns : allTxns.filter(t => t.type === filter);
+  let filtered = allTxns.filter(t => isInDateRange(t.date, dateRange));
+  if (filter !== "all") filtered = filtered.filter(t => t.type === filter);
   if (search) {
     const sq = search.toLowerCase();
     filtered = filtered.filter(t => t.party.toLowerCase().includes(sq) || t.label.toLowerCase().includes(sq) || t.note.toLowerCase().includes(sq));
   }
 
-  const totalIn = allTxns.filter(t => t.type === "in").reduce((s, t) => s + t.amount, 0);
-  const totalOut = allTxns.filter(t => t.type === "out").reduce((s, t) => s + t.amount, 0);
-  const totalExp = allTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const totalIn = filtered.filter(t => t.type === "in").reduce((s, t) => s + t.amount, 0);
+  const totalOut = filtered.filter(t => t.type === "out").reduce((s, t) => s + t.amount, 0);
+  const totalExp = filtered.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
 
-  // Group by mode
   const byMode: Record<string, number> = {};
-  allTxns.forEach(t => { byMode[t.mode] = (byMode[t.mode] || 0) + t.amount; });
+  filtered.forEach(t => { byMode[t.mode] = (byMode[t.mode] || 0) + t.amount; });
 
   const handleExport = () => {
     const headers = ["Date", "Type", "Party/Category", "Amount (₹)", "Mode", "Note", "Invoice Ref"];
@@ -60,7 +61,8 @@ export default function TransactionReports() {
         </button>
       </div>
 
-      {/* Summary */}
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+
       <div className="grid grid-cols-3 gap-3 mb-4">
         <Card className="bg-emerald/5">
           <CardContent className="p-3 text-center">
@@ -82,22 +84,22 @@ export default function TransactionReports() {
         </Card>
       </div>
 
-      {/* Payment Mode Breakdown */}
-      <Card className="mb-4">
-        <CardContent className="p-3">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">By Payment Mode</p>
-          <div className="flex gap-3 flex-wrap">
-            {Object.entries(byMode).map(([mode, amt]) => (
-              <div key={mode} className="text-center">
-                <p className="text-xs font-bold">₹{amt.toLocaleString("en-IN")}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{mode}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {Object.keys(byMode).length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="p-3">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">By Payment Mode</p>
+            <div className="flex gap-3 flex-wrap">
+              {Object.entries(byMode).map(([mode, amt]) => (
+                <div key={mode} className="text-center">
+                  <p className="text-xs font-bold">₹{amt.toLocaleString("en-IN")}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{mode}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Search + Filter */}
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions..." className="pl-9 h-8 text-xs" />
@@ -116,7 +118,6 @@ export default function TransactionReports() {
         ))}
       </div>
 
-      {/* Transaction List */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">No transactions found</div>
       ) : (

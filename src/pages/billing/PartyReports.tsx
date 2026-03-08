@@ -6,25 +6,29 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Users, Search, FileDown } from "lucide-react";
 import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function PartyReports() {
   const navigate = useNavigate();
   const { parties, payments } = useBilling();
   const [filter, setFilter] = useState<"all" | "collect" | "pay">("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+
+  const filteredPayments = payments.filter(p => isInDateRange(p.date, dateRange));
 
   const getOutstanding = (p: typeof parties[0]) => {
     if (p.balanceType === "collect") {
-      const received = payments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
+      const received = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
       return Math.max(0, p.openingBalance - received);
     } else {
-      const paid = payments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
+      const paid = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
       return Math.max(0, p.openingBalance - paid);
     }
   };
 
-  const getTxnCount = (partyId: string) => payments.filter(p => p.partyId === partyId).length;
-  const getTotalVolume = (partyId: string) => payments.filter(p => p.partyId === partyId).reduce((s, p) => s + p.amount, 0);
+  const getTxnCount = (partyId: string) => filteredPayments.filter(p => p.partyId === partyId).length;
+  const getTotalVolume = (partyId: string) => filteredPayments.filter(p => p.partyId === partyId).reduce((s, p) => s + p.amount, 0);
 
   let filtered = filter === "all" ? parties : parties.filter(p => p.balanceType === filter);
   if (search) {
@@ -54,7 +58,8 @@ export default function PartyReports() {
         </button>
       </div>
 
-      {/* Summary */}
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+
       <div className="grid grid-cols-3 gap-3 mb-4">
         <Card className="bg-emerald/5">
           <CardContent className="p-3 text-center">
@@ -76,7 +81,6 @@ export default function PartyReports() {
         </Card>
       </div>
 
-      {/* Search + Filter */}
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search parties..." className="pl-9 h-8 text-xs" />
@@ -90,7 +94,6 @@ export default function PartyReports() {
         ))}
       </div>
 
-      {/* Party List */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">No parties found</div>
       ) : (
