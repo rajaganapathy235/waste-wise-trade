@@ -594,7 +594,50 @@ export default function Billing() {
           })()}
         </TabsContent>
 
-        {/* Reuse for sub-filters */}
+        {/* ─── Items Tab ─── */}
+        <TabsContent value="items" className="mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex gap-2 overflow-x-auto">
+              <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">Low Stock</button>
+              <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">All Items</button>
+            </div>
+          </div>
+          {/* Mock items from invoices */}
+          {(() => {
+            const allItems = invoices.flatMap(inv => inv.items.map(item => ({ ...item, invoiceType: inv.type })));
+            const uniqueItems = Array.from(new Map(allItems.map(i => [i.description, i])).values());
+            return uniqueItems.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">No items yet. Create an invoice to add items.</div>
+            ) : (
+              <div className="space-y-3">
+                {uniqueItems.map((item, idx) => (
+                  <Card key={idx} className="cursor-pointer hover:shadow-md transition-all">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                        {item.description.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold">{item.description}</p>
+                        <p className="text-[10px] text-muted-foreground">HSN: {item.hsnSac || "N/A"}</p>
+                        <div className="flex gap-4 mt-1">
+                          <span className="text-[10px] text-muted-foreground">Sales: ₹{item.rate.toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold">{item.qty}</p>
+                        <p className="text-[10px] text-muted-foreground">{item.unit}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            );
+          })()}
+          <Button onClick={() => { setDocType("sale-invoice"); resetForm(); setCreateOpen(true); }} className="w-full mt-4 gap-1.5">
+            <Plus className="h-4 w-4" /> Create New Item
+          </Button>
+        </TabsContent>
+
         {["invoices", "challans", "cn-dn"].map(tab => (
           <TabsContent key={tab} value={tab} className="mt-4">
             <div className="space-y-3">
