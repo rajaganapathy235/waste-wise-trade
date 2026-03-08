@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
-import { ArrowLeft, LayoutGrid, Film } from "lucide-react";
+import { LayoutGrid, Film } from "lucide-react";
+import BillingHeader from "@/components/BillingHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
