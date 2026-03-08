@@ -1,6 +1,6 @@
 import { Lead } from "@/lib/mockData";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Package, IndianRupee } from "lucide-react";
+import { MapPin, Package, IndianRupee, ShoppingCart, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const categoryColors: Record<string, string> = {
@@ -18,9 +18,16 @@ export default function LeadCard({ lead }: { lead: Lead }) {
       className="w-full text-left bg-card rounded-lg border border-border p-4 hover:shadow-md transition-all animate-fade-in"
     >
       <div className="flex items-start justify-between mb-2">
-        <div>
-          <h3 className="font-semibold text-sm text-foreground">{lead.materialType}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{lead.sellerRole}</p>
+        <div className="flex items-center gap-2">
+          {lead.leadType === "Buy" ? (
+            <ShoppingCart className="h-3.5 w-3.5 text-primary" />
+          ) : (
+            <Tag className="h-3.5 w-3.5 text-emerald" />
+          )}
+          <div>
+            <h3 className="font-semibold text-sm text-foreground">{lead.materialType}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{lead.posterRole} · {lead.leadType}</p>
+          </div>
         </div>
         <div className="flex items-center gap-1.5">
           <Badge
@@ -30,9 +37,7 @@ export default function LeadCard({ lead }: { lead: Lead }) {
             {lead.category}
           </Badge>
           {lead.status === "Sold" && (
-            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-              Sold
-            </Badge>
+            <Badge variant="secondary" className="text-[10px] px-2 py-0.5">Sold</Badge>
           )}
         </div>
       </div>
