@@ -53,6 +53,7 @@ export default function Billing() {
     } catch { return MOCK_PRODUCTS; }
   });
 
+  const [billType, setBillType] = useState<BillType>("Sales");
   const billTypes: BillType[] = ["Sales", "Purchase", "Quotation"];
 
   const TABS: { id: BillingTab; label: string; icon: React.ElementType }[] = [
