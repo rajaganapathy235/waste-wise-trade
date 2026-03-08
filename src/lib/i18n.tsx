@@ -763,6 +763,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
 export function useI18n() {
   const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used within I18nProvider");
+  if (!ctx) {
+    // Fallback for HMR edge cases where context is temporarily unavailable
+    return {
+      lang: "en" as Language,
+      setLang: () => {},
+      t: (key: string) => key,
+      languages: [{ code: "en" as Language, label: "English" }],
+    };
+  }
   return ctx;
 }
