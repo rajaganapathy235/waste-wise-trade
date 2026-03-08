@@ -140,8 +140,8 @@ export default function GenerateBill() {
         <Card className="border-border shadow-sm">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-xs text-muted-foreground">Invoice Number</span>
-              <span className="text-base font-bold text-foreground">Invoice{invoiceNo}</span>
+              <span className="text-xs text-muted-foreground">{config.prefix} Number</span>
+              <span className="text-base font-bold text-foreground">{config.prefix}{invoiceNo}</span>
             </div>
             <div className="flex items-center justify-between">
               <div>
