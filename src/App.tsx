@@ -20,6 +20,7 @@ import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
+import TaxDetails from "./pages/billing/TaxDetails";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
