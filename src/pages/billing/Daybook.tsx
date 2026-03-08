@@ -3,18 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, FileText } from "lucide-react";
 import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function Daybook() {
   const navigate = useNavigate();
   const goBack = useSafeBack("/billing/reports");
-  const { payments, expenses } = useBilling();
+  const { payments, expenses, invoices } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
+  // Combine payments, expenses, AND invoices into daybook
   const allTxns = [
     ...payments.map(p => ({ id: p.id, date: p.date, label: p.type === "in" ? "Payment Received" : "Payment Made", party: p.partyName, amount: p.amount, type: p.type as "in" | "out", mode: p.paymentMode, note: p.note })),
     ...expenses.map(e => ({ id: e.id, date: e.date, label: `Expense: ${e.category}`, party: "", amount: e.amount, type: "out" as const, mode: e.paymentMode, note: e.note })),
+    ...invoices.map(inv => ({
+      id: "inv_" + inv.id,
+      date: inv.date,
+      label: `${inv.type.includes("sale") || inv.type.includes("quotation") || inv.type.includes("proforma") ? "Sale" : "Purchase"}: ${inv.invoiceNo}`,
+      party: inv.buyerName,
+      amount: inv.totalAmount,
+      type: (inv.type.includes("purchase") || inv.type.includes("debit") ? "out" : "in") as "in" | "out",
+      mode: "invoice" as string,
+      note: inv.items.map(i => i.description).join(", "),
+    })),
   ]
     .filter(t => isInDateRange(t.date, dateRange))
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -54,7 +65,13 @@ export default function Daybook() {
             <Card key={txn.id}>
               <CardContent className="p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {txn.type === "in" ? <ArrowDownLeft className="h-4 w-4 text-emerald" /> : <ArrowUpRight className="h-4 w-4 text-destructive" />}
+                  {txn.mode === "invoice" ? (
+                    <FileText className={`h-4 w-4 ${txn.type === "in" ? "text-emerald" : "text-destructive"}`} />
+                  ) : txn.type === "in" ? (
+                    <ArrowDownLeft className="h-4 w-4 text-emerald" />
+                  ) : (
+                    <ArrowUpRight className="h-4 w-4 text-destructive" />
+                  )}
                   <div>
                     <p className="text-sm font-medium">{txn.label}</p>
                     {txn.party && <p className="text-[10px] text-muted-foreground">{txn.party}</p>}

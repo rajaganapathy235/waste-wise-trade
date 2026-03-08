@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { exportToCSV } from "@/lib/csvExport";
+import { formatDisplayDate } from "@/components/DateRangeFilter";
 
 // ─── Helpers ──────────────────────────────────────────────
 const UNITS = ["KG", "MTR", "PCS", "BAG", "BALE", "BOX", "TON", "LTR", "NOS", "SET"];
@@ -387,7 +388,7 @@ export default function Billing() {
       id: editingInvoiceId || Date.now().toString(),
       type: docType,
       invoiceNo: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.invoiceNo || generateInvoiceNo(docType, invoices) : generateInvoiceNo(docType, invoices),
-      date: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.date || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      date: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.date || new Date().toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
       status: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.status || "unpaid" : "unpaid",
       sellerName: user.businessName,
       sellerGstin: user.gstNumber,
@@ -797,7 +798,7 @@ export default function Billing() {
                           <div>
                             <p className="text-sm font-bold">{inv.buyerName}</p>
                             <p className="text-[10px] text-muted-foreground">{typeLabel(inv.type)} {inv.invoiceNo}</p>
-                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(inv.date)}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-bold">₹ {inv.totalAmount.toLocaleString("en-IN")}</p>
@@ -898,7 +899,7 @@ export default function Billing() {
                           </div>
                           <div className="text-right">
                             {inv.totalAmount > 0 && <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>}
-                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(inv.date)}</p>
                           </div>
                         </div>
                         <div className="flex gap-1 mt-1 flex-wrap items-center">
@@ -1096,7 +1097,7 @@ export default function Billing() {
                             </div>
                             <div className="text-right">
                               {inv.totalAmount > 0 && <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>}
-                              <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                              <p className="text-[10px] text-muted-foreground">{formatDisplayDate(inv.date)}</p>
                             </div>
                           </div>
                           <div className="flex gap-1 mt-1 items-center">

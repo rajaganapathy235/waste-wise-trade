@@ -8,14 +8,18 @@ import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
 import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
+const SALE_TYPES = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"];
+const PURCHASE_TYPES = ["purchase-invoice", "purchase-order", "debit-note"];
+
 export default function BalanceSheet() {
   const navigate = useNavigate();
   const goBack = useSafeBack("/billing/reports");
-  const { parties, items, payments, expenses, bankAccounts } = useBilling();
+  const { parties, items, payments, expenses, bankAccounts, invoices } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   const filteredPayments = payments.filter(p => isInDateRange(p.date, dateRange));
   const filteredExpenses = expenses.filter(e => isInDateRange(e.date, dateRange));
+  const filteredInvoices = invoices.filter(i => isInDateRange(i.date, dateRange));
 
   const stockValue = items.filter(i => i.itemType === "product").reduce((s, i) => s + i.salesPrice * i.stockQty, 0);
 
@@ -28,21 +32,31 @@ export default function BalanceSheet() {
     + filteredPayments.filter(p => p.paymentMode === "bank" || p.paymentMode === "upi").reduce((s, p) => s + (p.type === "in" ? p.amount : -p.amount), 0)
     - filteredExpenses.filter(e => e.paymentMode === "bank" || e.paymentMode === "upi").reduce((s, e) => s + e.amount, 0);
 
-  const receivables = parties
-    .filter(p => p.balanceType === "collect")
-    .reduce((s, p) => {
-      const received = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((a, pay) => a + pay.amount, 0);
-      return s + Math.max(0, p.openingBalance - received);
-    }, 0);
+  // Receivables: unpaid sale invoices + party opening balances
+  const receivables = parties.reduce((s, p) => {
+    const partyInvoices = filteredInvoices.filter(inv =>
+      (inv.buyerName.toLowerCase() === p.name.toLowerCase() || (p.gstin && inv.buyerGstin === p.gstin)) &&
+      SALE_TYPES.includes(inv.type) && inv.status !== "paid"
+    );
+    const invoiceTotal = partyInvoices.reduce((a, i) => a + i.totalAmount, 0);
+    const received = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((a, pay) => a + pay.amount, 0);
+    const opening = p.balanceType === "collect" ? p.openingBalance : 0;
+    return s + Math.max(0, opening + invoiceTotal - received);
+  }, 0);
 
   const totalAssets = stockValue + Math.max(0, cashInHand) + Math.max(0, bankBalance) + receivables;
 
-  const payables = parties
-    .filter(p => p.balanceType === "pay")
-    .reduce((s, p) => {
-      const paid = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((a, pay) => a + pay.amount, 0);
-      return s + Math.max(0, p.openingBalance - paid);
-    }, 0);
+  // Payables: unpaid purchase invoices + party opening balances
+  const payables = parties.reduce((s, p) => {
+    const partyInvoices = filteredInvoices.filter(inv =>
+      (inv.buyerName.toLowerCase() === p.name.toLowerCase() || (p.gstin && inv.buyerGstin === p.gstin)) &&
+      PURCHASE_TYPES.includes(inv.type) && inv.status !== "paid"
+    );
+    const invoiceTotal = partyInvoices.reduce((a, i) => a + i.totalAmount, 0);
+    const paid = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((a, pay) => a + pay.amount, 0);
+    const opening = p.balanceType === "pay" ? p.openingBalance : 0;
+    return s + Math.max(0, opening + invoiceTotal - paid);
+  }, 0);
 
   const totalExpenses = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const totalLiabilities = payables + totalExpenses;
