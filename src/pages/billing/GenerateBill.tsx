@@ -22,15 +22,22 @@ type GstType = "CGST/SGST" | "IGST";
 type DiscountSetting = "amount" | "amount_percent";
 type BillTitle = "Tax Invoice" | "Bill Of Supply";
 
+const BILL_CONFIG = {
+  Sales: { title: "Create Invoice", prefix: "Invoice", partyLabel: "Customer", storageKey: "last_sales_no", defaultNo: 62 },
+  Purchase: { title: "Purchase Entry", prefix: "Purchase", partyLabel: "Supplier", storageKey: "last_purchase_no", defaultNo: 9 },
+  Quotation: { title: "Quotation Bill", prefix: "Quotation", partyLabel: "Purchaser", storageKey: "last_quotation_no", defaultNo: 2 },
+} as const;
+
 export default function GenerateBill() {
   const navigate = useNavigate();
   const location = useLocation();
   const goBack = useSafeBack("/billing");
-  const billType = (location.state as any)?.billType || "Sales";
+  const billType = ((location.state as any)?.billType || "Sales") as keyof typeof BILL_CONFIG;
+  const config = BILL_CONFIG[billType];
 
   // Invoice info
   const [invoiceNo] = useState(() => {
-    const last = parseInt(localStorage.getItem("last_invoice_no") || "62", 10);
+    const last = parseInt(localStorage.getItem(config.storageKey) || String(config.defaultNo), 10);
     return last + 1;
   });
   const [billDate] = useState(format(new Date(), "dd/MM/yyyy"));
@@ -106,15 +113,15 @@ export default function GenerateBill() {
       toast.error("Please add at least one item");
       return;
     }
-    localStorage.setItem("last_invoice_no", String(invoiceNo));
-    toast.success(`Invoice ${invoiceNo} generated successfully!`);
+    localStorage.setItem(config.storageKey, String(invoiceNo));
+    toast.success(`${config.prefix}${invoiceNo} generated successfully!`);
     navigate("/billing");
   };
 
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background relative">
       <BillingHeader
-        title="Create Invoice"
+        title={config.title}
         showBack
         onBack={goBack}
         rightAction={
@@ -133,8 +140,8 @@ export default function GenerateBill() {
         <Card className="border-border shadow-sm">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-xs text-muted-foreground">Invoice Number</span>
-              <span className="text-base font-bold text-foreground">Invoice{invoiceNo}</span>
+              <span className="text-xs text-muted-foreground">{config.prefix} Number</span>
+              <span className="text-base font-bold text-foreground">{config.prefix}{invoiceNo}</span>
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -157,7 +164,7 @@ export default function GenerateBill() {
           <CardContent className="p-4">
             {selectedPartyData ? (
               <div>
-                <p className="text-xs text-muted-foreground">To</p>
+                <p className="text-xs text-muted-foreground">{config.partyLabel}</p>
                 <p className="text-sm font-bold text-foreground">{selectedPartyData.name}</p>
                 {selectedPartyData.gstin && (
                   <p className="text-[10px] text-muted-foreground">{selectedPartyData.gstin}</p>
@@ -166,7 +173,7 @@ export default function GenerateBill() {
             ) : (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">To (जिसको बिल भेजना है)</p>
+                  <p className="text-xs text-muted-foreground">{config.partyLabel}</p>
                   <p className="text-sm font-bold text-accent">(click here)</p>
                 </div>
                 <span className="text-xs text-muted-foreground">Add</span>
