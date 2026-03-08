@@ -15,6 +15,7 @@ const EXPENSE_CATEGORIES = ["Transport", "Office", "Labour", "Electricity", "Ren
 
 export default function ExpensePage() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { expenses, setExpenses } = useBilling();
   const [showForm, setShowForm] = useState(false);
   const [category, setCategory] = useState("");
