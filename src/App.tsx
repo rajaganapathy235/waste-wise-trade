@@ -77,6 +77,8 @@ function App() {
       <Route path="/billing/cash-bank" element={<CashBank />} />
       <Route path="/billing/gst-reports" element={<GSTReports />} />
       <Route path="/billing/daybook" element={<Daybook />} />
+      <Route path="/billing/recurring" element={<RecurringInvoices />} />
+      <Route path="/billing/reminders" element={<PaymentReminders />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
