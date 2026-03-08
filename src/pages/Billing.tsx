@@ -782,15 +782,16 @@ export default function Billing() {
           </TabsContent>
         ))}
       </Tabs>
+      </main>
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-card border-t border-border z-30">
         <div className="flex items-center justify-around py-2">
           {BILLING_NAV.map(({ key, label, icon: Icon }) => {
             const isActive = activeTab === key;
-            if (key === "marketplace") {
+            if (key === "services") {
               return (
-                <button key={key} onClick={() => navigate("/")} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                <button key={key} onClick={() => navigate("/services")} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                   <Icon className="h-5 w-5" />
                   <span className="text-[10px] font-medium">{label}</span>
                 </button>
