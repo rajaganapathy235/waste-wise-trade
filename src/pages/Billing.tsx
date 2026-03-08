@@ -10,7 +10,19 @@ import { Input } from "@/components/ui/input";
 import BillingHeader from "@/components/BillingHeader";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
-type BillingTab = "send" | "party" | "center" | "bills" | "products";
+type BillingTab = "home" | "send" | "party" | "center" | "bills" | "products";
+
+interface SendEntry {
+  id: string;
+  name: string;
+  month: string;
+  date: string;
+  billCount: number;
+}
+
+const MOCK_SEND_ENTRIES: SendEntry[] = [
+  { id: "s1", name: "Raja", month: "January-2026", date: "22 Jan,2026", billCount: 10 },
+];
 
 interface Product {
   id: string;
