@@ -270,7 +270,7 @@ export default function GenerateBill() {
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-bold text-accent">Add Item (+)</span>
-                  <span className="text-xs text-muted-foreground">यहां क्लिक करे</span>
+                  <span className="text-xs text-muted-foreground">Click to add</span>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">
