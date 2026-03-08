@@ -124,7 +124,10 @@ export default function BillsTab() {
       </div>
 
       {/* FAB */}
-      <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20">
+      <button
+        onClick={() => navigate("/billing/generate-bill", { state: { billType: filter } })}
+        className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20"
+      >
         <Plus className="h-7 w-7" />
       </button>
     </div>
