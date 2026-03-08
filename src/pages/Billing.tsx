@@ -144,7 +144,7 @@ export default function Billing() {
     <div className="relative min-h-[60vh]">
       <div className="divide-y divide-border">
         {products.map((product) => (
-          <div key={product.id} className="flex items-start gap-3 py-4">
+          <div key={product.id} onClick={() => navigate(`/billing/product/${product.id}`)} className="flex items-start gap-3 py-4 cursor-pointer active:bg-muted/50 transition-colors">
             <div className="h-14 w-14 rounded-lg bg-gold/20 flex items-center justify-center shrink-0">
               <Package className="h-7 w-7 text-gold" />
             </div>
