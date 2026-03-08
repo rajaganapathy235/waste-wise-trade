@@ -36,7 +36,7 @@ export function useProducts() {
 
   const addProduct = async (product: Partial<DbProduct>) => {
     if (!user) return { error: new Error("Not authenticated") };
-    const { error } = await supabase.from("products").insert({ ...product, user_id: user.id });
+    const { error } = await supabase.from("products").insert({ ...product, user_id: user.id } as any);
     if (!error) fetchProducts();
     return { error };
   };
