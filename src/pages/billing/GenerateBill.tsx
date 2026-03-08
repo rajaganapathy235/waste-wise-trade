@@ -114,9 +114,38 @@ export default function GenerateBill() {
       toast.error("Please add at least one item");
       return;
     }
-    localStorage.setItem(config.storageKey, String(invoiceNo));
-    toast.success(`${config.prefix}${invoiceNo} generated successfully!`);
-    navigate("/billing");
+    try {
+      const party = selectedPartyData!;
+      const doc = generateInvoicePDF({
+        billTitle: billTitle,
+        invoiceNo: `${config.prefix}${invoiceNo}`,
+        date: billDate,
+        billType,
+        party: {
+          name: party.name,
+          gstin: party.gstin,
+          state: party.location?.toUpperCase() || "TAMILNADU",
+          city: "TIRUPPUR",
+          contact: party.phone,
+        },
+        items: items.map((i) => ({
+          name: i.name,
+          qty: i.qty,
+          rate: i.price,
+          discount: i.discount,
+        })),
+        gstType,
+        gstRate: taxRate,
+        freightCharge: freightEnabled ? parseFloat(freightAmount) || 0 : undefined,
+        packagingCharge: packagingEnabled ? parseFloat(packagingAmount) || 0 : undefined,
+        tcsAmount: tcsEnabled ? parseFloat(tcsAmount) || 0 : undefined,
+      });
+      doc.save(`${config.prefix}${invoiceNo}_${party.name.replace(/\s+/g, "_")}.pdf`);
+      localStorage.setItem(config.storageKey, String(invoiceNo));
+      toast.success(`${config.prefix}${invoiceNo} PDF generated!`);
+    } catch (err) {
+      toast.error("Failed to generate PDF");
+    }
   };
 
   return (
