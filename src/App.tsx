@@ -16,6 +16,7 @@ import DemandHeatmap from "./pages/DemandHeatmap";
 import Transport from "./pages/Transport";
 import WriteReview from "./pages/Reviews";
 import Services from "./pages/Services";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 
 function App() {
