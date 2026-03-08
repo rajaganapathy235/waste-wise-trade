@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
-import { FileText } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import BillingHeader from "@/components/BillingHeader";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Product {
@@ -146,6 +148,23 @@ export default function ProductDetail() {
             </CardContent>
           </Card>
         )}
+
+        <Button
+          variant="destructive"
+          className="w-full h-12 text-base font-bold"
+          onClick={() => {
+            try {
+              const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+              const updated = saved.filter((p: any) => p.id !== product.id);
+              localStorage.setItem("billing_products", JSON.stringify(updated));
+            } catch {}
+            toast.success("Product deleted");
+            goBack();
+          }}
+        >
+          <Trash2 className="h-5 w-5 mr-2" />
+          Delete Product
+        </Button>
       </div>
     </div>
   );
