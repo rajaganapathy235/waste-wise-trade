@@ -197,6 +197,7 @@ export default function Billing() {
   const navigate = useNavigate();
   const { user, setUser } = useApp();
   const { parties: billingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
+  const { t, lang, setLang, languages } = useI18n();
   const { t } = useI18n();
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState("dashboard");
