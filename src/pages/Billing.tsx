@@ -700,8 +700,6 @@ export default function Billing() {
           })}
         </div>
       </nav>
-        </Button>
-      </div>
 
       {/* ═══════════════════════════════════════════════════════
           CREATE INVOICE DIALOG
