@@ -113,24 +113,20 @@ export default function GenerateBill() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background relative">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-accent text-accent-foreground">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button onClick={goBack}>
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-lg font-bold">{billType} Tally Bill</h1>
-          </div>
+      <BillingHeader
+        title="Create Invoice"
+        showBack
+        onBack={goBack}
+        rightAction={
           <button
             onClick={handleGeneratePDF}
-            className="flex items-center gap-1.5 bg-accent-foreground/20 rounded-lg px-3 py-1.5"
+            className="flex items-center gap-1.5 bg-navy-foreground/10 rounded-lg px-3 py-1.5 hover:bg-navy-foreground/20 transition-colors"
           >
             <span className="text-sm font-bold">Go</span>
             <TrendingUp className="h-4 w-4" />
           </button>
-        </div>
-      </header>
+        }
+      />
 
       <main className="flex-1 overflow-y-auto pb-24 px-4 pt-4 space-y-4">
         {/* Invoice Info */}
