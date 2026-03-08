@@ -37,97 +37,92 @@ export default function BillsTab() {
     (b) => b.type === filter && (!search || b.partyName.toLowerCase().includes(search.toLowerCase()) || String(b.invoiceNo).includes(search))
   );
 
-  const totalCount = MOCK_BILLS.filter(b => b.type === filter).length;
-
   return (
-    <div className="relative min-h-[60vh]">
+    <div className="space-y-3">
       {/* Search */}
-      <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
-        <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search Here"
-          className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto py-0 text-sm"
+          placeholder="Search bills..."
+          className="pl-9 h-10 text-sm bg-secondary border-0"
         />
       </div>
 
+      {/* Filter chips */}
+      <div className="flex gap-2">
+        {filters.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              filter === f
+                ? f === "Sales" ? "bg-accent text-accent-foreground" : f === "Purchase" ? "bg-primary text-primary-foreground" : "bg-foreground text-background"
+                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
       {/* Bill Cards */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {filtered.map((bill) => (
-          <Card key={bill.id} className="border-border shadow-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="flex gap-3 p-3">
-                {/* Date Circle */}
-                <div className="flex flex-col items-center shrink-0">
-                  <div className="h-10 w-10 rounded-full bg-emerald flex items-center justify-center">
-                    <span className="text-sm font-bold text-emerald-foreground">{bill.date}</span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground mt-0.5">{bill.month}-{bill.year}</span>
+          <Card key={bill.id} className="border-border shadow-sm">
+            <CardContent className="p-3 flex items-start gap-3">
+              {/* Date Circle */}
+              <div className="flex flex-col items-center shrink-0">
+                <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-accent">{bill.date}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground mt-0.5">{bill.month}-{bill.year}</span>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <p className="text-sm font-bold text-foreground">#{bill.invoiceNo}</p>
+                  <p className="text-sm font-bold text-primary">₹{bill.amount.toFixed(2)}</p>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <p className="text-base font-bold text-foreground">#{bill.invoiceNo}</p>
-                    <p className="text-base font-bold text-gold">{bill.amount.toFixed(2)} ₹</p>
-                  </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{bill.partyName}</p>
 
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-sm font-semibold text-foreground">{bill.partyName}</p>
-                    <div className="flex items-center gap-1.5 ml-auto">
-                      <button onClick={() => toast.info(`Bill #${bill.invoiceNo} details`)} className="h-7 w-7 rounded-full border border-primary flex items-center justify-center">
-                        <Info className="h-3.5 w-3.5 text-primary" />
-                      </button>
-                      <button onClick={() => toast.info("Share")} className="h-7 w-7 rounded-full border border-emerald flex items-center justify-center">
-                        <Share2 className="h-3.5 w-3.5 text-emerald" />
-                      </button>
-                      <button onClick={() => toast.info("Edit")} className="h-7 w-7 rounded-full border border-gold flex items-center justify-center">
-                        <Pencil className="h-3.5 w-3.5 text-gold" />
-                      </button>
-                      <button onClick={() => toast.info("Delete")} className="h-7 w-7 rounded-full border border-emerald flex items-center justify-center">
-                        <MinusCircle className="h-3.5 w-3.5 text-emerald" />
-                      </button>
-                    </div>
-                  </div>
+                {/* Action buttons */}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <button onClick={() => toast.info(`Bill #${bill.invoiceNo} details`)} className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Info className="h-3.5 w-3.5 text-primary" />
+                  </button>
+                  <button onClick={() => toast.info("Share")} className="h-7 w-7 rounded-full bg-accent/10 flex items-center justify-center">
+                    <Share2 className="h-3.5 w-3.5 text-accent" />
+                  </button>
+                  <button onClick={() => toast.info("Edit")} className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center">
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => toast.info("Delete")} className="h-7 w-7 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <MinusCircle className="h-3.5 w-3.5 text-destructive" />
+                  </button>
+                </div>
 
-                  {/* Badges */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="px-3 py-1 rounded text-xs font-bold bg-gold text-gold-foreground">Copies</span>
-                    <span className="px-3 py-1 rounded text-xs font-bold bg-primary text-primary-foreground flex items-center gap-1">
-                      Ledger Entry {bill.ledgerEntry && "✓"}
-                    </span>
-                    <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center ml-auto">
-                      <span className="text-xs font-bold text-navy-foreground">L</span>
-                    </div>
-                  </div>
+                {/* Badges */}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">Copies</span>
+                  <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold">
+                    Ledger {bill.ledgerEntry && "✓"}
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
         {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground text-sm py-8">No bills found</p>
+          <div className="text-center py-12 text-muted-foreground text-sm">No bills found</div>
         )}
       </div>
 
-      {/* Filter toggle */}
-      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20">
-        <div className="flex border border-emerald rounded-full overflow-hidden">
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-5 py-2 text-sm font-semibold transition-colors ${filter === f ? "bg-emerald text-emerald-foreground" : "bg-card text-foreground"}`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* FAB */}
-      <button className="fixed bottom-28 right-6 h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
+      <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20">
         <Plus className="h-7 w-7" />
       </button>
     </div>
