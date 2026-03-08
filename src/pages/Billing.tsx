@@ -40,8 +40,9 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default function Billing() {
   const navigate = useNavigate();
-  const [billType, setBillType] = useState<BillType>("Sales");
-  const [activeTab, setActiveTab] = useState<BillingTab>("send");
+  const [activeTab, setActiveTab] = useState<BillingTab>("home");
+  const [sendSearch, setSendSearch] = useState("");
+  const [sendSubTab, setSendSubTab] = useState<"send" | "overview">("send");
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
