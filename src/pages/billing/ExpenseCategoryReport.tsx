@@ -10,6 +10,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function ExpenseCategoryReport() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { expenses } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
