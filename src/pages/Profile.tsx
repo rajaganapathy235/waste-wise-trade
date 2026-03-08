@@ -4,14 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Globe, ArrowLeft } from "lucide-react";
+import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ReviewsList } from "./Reviews";
 
 export default function Profile() {
   const { user, setUser, setIsLoggedIn, reviews } = useApp();
-  const { t, lang, setLang, languages } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const myReviews = reviews.filter((r) => r.revieweeId === user.id);
@@ -28,30 +28,6 @@ export default function Profile() {
         <ArrowLeft className="h-4 w-4" /> {t("lead.back")}
       </button>
       <h1 className="text-lg font-bold mb-4">{t("profile.title")}</h1>
-
-      {/* Language Selector */}
-      <Card className="mb-4">
-        <CardContent className="p-4">
-          <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-3">
-            <Globe className="h-4 w-4 text-primary" /> {t("profile.language")}
-          </h2>
-          <div className="flex gap-2">
-            {languages.map(({ code, label }) => (
-              <button
-                key={code}
-                onClick={() => setLang(code)}
-                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  lang === code
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Business Card */}
       <Card className="mb-4">

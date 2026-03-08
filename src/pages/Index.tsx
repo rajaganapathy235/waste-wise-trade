@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { LeadCategory, LeadType } from "@/lib/mockData";
 import LeadCard from "@/components/LeadCard";
 import { Input } from "@/components/ui/input";
-import { Search, Wrench, ArrowRight, Megaphone } from "lucide-react";
+import { Search, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,26 +103,6 @@ export default function Index() {
           </button>
         ))}
       </div>
-
-      {/* Job Work Section */}
-      <Card className="mb-4 border-primary/20 bg-primary/5">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Wrench className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-foreground">{t("home.jobWork")}</h3>
-                <p className="text-[10px] text-muted-foreground">{t("home.jobWorkDesc")}</p>
-              </div>
-            </div>
-            <Button size="sm" variant="outline" className="text-xs h-8 border-primary/30 text-primary hover:bg-primary/10">
-              {t("home.findJobWorkers")} <ArrowRight className="h-3 w-3 ml-1" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Feed */}
       <div className="space-y-3 pb-4">
