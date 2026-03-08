@@ -59,6 +59,7 @@ function AppRoutes() {
       <Route path="/billing/tax-details" element={<TaxDetails />} />
       <Route path="/billing/ledger/:partyId" element={<PartyLedger />} />
       <Route path="/billing/ledger/:partyId/add" element={<AddLedgerEntry />} />
+      <Route path="/billing/generate-bill" element={<GenerateBill />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
