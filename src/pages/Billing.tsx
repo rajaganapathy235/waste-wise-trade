@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
 import { useBilling } from "@/lib/billingContext";
 import { useI18n } from "@/lib/i18n";
@@ -213,6 +213,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
 // ─── Component ──────────────────────────────────────────
 export default function Billing() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, setUser } = useApp();
   const { parties: billingParties, setParties: setBillingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
   const i18n = useI18n();
@@ -220,6 +221,16 @@ export default function Billing() {
 
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Handle navigation state (e.g., from AllInvoices page)
+  useEffect(() => {
+    const state = location.state as { tab?: string } | null;
+    if (state?.tab) {
+      setActiveTab(state.tab);
+      // Clear the state so refreshing doesn't keep switching
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   const [createOpen, setCreateOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<GSTInvoice | null>(null);
   const [docType, setDocType] = useState<GSTInvoice["type"]>("sale-invoice");

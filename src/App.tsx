@@ -34,6 +34,11 @@ import GSTReports from "./pages/billing/GSTReports";
 import Daybook from "./pages/billing/Daybook";
 import RecurringInvoices from "./pages/billing/RecurringInvoices";
 import PaymentReminders from "./pages/billing/PaymentReminders";
+import BalanceSheet from "./pages/billing/BalanceSheet";
+import PartyReports from "./pages/billing/PartyReports";
+import ItemReports from "./pages/billing/ItemReports";
+import TransactionReports from "./pages/billing/TransactionReports";
+import AllInvoices from "./pages/billing/AllInvoices";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
@@ -79,6 +84,11 @@ function AppRoutes() {
       <Route path="/billing/daybook" element={<Daybook />} />
       <Route path="/billing/recurring" element={<RecurringInvoices />} />
       <Route path="/billing/reminders" element={<PaymentReminders />} />
+      <Route path="/billing/balance-sheet" element={<BalanceSheet />} />
+      <Route path="/billing/party-reports" element={<PartyReports />} />
+      <Route path="/billing/item-reports" element={<ItemReports />} />
+      <Route path="/billing/transaction-reports" element={<TransactionReports />} />
+      <Route path="/billing/all-invoices" element={<AllInvoices />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
