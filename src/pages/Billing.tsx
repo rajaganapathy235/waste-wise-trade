@@ -351,8 +351,17 @@ export default function Billing() {
   const needsTax = !["delivery-challan", "quotation"].includes(docType);
 
   // Dashboard stats from billing context
-  const totalCollect = billingParties.filter(p => p.balanceType === "collect").reduce((s, p) => s + p.openingBalance, 0) + billingPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
-  const totalPay = billingParties.filter(p => p.balanceType === "pay").reduce((s, p) => s + p.openingBalance, 0) + billingPayments.filter(p => p.type === "out").reduce((s, p) => s + p.amount, 0);
+  // To Collect = opening balance of collect parties minus payments received from them
+  const collectParties = billingParties.filter(p => p.balanceType === "collect");
+  const payParties = billingParties.filter(p => p.balanceType === "pay");
+  const totalCollect = collectParties.reduce((s, p) => {
+    const received = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((a, pay) => a + pay.amount, 0);
+    return s + Math.max(0, p.openingBalance - received);
+  }, 0);
+  const totalPay = payParties.reduce((s, p) => {
+    const paid = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((a, pay) => a + pay.amount, 0);
+    return s + Math.max(0, p.openingBalance - paid);
+  }, 0);
   const thisWeekSales = billingPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
   const stockValue = billingItems.filter(i => i.itemType === "product").reduce((s, i) => s + i.salesPrice * i.stockQty, 0);
   const totalExpenseAmt = billingExpenses.reduce((s, e) => s + e.amount, 0);
