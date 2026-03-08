@@ -23,11 +23,17 @@ export default function AddProduct() {
   const [tax, setTax] = useState("0");
 
   // Load existing product for editing
+  const MOCK_PRODUCTS = [
+    { id: "1", name: "JOB WORK FOR RECYCLED BANIAN CLOTH WASTE COTTONS", sellPrice: 8.70, buyingPrice: 8.00, unit: "Kgs", salesStock: 9682, purchaseStock: 0, hsn: "", tax: 0, mrp: undefined },
+    { id: "2", name: "JOB WORK FOR RECYCLED BANIAN CLOTH WASTE COTTON", sellPrice: 9.75, buyingPrice: 9.50, unit: "Kgs", salesStock: 369684, purchaseStock: 369684, hsn: "", tax: 0, mrp: undefined },
+  ];
+
   useEffect(() => {
     if (editId) {
       try {
         const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
-        const found = saved.find((p: any) => p.id === editId);
+        let found = saved.find((p: any) => p.id === editId);
+        if (!found) found = MOCK_PRODUCTS.find(p => p.id === editId);
         if (found) {
           setName(found.name || "");
           setBuyingPrice(String(found.buyingPrice ?? found.purchasePrice ?? ""));
