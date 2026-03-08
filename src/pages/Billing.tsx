@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
+import { useBilling } from "@/lib/billingContext";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, Plus, FileText, Truck, RotateCcw, Download, Trash2,
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
   FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
-  Home, Users, Package, ArrowRightLeft
+  Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -192,6 +193,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
 export default function Billing() {
   const navigate = useNavigate();
   const { user } = useApp();
+  const { parties: billingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
   const { t } = useI18n();
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -342,11 +344,12 @@ export default function Billing() {
 
   const needsTax = !["delivery-challan", "quotation"].includes(docType);
 
-  // Dashboard stats
-  const totalCollect = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.totalAmount, 0);
-  const totalPay = invoices.filter(i => i.type === "purchase-invoice").reduce((s, i) => s + i.totalAmount, 0);
-  const thisWeekSales = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.totalAmount, 0);
-  const stockValue = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.taxableAmount, 0);
+  // Dashboard stats from billing context
+  const totalCollect = billingParties.filter(p => p.balanceType === "collect").reduce((s, p) => s + p.openingBalance, 0) + billingPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
+  const totalPay = billingParties.filter(p => p.balanceType === "pay").reduce((s, p) => s + p.openingBalance, 0) + billingPayments.filter(p => p.type === "out").reduce((s, p) => s + p.amount, 0);
+  const thisWeekSales = billingPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
+  const stockValue = billingItems.filter(i => i.itemType === "product").reduce((s, i) => s + i.salesPrice * i.stockQty, 0);
+  const totalExpenseAmt = billingExpenses.reduce((s, e) => s + e.amount, 0);
 
   const BILLING_NAV = [
     { key: "dashboard", label: "Dashboard", icon: Home },
@@ -390,30 +393,43 @@ export default function Billing() {
                 <p className="text-[10px] text-destructive font-semibold flex items-center gap-1">To Pay <ArrowUpRight className="h-3 w-3" /></p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/stock-summary")}>
               <CardContent className="p-3">
-                <p className="text-xs font-bold">Stock Value</p>
-                <p className="text-[10px] text-muted-foreground">Value of Items</p>
+                <p className="text-xs font-bold">₹ {stockValue.toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-muted-foreground">Stock Value</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/sales-summary")}>
               <CardContent className="p-3">
                 <p className="text-xs font-bold">₹ {thisWeekSales.toLocaleString("en-IN")}</p>
                 <p className="text-[10px] text-muted-foreground">This week's sale</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/cash-bank")}>
               <CardContent className="p-3">
                 <p className="text-xs font-bold">Total Balance</p>
                 <p className="text-[10px] text-muted-foreground">Cash + Bank Balance</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate("/billing/reports")}>
               <CardContent className="p-3">
-                <p className="text-xs font-bold">Reports</p>
+                <p className="text-xs font-bold flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Reports</p>
                 <p className="text-[10px] text-muted-foreground">Sales, Party, GST...</p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex gap-2 mb-4">
+            <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/payment-in")}>
+              <ArrowDownLeft className="h-3 w-3 text-emerald" /> Payment In
+            </Button>
+            <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/payment-out")}>
+              <ArrowUpRight className="h-3 w-3 text-destructive" /> Payment Out
+            </Button>
+            <Button size="sm" variant="outline" className="text-[10px] gap-1 flex-1" onClick={() => navigate("/billing/expenses")}>
+              <Wallet className="h-3 w-3 text-gold" /> Expense
+            </Button>
           </div>
 
           {/* Recent Transactions */}
@@ -560,38 +576,38 @@ export default function Billing() {
               </button>
             ))}
           </div>
-          {/* Extract unique parties from invoices */}
-          {(() => {
-            const parties = Array.from(new Set(invoices.map(i => i.buyerName))).map(name => {
-              const partyInvoices = invoices.filter(i => i.buyerName === name);
-              const total = partyInvoices.reduce((s, i) => s + i.totalAmount, 0);
-              const isBuyer = partyInvoices.some(i => i.type.includes("sale"));
-              return { name, total, isBuyer, gstin: partyInvoices[0]?.buyerGstin };
-            });
-            return parties.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">No parties yet. Create an invoice to add parties.</div>
-            ) : (
-              <div className="space-y-3">
-                {parties.map(p => (
-                  <Card key={p.name} className="cursor-pointer hover:shadow-md transition-all">
-                    <CardContent className="p-3 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
-                        {p.name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold">{p.name}</p>
-                        <p className="text-[10px] text-muted-foreground">Customer</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-emerald flex items-center gap-0.5">₹ {p.total.toLocaleString("en-IN")} <ArrowDownLeft className="h-3 w-3" /></p>
-                        <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            );
-          })()}
+          {billingParties.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sm font-semibold text-muted-foreground">No Parties Found</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Please search for a different party or create a new party.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {billingParties.map(p => (
+                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate(`/billing/party/${p.id}`)}>
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                      {p.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold">{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground capitalize">{p.type}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-bold flex items-center gap-0.5 ${p.balanceType === "collect" ? "text-emerald" : "text-destructive"}`}>
+                        ₹ {p.openingBalance.toLocaleString("en-IN")}
+                        {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                      </p>
+                      <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          <Button onClick={() => navigate("/billing/create-party")} className="w-full mt-4 gap-1.5">
+            <Plus className="h-4 w-4" /> Create Party
+          </Button>
         </TabsContent>
 
         {/* ─── Items Tab ─── */}
@@ -599,41 +615,38 @@ export default function Billing() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-2 overflow-x-auto">
               <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">Low Stock</button>
-              <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">All Items</button>
+              <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">All Items</button>
             </div>
+            <Search className="h-4 w-4 text-muted-foreground" />
           </div>
-          {/* Mock items from invoices */}
-          {(() => {
-            const allItems = invoices.flatMap(inv => inv.items.map(item => ({ ...item, invoiceType: inv.type })));
-            const uniqueItems = Array.from(new Map(allItems.map(i => [i.description, i])).values());
-            return uniqueItems.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">No items yet. Create an invoice to add items.</div>
-            ) : (
-              <div className="space-y-3">
-                {uniqueItems.map((item, idx) => (
-                  <Card key={idx} className="cursor-pointer hover:shadow-md transition-all">
-                    <CardContent className="p-3 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
-                        {item.description.charAt(0)}
+          {billingItems.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground text-sm">No items yet. Create an item to get started.</div>
+          ) : (
+            <div className="space-y-3">
+              {billingItems.map(item => (
+                <Card key={item.id} className="cursor-pointer hover:shadow-md transition-all">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                      {item.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold">{item.name}</p>
+                      <p className="text-[10px] text-muted-foreground">HSN: {item.hsnSac || "N/A"}</p>
+                      <div className="flex gap-4 mt-1">
+                        <span className="text-[10px] text-muted-foreground">Sales: ₹{item.salesPrice.toLocaleString("en-IN")}</span>
+                        <span className="text-[10px] text-muted-foreground">Purchase: ₹{item.purchasePrice.toLocaleString("en-IN")}</span>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold">{item.description}</p>
-                        <p className="text-[10px] text-muted-foreground">HSN: {item.hsnSac || "N/A"}</p>
-                        <div className="flex gap-4 mt-1">
-                          <span className="text-[10px] text-muted-foreground">Sales: ₹{item.rate.toLocaleString("en-IN")}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold">{item.qty}</p>
-                        <p className="text-[10px] text-muted-foreground">{item.unit}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            );
-          })()}
-          <Button onClick={() => { setDocType("sale-invoice"); resetForm(); setCreateOpen(true); }} className="w-full mt-4 gap-1.5">
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold">{item.stockQty}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.unit}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          <Button onClick={() => navigate("/billing/create-item")} className="w-full mt-4 gap-1.5">
             <Plus className="h-4 w-4" /> Create New Item
           </Button>
         </TabsContent>
