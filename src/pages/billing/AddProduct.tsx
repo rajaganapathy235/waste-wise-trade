@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
 import { ArrowLeft, LayoutGrid, Film } from "lucide-react";
 import { Input } from "@/components/ui/input";
