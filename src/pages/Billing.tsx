@@ -36,7 +36,15 @@ export default function Billing() {
   const { lang, setLang, languages } = useI18n();
   const [billType, setBillType] = useState<BillType>("Sales");
   const [activeTab, setActiveTab] = useState<BillingTab>("send");
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+      return saved.length > 0 ? saved.map((p: any) => ({
+        id: p.id, name: p.name, sellPrice: p.sellPrice, purchasePrice: p.buyingPrice || p.purchasePrice,
+        salesStock: p.salesStock || 0, purchaseStock: p.purchaseStock || 0,
+      })) : MOCK_PRODUCTS;
+    } catch { return MOCK_PRODUCTS; }
+  });
 
   const billTypes: BillType[] = ["Sales", "Purchase", "Quotation"];
 
