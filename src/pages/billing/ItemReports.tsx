@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 export default function ItemReports() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { items } = useBilling();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "product" | "service" | "low-stock">("all");
