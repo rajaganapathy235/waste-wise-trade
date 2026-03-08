@@ -8,6 +8,7 @@ import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, ArrowLeft }
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ReviewsList } from "./Reviews";
+import { useIsAdmin } from "@/hooks/useProfile";
 
 export default function Profile() {
   const { user, setUser, setIsLoggedIn, reviews } = useApp();
