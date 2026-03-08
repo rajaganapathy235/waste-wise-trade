@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "@/lib/appContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useI18n } from "@/lib/i18n";
-import { DISTRICTS, VEHICLE_TYPES, TransportRequest } from "@/lib/mockData";
+import { DISTRICTS, VEHICLE_TYPES } from "@/lib/mockData";
+import { useTransport } from "@/hooks/useTransport";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,32 +24,49 @@ const statusColors: Record<string, string> = {
 
 export default function Transport() {
   const navigate = useNavigate();
-  const { transportRequests, setTransportRequests, user } = useApp();
+  const { profile } = useProfile();
   const { t } = useI18n();
+  const { requests, loading, addRequest } = useTransport();
   const [showForm, setShowForm] = useState(false);
-  const [fromDistrict, setFromDistrict] = useState(user.locationDistrict);
+  const [fromDistrict, setFromDistrict] = useState(profile?.location || "Coimbatore");
   const [toDistrict, setToDistrict] = useState("");
-  const [vehicleType, setVehicleType] = useState<TransportRequest["vehicleType"]>("Tempo");
+  const [vehicleType, setVehicleType] = useState("Tempo");
   const [quantity, setQuantity] = useState("");
   const [requestedDate, setRequestedDate] = useState("");
   const [materialType, setMaterialType] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedVehicle = VEHICLE_TYPES.find((v) => v.type === vehicleType);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!toDistrict || !quantity || !requestedDate) {
       toast.error(t("transport.fillAll")); return;
     }
-    const newRequest: TransportRequest = {
-      id: `t-${Date.now()}`, leadId: "", materialType: materialType || "General",
-      quantity: Number(quantity), fromDistrict, toDistrict, requestedDate, vehicleType,
-      status: "Pending", estimatedCost: selectedVehicle ? selectedVehicle.baseRate + Math.floor(Math.random() * 2000) : 3000,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    setTransportRequests((prev) => [newRequest, ...prev]);
-    toast.success(t("transport.submitted"));
-    setShowForm(false); setToDistrict(""); setQuantity(""); setRequestedDate(""); setMaterialType("");
+    setSubmitting(true);
+    const { error } = await addRequest({
+      material_type: materialType || "General",
+      quantity: Number(quantity),
+      from_district: fromDistrict,
+      to_district: toDistrict,
+      requested_date: requestedDate,
+      vehicle_type: vehicleType,
+      status: "Pending",
+      estimated_cost: selectedVehicle ? selectedVehicle.baseRate + Math.floor(Math.random() * 2000) : 3000,
+    });
+    setSubmitting(false);
+    if (!error) {
+      toast.success(t("transport.submitted"));
+      setShowForm(false); setToDistrict(""); setQuantity(""); setRequestedDate(""); setMaterialType("");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
@@ -112,49 +131,49 @@ export default function Transport() {
               <Label className="text-xs">{t("transport.material")}</Label>
               <Input value={materialType} onChange={(e) => setMaterialType(e.target.value)} placeholder="Comber Noil" className="text-xs" />
             </div>
-            <Button onClick={handleSubmit} className="w-full bg-primary">
-              {t("transport.submitRequest")} <ArrowRight className="h-4 w-4 ml-1" />
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full bg-primary">
+              {submitting ? "Submitting..." : t("transport.submitRequest")} <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </CardContent>
         </Card>
       )}
 
       <h2 className="text-sm font-semibold mb-2">{t("transport.yourRequests")}</h2>
-      {transportRequests.length === 0 ? (
+      {requests.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">{t("transport.noRequests")}</div>
       ) : (
         <div className="space-y-3">
-          {transportRequests.map((req) => (
+          {requests.map((req) => (
             <Card key={req.id} className="animate-fade-in">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="text-sm font-semibold">{req.materialType}</p>
-                    <p className="text-[10px] text-muted-foreground">{req.createdAt}</p>
+                    <p className="text-sm font-semibold">{req.material_type}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</p>
                   </div>
                   <Badge variant="outline" className={`text-[10px] ${statusColors[req.status] || ""}`}>{req.status}</Badge>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                   <MapPin className="h-3 w-3 text-primary" />
-                  <span>{req.fromDistrict}</span>
+                  <span>{req.from_district}</span>
                   <ArrowRight className="h-3 w-3" />
-                  <span>{req.toDistrict}</span>
+                  <span>{req.to_district}</span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Package className="h-3 w-3" /> {req.quantity.toLocaleString()} kg</span>
-                  <span className="flex items-center gap-1"><Truck className="h-3 w-3" /> {req.vehicleType}</span>
-                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {req.requestedDate}</span>
+                  <span className="flex items-center gap-1"><Package className="h-3 w-3" /> {(req.quantity || 0).toLocaleString()} kg</span>
+                  <span className="flex items-center gap-1"><Truck className="h-3 w-3" /> {req.vehicle_type}</span>
+                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {req.requested_date}</span>
                 </div>
-                {req.estimatedCost && (
+                {req.estimated_cost && (
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{t("transport.estCost")}</span>
-                    <span className="text-sm font-bold text-emerald">₹{req.estimatedCost.toLocaleString()}</span>
+                    <span className="text-sm font-bold text-emerald">₹{req.estimated_cost.toLocaleString()}</span>
                   </div>
                 )}
-                {req.providerName && (
+                {req.provider_name && (
                   <div className="mt-2 pt-2 border-t border-border">
-                    <p className="text-xs font-medium">{req.providerName}</p>
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {req.providerPhone}</p>
+                    <p className="text-xs font-medium">{req.provider_name}</p>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {req.provider_phone}</p>
                   </div>
                 )}
               </CardContent>

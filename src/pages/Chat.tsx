@@ -1,19 +1,29 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useApp } from "@/lib/appContext";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { useChatThreads } from "@/hooks/useChatThreads";
+import { useChatMessages, useCreateThread } from "@/hooks/useChatThreads";
 import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Send, Crown, Lock, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { DbLead } from "@/hooks/useLeads";
 
 export default function ChatList() {
   const navigate = useNavigate();
-  const { user, chatThreads } = useApp();
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const { threads, loading } = useChatThreads();
   const { t } = useI18n();
+  const isSubscribed = profile?.is_subscribed || false;
 
-  if (!user.isSubscribed) {
+  if (!isSubscribed) {
     return (
       <div className="px-4 pt-4 pb-8 max-w-md mx-auto">
         <h1 className="text-lg font-bold mb-4">{t("chat.title")}</h1>
@@ -31,44 +41,49 @@ export default function ChatList() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 pt-4 pb-8 max-w-md mx-auto">
       <h1 className="text-lg font-bold mb-4">{t("chat.title")}</h1>
-      {chatThreads.length === 0 ? (
+      {threads.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">
           <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
           {t("chat.noChats")}
         </div>
       ) : (
         <div className="space-y-2">
-          {chatThreads.map((thread) => {
-            const other = thread.participants.find((p) => p.id !== user.id);
-            return (
-              <button
-                key={thread.id}
-                onClick={() => navigate(`/chat/${thread.leadId}`)}
-                className="w-full text-left bg-card border border-border rounded-lg p-3 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-start justify-between mb-1">
-                  <div>
-                    <p className="text-sm font-semibold">{other?.name || "Unknown"}</p>
-                    <p className="text-[10px] text-muted-foreground">{thread.leadTitle}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {thread.unreadCount > 0 && (
-                      <Badge className="bg-primary text-primary-foreground text-[10px] h-5 min-w-[20px] justify-center">
-                        {thread.unreadCount}
-                      </Badge>
-                    )}
-                  </div>
+          {threads.map((thread) => (
+            <button
+              key={thread.id}
+              onClick={() => navigate(`/chat/${thread.lead_id}`)}
+              className="w-full text-left bg-card border border-border rounded-lg p-3 hover:shadow-sm transition-all"
+            >
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <p className="text-sm font-semibold">{thread.other_name || "Unknown"}</p>
+                  <p className="text-[10px] text-muted-foreground">{thread.lead_title}</p>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{thread.lastMessage}</p>
-                <p className="text-[10px] text-muted-foreground/60 mt-1">
-                  {new Date(thread.lastMessageAt).toLocaleDateString()}
-                </p>
-              </button>
-            );
-          })}
+                <div className="flex items-center gap-2">
+                  {(thread.unread_count || 0) > 0 && (
+                    <Badge className="bg-primary text-primary-foreground text-[10px] h-5 min-w-[20px] justify-center">
+                      {thread.unread_count}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground truncate">{thread.last_message}</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1">
+                {thread.last_message_at ? new Date(thread.last_message_at).toLocaleDateString() : ""}
+              </p>
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -78,14 +93,51 @@ export default function ChatList() {
 export function ChatThread() {
   const { leadId } = useParams();
   const navigate = useNavigate();
-  const { user, chatThreads, setChatThreads, leads } = useApp();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const { t } = useI18n();
   const [message, setMessage] = useState("");
+  const [lead, setLead] = useState<DbLead | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const { createThread } = useCreateThread();
+  const { messages, sendMessage } = useChatMessages(threadId);
+  const isSubscribed = profile?.is_subscribed || false;
 
-  const thread = chatThreads.find((t) => t.leadId === leadId);
-  const lead = leads.find((l) => l.id === leadId);
+  // Find or create thread for this lead
+  useEffect(() => {
+    if (!leadId || !user) return;
 
-  if (!user.isSubscribed) {
+    const init = async () => {
+      // Fetch lead
+      const { data: leadData } = await supabase.from("leads").select("*").eq("id", leadId).single();
+      if (leadData) setLead(leadData);
+
+      // Find existing thread
+      const { data: myParticipations } = await supabase
+        .from("chat_participants")
+        .select("thread_id")
+        .eq("user_id", user.id);
+
+      if (myParticipations) {
+        for (const p of myParticipations) {
+          const { data: thread } = await supabase
+            .from("chat_threads")
+            .select("*")
+            .eq("id", p.thread_id)
+            .eq("lead_id", leadId)
+            .single();
+          if (thread) {
+            setThreadId(thread.id);
+            return;
+          }
+        }
+      }
+      // No thread yet — will create on first message
+    };
+    init();
+  }, [leadId, user]);
+
+  if (!isSubscribed) {
     return (
       <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
@@ -105,40 +157,21 @@ export function ChatThread() {
     );
   }
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-    const newMsg = { id: Date.now().toString(), senderId: user.id, text: message.trim(), timestamp: new Date().toISOString() };
+  const handleSend = async () => {
+    if (!message.trim() || !user || !lead) return;
 
-    if (thread) {
-      setChatThreads((prev) =>
-        prev.map((t) =>
-          t.leadId === leadId
-            ? { ...t, messages: [...t.messages, newMsg], lastMessage: message.trim(), lastMessageAt: newMsg.timestamp }
-            : t
-        )
-      );
-    } else {
-      const otherName = lead?.posterName || "Unknown";
-      const otherId = lead?.posterId || "unknown";
-      setChatThreads((prev) => [
-        ...prev,
-        {
-          id: `chat-${Date.now()}`,
-          leadId: leadId || "",
-          leadTitle: `${lead?.materialType || "Lead"} — ${lead?.quantity?.toLocaleString() || "?"} kg`,
-          participants: [{ id: user.id, name: user.businessName }, { id: otherId, name: otherName }],
-          messages: [newMsg],
-          lastMessage: message.trim(),
-          lastMessageAt: newMsg.timestamp,
-          unreadCount: 0,
-        },
-      ]);
+    let currentThreadId = threadId;
+    if (!currentThreadId) {
+      const title = `${lead.material_type} — ${lead.quantity?.toLocaleString() || "?"} kg`;
+      currentThreadId = await createThread(lead.id, title, lead.user_id, lead.poster_name || "Unknown");
+      if (currentThreadId) setThreadId(currentThreadId);
     }
-    setMessage("");
-  };
 
-  const messages = thread?.messages || [];
-  const other = thread?.participants.find((p) => p.id !== user.id);
+    if (currentThreadId) {
+      await sendMessage(message.trim());
+      setMessage("");
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
@@ -147,19 +180,19 @@ export function ChatThread() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <p className="text-sm font-semibold">{other?.name || lead?.posterName || "Chat"}</p>
-          <p className="text-[10px] text-navy-foreground/60">{lead?.materialType || "Lead"}</p>
+          <p className="text-sm font-semibold">{lead?.poster_name || "Chat"}</p>
+          <p className="text-[10px] text-navy-foreground/60">{lead?.material_type || "Lead"}</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {lead && (
           <div className="bg-secondary rounded-lg p-3 mb-2">
-            <p className="text-[10px] text-muted-foreground">Re: {lead.materialType} — {lead.quantity.toLocaleString()} kg @ ₹{lead.pricePerKg}/kg</p>
+            <p className="text-[10px] text-muted-foreground">Re: {lead.material_type} — {lead.quantity.toLocaleString()} kg @ ₹{lead.price_per_kg}/kg</p>
           </div>
         )}
         {messages.map((msg) => {
-          const isMe = msg.senderId === user.id;
+          const isMe = msg.sender_id === user?.id;
           return (
             <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
@@ -167,7 +200,7 @@ export function ChatThread() {
               }`}>
                 {msg.text}
                 <p className={`text-[9px] mt-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
             </div>
