@@ -96,22 +96,16 @@ export default function AddProduct() {
           </div>
         ))}
 
-        {/* Tax field with border box */}
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate("/billing/tax-details", { state: { totalPrice: 0 } })}
+        >
           <div className="shrink-0 w-10 flex justify-center">
             <Film className="h-5 w-5 text-muted-foreground/40" />
           </div>
           <div className="flex-1 flex items-center border border-emerald rounded-md px-3 py-2">
             <span className="text-sm text-foreground flex-1">Tax</span>
-            <div className="flex items-center gap-1">
-              <Input
-                value={tax}
-                onChange={e => setTax(e.target.value)}
-                type="number"
-                className="border-0 w-16 text-right px-0 focus-visible:ring-0 shadow-none h-auto py-0"
-              />
-              <span className="text-sm text-muted-foreground">₹</span>
-            </div>
+            <span className="text-sm font-semibold text-foreground">{tax} ₹</span>
           </div>
         </div>
       </div>
