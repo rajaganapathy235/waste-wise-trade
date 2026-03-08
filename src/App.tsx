@@ -24,6 +24,7 @@ import PartyLedger from "./pages/billing/PartyLedger";
 import AddLedgerEntry from "./pages/billing/AddLedgerEntry";
 import GenerateBill from "./pages/billing/GenerateBill";
 import Auth from "./pages/Auth";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -70,6 +71,7 @@ function AppRoutes() {
       <Route path="/billing/generate-bill" element={<GenerateBill />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/admin" element={<AdminDashboard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
