@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import BillingHeader from "@/components/BillingHeader";
+import BillsTab from "@/components/billing/BillsTab";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
 type BillingTab = "home" | "send" | "party" | "center" | "bills" | "products";
