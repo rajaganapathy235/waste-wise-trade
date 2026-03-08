@@ -21,6 +21,15 @@ export default function TaxDetails() {
   const [igstPct, setIgstPct] = useState(incoming.igstPct || "0.0");
   const [igstFlat, setIgstFlat] = useState(incoming.igstFlat || "0.0");
 
+  const handleGstTotalChange = (val: string) => {
+    setGstTotal(val);
+    const num = parseFloat(val) || 0;
+    const half = (num / 2).toFixed(1);
+    setCgstPct(half);
+    setSgstPct(half);
+    setIgstPct(num.toFixed(1));
+  };
+
   const totalPrice = incoming.totalPrice || 0;
   const taxableAmount = totalPrice;
   const taxAmount =
