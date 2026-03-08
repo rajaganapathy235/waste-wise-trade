@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
 import { ArrowLeft, LayoutGrid, Film } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import { toast } from "sonner";
 
 export default function AddProduct() {
   const goBack = useSafeBack("/billing");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const incomingState = (location.state as any) || {};
   const [name, setName] = useState("");
   const [buyingPrice, setBuyingPrice] = useState("");
   const [sellPrice, setSellPrice] = useState("");
@@ -15,6 +18,13 @@ export default function AddProduct() {
   const [unit, setUnit] = useState("nos");
   const [hsn, setHsn] = useState("");
   const [tax, setTax] = useState("0");
+
+  // Receive tax data back from TaxDetails page
+  useEffect(() => {
+    if (incomingState?.taxData) {
+      setTax(String(incomingState.taxData.taxAmount || 0));
+    }
+  }, []);
 
   const handleSave = () => {
     if (!name.trim()) { toast.error("Product Name is required"); return; }
@@ -86,22 +96,16 @@ export default function AddProduct() {
           </div>
         ))}
 
-        {/* Tax field with border box */}
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate("/billing/tax-details", { state: { totalPrice: 0 } })}
+        >
           <div className="shrink-0 w-10 flex justify-center">
             <Film className="h-5 w-5 text-muted-foreground/40" />
           </div>
           <div className="flex-1 flex items-center border border-emerald rounded-md px-3 py-2">
             <span className="text-sm text-foreground flex-1">Tax</span>
-            <div className="flex items-center gap-1">
-              <Input
-                value={tax}
-                onChange={e => setTax(e.target.value)}
-                type="number"
-                className="border-0 w-16 text-right px-0 focus-visible:ring-0 shadow-none h-auto py-0"
-              />
-              <span className="text-sm text-muted-foreground">₹</span>
-            </div>
+            <span className="text-sm font-semibold text-foreground">{tax} ₹</span>
           </div>
         </div>
       </div>
