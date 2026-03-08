@@ -59,7 +59,7 @@ export default function AddProduct() {
       setHsn(f.hsn || "");
     }
     if (incomingState?.taxData) {
-      setTax(String(incomingState.taxData.taxAmount || 0));
+      setTax(String(incomingState.taxData.gstTotal || 0));
     }
   }, []);
 
