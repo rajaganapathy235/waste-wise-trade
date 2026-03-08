@@ -44,6 +44,33 @@ export interface ChatThread {
   unreadCount: number;
 }
 
+export interface Review {
+  id: string;
+  reviewerId: string;
+  reviewerName: string;
+  revieweeId: string;
+  leadId: string;
+  rating: number; // 1-5
+  comment: string;
+  createdAt: string;
+}
+
+export interface TransportRequest {
+  id: string;
+  leadId: string;
+  materialType: string;
+  quantity: number;
+  fromDistrict: string;
+  toDistrict: string;
+  requestedDate: string;
+  vehicleType: "Tempo" | "Mini Truck" | "Full Truck";
+  status: "Pending" | "Accepted" | "In Transit" | "Delivered" | "Cancelled";
+  estimatedCost?: number;
+  providerName?: string;
+  providerPhone?: string;
+  createdAt: string;
+}
+
 export interface UserProfile {
   id: string;
   phone: string;
@@ -58,6 +85,8 @@ export interface UserProfile {
   blockedUsers: string[];
   verificationDocuments?: { selfie?: string; gstCert?: string; incorpCert?: string };
   verificationStatus: "none" | "pending" | "verified" | "rejected";
+  trustScore: number; // average rating
+  totalReviews: number;
 }
 
 export const MATERIAL_TYPES: Record<LeadCategory, string[]> = {
