@@ -269,9 +269,15 @@ export default function JobWork() {
                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                       <MapPin className="h-3 w-3" /> {post.location}
                     </div>
-                    <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1">
-                      <Phone className="h-3 w-3" /> {t("jobWork.contact")}
-                    </Button>
+                    {user.isSubscribed ? (
+                      <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => navigate(`/chat/${post.id}`)}>
+                        <Phone className="h-3 w-3" /> {t("jobWork.contact")}
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 border-gold/30 text-gold" onClick={() => { toast(t("jobWork.premiumOnly"), { icon: "👑" }); navigate("/profile"); }}>
+                        <Crown className="h-3 w-3" /> <Lock className="h-2.5 w-2.5" /> {t("jobWork.contact")}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
