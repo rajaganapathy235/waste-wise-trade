@@ -106,7 +106,7 @@ export default function Billing() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, setUser } = useApp();
-  const { parties: billingParties, setParties: setBillingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
+  const { parties: billingParties, setParties: setBillingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses, invoices, setInvoices } = useBilling();
   const i18n = useI18n();
   const { t, lang, setLang, languages } = i18n;
 
