@@ -47,6 +47,7 @@ function App() {
       <Route path="/demand-heatmap" element={<DemandHeatmap />} />
       <Route path="/transport" element={<Transport />} />
       <Route path="/tneb" element={<TNEB />} />
+      <Route path="/billing" element={<Billing />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
