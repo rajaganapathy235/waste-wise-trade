@@ -34,6 +34,7 @@ const typeColor = (type: GSTInvoice["type"]) => {
 
 export default function AllInvoices() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { invoices } = useBilling();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "sale" | "purchase" | "challan" | "cn-dn" | "other">("all");
