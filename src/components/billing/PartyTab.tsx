@@ -4,7 +4,7 @@ import { Phone, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-
+import StatementDialog from "./StatementDialog";
 type PartyFilter = "Customers" | "Suppliers";
 
 interface Party {
@@ -29,6 +29,7 @@ export default function PartyTab() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<PartyFilter>("Customers");
   const [search, setSearch] = useState("");
+  const [statementParty, setStatementParty] = useState<{ id: string; name: string } | null>(null);
   const filters: PartyFilter[] = ["Customers", "Suppliers"];
 
   const filtered = MOCK_PARTIES.filter(
@@ -88,7 +89,7 @@ export default function PartyTab() {
                     {party.billCount} Bills
                   </span>
                   <button
-                    onClick={() => toast.info(`${party.name} statement`)}
+                    onClick={() => setStatementParty({ id: party.id, name: party.name })}
                     className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold"
                   >
                     Statement
@@ -120,6 +121,14 @@ export default function PartyTab() {
       <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20">
         <Plus className="h-7 w-7" />
       </button>
+
+      {/* Statement Dialog */}
+      <StatementDialog
+        open={!!statementParty}
+        onOpenChange={(v) => !v && setStatementParty(null)}
+        partyName={statementParty?.name || ""}
+        partyId={statementParty?.id || ""}
+      />
     </div>
   );
 }
