@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Info, Share2, Pencil, MinusCircle, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +30,7 @@ const MOCK_BILLS: Bill[] = [
 ];
 
 export default function BillsTab() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<BillFilter>("Sales");
   const filters: BillFilter[] = ["Sales", "Purchase", "Quotation"];
@@ -122,7 +124,10 @@ export default function BillsTab() {
       </div>
 
       {/* FAB */}
-      <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20">
+      <button
+        onClick={() => navigate("/billing/generate-bill", { state: { billType: filter } })}
+        className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg flex items-center justify-center z-20"
+      >
         <Plus className="h-7 w-7" />
       </button>
     </div>
