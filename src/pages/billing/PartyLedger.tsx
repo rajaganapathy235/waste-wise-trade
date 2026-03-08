@@ -9,6 +9,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function PartyLedger() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { partyId } = useParams();
   const { parties, payments } = useBilling();
   const party = parties.find(p => p.id === partyId);
