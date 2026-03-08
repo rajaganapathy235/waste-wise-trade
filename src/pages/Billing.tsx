@@ -1250,13 +1250,72 @@ export default function Billing() {
               ))}
             </div>
 
-            {/* Transport */}
-            {docType === "delivery-challan" && (
-              <div>
-                <Label className="text-xs">Vehicle No.</Label>
-                <Input value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} placeholder="TN 39 AB 1234" />
+            {/* Transport & Vehicle Details */}
+            <div className="border rounded-lg p-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                <Truck className="h-3.5 w-3.5" /> Transport Details
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Transport Mode</Label>
+                  <Select value={transportMode} onValueChange={setTransportMode}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {["Road", "Rail", "Air", "Ship/Vessel"].map(m => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-[10px]">Vehicle Type</Label>
+                  <Select value={vehicleType} onValueChange={setVehicleType}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {["Regular", "Over Dimensional Cargo (ODC)"].map(v => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Vehicle No. *</Label>
+                  <Input className="h-8 text-xs" value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} placeholder="TN 39 AB 1234" />
+                </div>
+                <div>
+                  <Label className="text-[10px]">Transporter Name</Label>
+                  <Input className="h-8 text-xs" value={transporterName} onChange={(e) => setTransporterName(e.target.value)} placeholder="Sri Logistics" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Transporter ID (GSTIN)</Label>
+                  <Input className="h-8 text-xs" value={transporterId} onChange={(e) => setTransporterId(e.target.value.toUpperCase())} placeholder="33XXXXX1234X1Z5" maxLength={15} />
+                </div>
+                <div>
+                  <Label className="text-[10px]">LR / GR No.</Label>
+                  <Input className="h-8 text-xs" value={lrNo} onChange={(e) => setLrNo(e.target.value)} placeholder="LR-2026-001" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">LR Date</Label>
+                  <Input className="h-8 text-xs" type="date" value={lrDate} onChange={(e) => setLrDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-[10px]">E-Way Bill No.</Label>
+                  <Input className="h-8 text-xs" value={eWayBillNo} onChange={(e) => setEWayBillNo(e.target.value)} placeholder="3714XXXXXXXX" />
+                </div>
+              </div>
+              {eWayBillNo && (
+                <div className="w-1/2">
+                  <Label className="text-[10px]">E-Way Bill Date</Label>
+                  <Input className="h-8 text-xs" type="date" value={eWayBillDate} onChange={(e) => setEWayBillDate(e.target.value)} />
+                </div>
+              )}
+            </div>
 
             {/* Payment Terms */}
             <div>
