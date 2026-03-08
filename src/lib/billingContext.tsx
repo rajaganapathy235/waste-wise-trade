@@ -6,9 +6,12 @@ export interface BillingParty {
   name: string;
   gstin: string;
   phone: string;
+  email?: string;
   address: string;
+  city?: string;
   state: string;
   stateCode: string;
+  taxCode?: string;
   type: "customer" | "supplier" | "both";
   openingBalance: number;
   balanceType: "collect" | "pay";
@@ -22,6 +25,7 @@ export interface BillingItem {
   unit: string;
   salesPrice: number;
   purchasePrice: number;
+  mrp?: number;
   gstRate: number;
   hsnSac: string;
   stockQty: number;
