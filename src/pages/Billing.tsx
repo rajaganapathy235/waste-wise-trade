@@ -208,7 +208,7 @@ export default function Billing() {
               return (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id)}
+                  onClick={() => navigate("/")}
                   className="relative -mt-5 flex flex-col items-center"
                 >
                   <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg ${
