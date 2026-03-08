@@ -35,7 +35,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/my-leads" element={<MyLeads />} />
         <Route path="/chats" element={<ChatList />} />
-        <Route path="/tneb" element={<TNEB />} />
+        <Route path="/job-work" element={<JobWork />} />
         <Route path="/services" element={<Services />} />
       </Route>
       <Route path="/lead/:id" element={<LeadDetail />} />
