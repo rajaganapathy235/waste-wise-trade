@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
-import { FileText } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import BillingHeader from "@/components/BillingHeader";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Product {
