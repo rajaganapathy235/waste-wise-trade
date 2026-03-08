@@ -420,13 +420,13 @@ export default function Billing() {
         <TabsContent value="dashboard" className="mt-4 space-y-4">
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3">
-            <Card className="border-l-4 border-l-emerald cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="border-l-4 border-l-emerald cursor-pointer hover:shadow-md transition-all" onClick={() => { setPartyFilter("collect"); setActiveTab("parties"); }}>
               <CardContent className="p-3">
                 <p className="text-lg font-bold">₹ {totalCollect.toLocaleString("en-IN")}</p>
                 <p className="text-[10px] text-emerald font-semibold flex items-center gap-1">To Collect <ArrowDownLeft className="h-3 w-3" /></p>
               </CardContent>
             </Card>
-            <Card className="border-l-4 border-l-destructive cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+            <Card className="border-l-4 border-l-destructive cursor-pointer hover:shadow-md transition-all" onClick={() => { setPartyFilter("pay"); setActiveTab("parties"); }}>
               <CardContent className="p-3">
                 <p className="text-lg font-bold">₹ {totalPay.toLocaleString("en-IN")}</p>
                 <p className="text-[10px] text-destructive font-semibold flex items-center gap-1">To Pay <ArrowUpRight className="h-3 w-3" /></p>
