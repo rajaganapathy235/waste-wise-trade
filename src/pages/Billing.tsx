@@ -330,6 +330,44 @@ export default function Billing() {
     } else {
       setInvoices((prev) => [invoice, ...prev]);
       toast.success(`${docType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())} created!`);
+
+      // Auto-create or link party when creating a new invoice
+      const isSaleType = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"].includes(docType);
+      const isPurchaseType = ["purchase-invoice", "purchase-order", "debit-note"].includes(docType);
+      const existingParty = billingParties.find(
+        p => p.name.toLowerCase() === buyerName.toLowerCase() || (buyerGstin && p.gstin === buyerGstin)
+      );
+
+      if (!existingParty) {
+        // Auto-create party from invoice details
+        const newParty: import("@/lib/billingContext").BillingParty = {
+          id: "auto_" + Date.now().toString(),
+          name: buyerName,
+          gstin: buyerGstin,
+          phone: "",
+          address: buyerAddress,
+          state: buyerState,
+          stateCode: selectedBuyerState?.code || "",
+          type: isSaleType ? "customer" : isPurchaseType ? "supplier" : "both",
+          openingBalance: total,
+          balanceType: isSaleType ? "collect" : "pay",
+          createdAt: new Date().toISOString().slice(0, 10),
+        };
+        setBillingParties(prev => [newParty, ...prev]);
+        toast.info(`Party "${buyerName}" auto-created from invoice`);
+      } else {
+        // Update existing party's opening balance to include invoice amount
+        setBillingParties(prev => prev.map(p => {
+          if (p.id === existingParty.id) {
+            if (isSaleType) {
+              return { ...p, openingBalance: p.openingBalance + total, balanceType: "collect" as const };
+            } else if (isPurchaseType) {
+              return { ...p, openingBalance: p.openingBalance + total, balanceType: "pay" as const };
+            }
+          }
+          return p;
+        }));
+      }
     }
 
     // E-Way Bill warning
