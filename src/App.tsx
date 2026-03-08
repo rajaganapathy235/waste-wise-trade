@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
+import PartyLedger from "./pages/billing/PartyLedger";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
