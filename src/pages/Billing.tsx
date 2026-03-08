@@ -214,7 +214,7 @@ export default function Billing() {
   const renderContent = () => {
     switch (activeTab) {
       case "home": return renderHomeTab();
-      case "send": return renderSendTab();
+      case "analytics": return renderAnalyticsTab();
       case "products": return renderProductsTab();
       case "party": return <PartyTab />;
       case "bills": return <BillsTab />;
