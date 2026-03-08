@@ -35,7 +35,7 @@ import Daybook from "./pages/billing/Daybook";
 import RecurringInvoices from "./pages/billing/RecurringInvoices";
 import PaymentReminders from "./pages/billing/PaymentReminders";
 
-function App() {
+function AppRoutes() {
   const { isLoggedIn } = useApp();
 
   if (!isLoggedIn) {
@@ -84,6 +84,10 @@ function App() {
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
+}
+
+function App() {
+  return <AppRoutes />;
 }
 
 export default App;
