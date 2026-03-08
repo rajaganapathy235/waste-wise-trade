@@ -17,6 +17,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function CashBank() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { payments, expenses, bankAccounts, setBankAccounts, setPayments } = useBilling();
   const [addOpen, setAddOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
