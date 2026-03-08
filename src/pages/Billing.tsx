@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import BillingHeader from "@/components/BillingHeader";
 import BillsTab from "@/components/billing/BillsTab";
+import PartyTab from "@/components/billing/PartyTab";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
 type BillingTab = "home" | "send" | "party" | "center" | "bills" | "products";
@@ -276,7 +277,7 @@ export default function Billing() {
       case "home": return renderHomeTab();
       case "send": return renderSendTab();
       case "products": return renderProductsTab();
-      case "party": return renderPlaceholder("Party");
+      case "party": return <PartyTab />;
       case "bills": return <BillsTab />;
       default: return null;
     }
