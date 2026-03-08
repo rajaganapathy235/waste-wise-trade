@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Send, Users, Smartphone, FileText, Package,
+  Send, Users, Home, FileText, Package,
   FileSpreadsheet, TrendingUp, Plus
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
