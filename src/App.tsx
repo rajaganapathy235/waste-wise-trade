@@ -1,9 +1,5 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppProvider, useApp } from "@/lib/appContext";
+import { Routes, Route } from "react-router-dom";
+import { useApp } from "@/lib/appContext";
 import AppShell from "@/components/AppShell";
 import Index from "./pages/Index";
 import LeadDetail from "./pages/LeadDetail";
@@ -18,10 +14,7 @@ import Analytics from "./pages/Analytics";
 import DemandHeatmap from "./pages/DemandHeatmap";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
-
-function AppRoutes() {
+function App() {
   const { isLoggedIn } = useApp();
 
   if (!isLoggedIn) {
@@ -51,19 +44,5 @@ function AppRoutes() {
     </Routes>
   );
 }
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppProvider>
-          <AppRoutes />
-        </AppProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
 
 export default App;
