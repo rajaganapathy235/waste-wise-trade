@@ -1,30 +1,29 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
+import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Send, Crown, Lock, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-// Chat list page
 export default function ChatList() {
   const navigate = useNavigate();
   const { user, chatThreads } = useApp();
+  const { t } = useI18n();
 
   if (!user.isSubscribed) {
     return (
       <div className="px-4 pt-4 pb-8 max-w-md mx-auto">
-        <h1 className="text-lg font-bold mb-4">Chats</h1>
+        <h1 className="text-lg font-bold mb-4">{t("chat.title")}</h1>
         <Card>
           <CardContent className="p-6 text-center">
             <Lock className="h-8 w-8 text-gold mx-auto mb-3" />
-            <h2 className="font-semibold mb-1">Premium Feature</h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              Chat directly with buyers and sellers. Negotiate deals, request samples, and close transactions — all within HiTex.
-            </p>
+            <h2 className="font-semibold mb-1">{t("chat.premium")}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t("chat.premiumDesc")}</p>
             <Button className="bg-gold hover:bg-gold/90 text-gold-foreground font-semibold">
-              <Crown className="h-4 w-4 mr-1" /> Upgrade to Premium — ₹10,000/yr
+              <Crown className="h-4 w-4 mr-1" /> {t("chat.upgrade")}
             </Button>
           </CardContent>
         </Card>
@@ -34,11 +33,11 @@ export default function ChatList() {
 
   return (
     <div className="px-4 pt-4 pb-8 max-w-md mx-auto">
-      <h1 className="text-lg font-bold mb-4">Chats</h1>
+      <h1 className="text-lg font-bold mb-4">{t("chat.title")}</h1>
       {chatThreads.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">
           <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          No conversations yet. Start chatting from a lead detail page.
+          {t("chat.noChats")}
         </div>
       ) : (
         <div className="space-y-2">
@@ -76,11 +75,11 @@ export default function ChatList() {
   );
 }
 
-// Chat thread page
 export function ChatThread() {
   const { leadId } = useParams();
   const navigate = useNavigate();
   const { user, chatThreads, setChatThreads, leads } = useApp();
+  const { t } = useI18n();
   const [message, setMessage] = useState("");
 
   const thread = chatThreads.find((t) => t.leadId === leadId);
@@ -90,15 +89,15 @@ export function ChatThread() {
     return (
       <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> {t("chat.back")}
         </button>
         <Card>
           <CardContent className="p-6 text-center">
             <Lock className="h-8 w-8 text-gold mx-auto mb-3" />
-            <h2 className="font-semibold mb-1">Premium Required</h2>
-            <p className="text-xs text-muted-foreground mb-4">Subscribe to chat with this user.</p>
+            <h2 className="font-semibold mb-1">{t("chat.premiumRequired")}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t("chat.premiumSubDesc")}</p>
             <Button className="bg-gold hover:bg-gold/90 text-gold-foreground font-semibold">
-              <Crown className="h-4 w-4 mr-1" /> Upgrade — ₹10,000/yr
+              <Crown className="h-4 w-4 mr-1" /> {t("chat.upgradeShort")}
             </Button>
           </CardContent>
         </Card>
@@ -143,7 +142,6 @@ export function ChatThread() {
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
-      {/* Header */}
       <div className="bg-navy text-navy-foreground px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
@@ -154,7 +152,6 @@ export function ChatThread() {
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {lead && (
           <div className="bg-secondary rounded-lg p-3 mb-2">
@@ -178,12 +175,11 @@ export function ChatThread() {
         })}
       </div>
 
-      {/* Input */}
       <div className="border-t border-border p-3 flex gap-2">
         <Input
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message…"
+          placeholder={t("chat.typePlaceholder")}
           className="flex-1"
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
         />

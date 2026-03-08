@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AppProvider } from "./lib/appContext";
+import { I18nProvider } from "./lib/i18n";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -16,9 +17,11 @@ createRoot(document.getElementById("root")!).render(
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppProvider>
-          <App />
-        </AppProvider>
+        <I18nProvider>
+          <AppProvider>
+            <App />
+          </AppProvider>
+        </I18nProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,15 +1,17 @@
 import { useApp } from "@/lib/appContext";
+import { useI18n, Language } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Truck } from "lucide-react";
+import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Truck, TrendingUp, BarChart3, Flame, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ReviewsList } from "./Reviews";
 
 export default function Profile() {
   const { user, setUser, setIsLoggedIn, reviews } = useApp();
+  const { t, lang, setLang, languages } = useI18n();
   const navigate = useNavigate();
 
   const myReviews = reviews.filter((r) => r.revieweeId === user.id);
@@ -17,12 +19,36 @@ export default function Profile() {
 
   const handleSubmitVerification = () => {
     setUser((u) => ({ ...u, verificationStatus: "pending" }));
-    toast.success("Verification documents submitted!");
+    toast.success(t("profile.verificationSubmitted"));
   };
 
   return (
     <div className="px-4 pt-4 pb-8">
-      <h1 className="text-lg font-bold mb-4">Profile</h1>
+      <h1 className="text-lg font-bold mb-4">{t("profile.title")}</h1>
+
+      {/* Language Selector */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-3">
+            <Globe className="h-4 w-4 text-primary" /> {t("profile.language")}
+          </h2>
+          <div className="flex gap-2">
+            {languages.map(({ code, label }) => (
+              <button
+                key={code}
+                onClick={() => setLang(code)}
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  lang === code
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Business Card */}
       <Card className="mb-4">
@@ -34,12 +60,12 @@ export default function Profile() {
             </div>
             {user.verificationStatus === "verified" ? (
               <Badge className="bg-emerald/10 text-emerald border-emerald/20 text-[10px]">
-                <Shield className="h-3 w-3 mr-0.5" /> Verified
+                <Shield className="h-3 w-3 mr-0.5" /> {t("profile.verified")}
               </Badge>
             ) : user.verificationStatus === "pending" ? (
-              <Badge variant="secondary" className="text-[10px]">⏳ Pending</Badge>
+              <Badge variant="secondary" className="text-[10px]">⏳ {t("profile.pending")}</Badge>
             ) : (
-              <Badge variant="secondary" className="text-[10px]">Unverified</Badge>
+              <Badge variant="secondary" className="text-[10px]">{t("profile.unverified")}</Badge>
             )}
           </div>
 
@@ -67,16 +93,16 @@ export default function Profile() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold flex items-center gap-1.5">
-              <Star className="h-4 w-4 fill-gold text-gold" /> Trust Score
+              <Star className="h-4 w-4 fill-gold text-gold" /> {t("profile.trustScore")}
             </h2>
             {avgRating ? (
               <div className="flex items-center gap-1">
                 <span className="text-lg font-bold">{avgRating}</span>
                 <span className="text-xs text-muted-foreground">/ 5</span>
-                <span className="text-[10px] text-muted-foreground ml-1">({myReviews.length} reviews)</span>
+                <span className="text-[10px] text-muted-foreground ml-1">({myReviews.length} {t("profile.reviews")})</span>
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground">No reviews yet</span>
+              <span className="text-xs text-muted-foreground">{t("profile.noReviews")}</span>
             )}
           </div>
           {avgRating && (
@@ -94,15 +120,23 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
+      {/* Quick Actions — now includes Market Pulse, Analytics, Demand, Transport */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/transport")}>
-          <Truck className="h-5 w-5 text-primary" />
-          <span className="text-xs">Transport</span>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/market-pulse")}>
+          <TrendingUp className="h-5 w-5 text-emerald" />
+          <span className="text-xs">{t("profile.marketPulse")}</span>
         </Button>
         <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/analytics")}>
-          <Star className="h-5 w-5 text-gold" />
-          <span className="text-xs">Analytics</span>
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <span className="text-xs">{t("profile.analytics")}</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/demand-heatmap")}>
+          <Flame className="h-5 w-5 text-gold" />
+          <span className="text-xs">{t("profile.demandMap")}</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/transport")}>
+          <Truck className="h-5 w-5 text-primary" />
+          <span className="text-xs">{t("profile.transport")}</span>
         </Button>
       </div>
 
@@ -111,9 +145,9 @@ export default function Profile() {
         <Card className="mb-4 border-emerald/20">
           <CardContent className="p-4">
             <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
-              <Shield className="h-4 w-4 text-emerald" /> Get Verified
+              <Shield className="h-4 w-4 text-emerald" /> {t("profile.getVerified")}
             </h2>
-            <p className="text-xs text-muted-foreground mb-3">Upload documents to earn a trust badge.</p>
+            <p className="text-xs text-muted-foreground mb-3">{t("profile.uploadDocs")}</p>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {["GST Cert", "Incorp Cert", "Tax Docs"].map((doc) => (
                 <button key={doc} className="flex flex-col items-center gap-1 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
@@ -122,7 +156,7 @@ export default function Profile() {
               ))}
             </div>
             <Button onClick={handleSubmitVerification} size="sm" className="w-full bg-emerald hover:bg-emerald/90 text-emerald-foreground">
-              Submit for Verification
+              {t("profile.submitVerification")}
             </Button>
           </CardContent>
         </Card>
@@ -131,8 +165,8 @@ export default function Profile() {
       {user.verificationStatus === "pending" && (
         <Card className="mb-4 border-gold/20 bg-gold/5">
           <CardContent className="p-4 text-center">
-            <p className="text-sm font-medium">⏳ Verification Under Review</p>
-            <p className="text-xs text-muted-foreground mt-1">Usually within 24 hours.</p>
+            <p className="text-sm font-medium">{t("profile.verificationPending")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("profile.verificationTime")}</p>
           </CardContent>
         </Card>
       )}
@@ -142,15 +176,15 @@ export default function Profile() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold flex items-center gap-1.5">
-              <Crown className="h-4 w-4 text-gold" /> Subscription
+              <Crown className="h-4 w-4 text-gold" /> {t("profile.subscription")}
             </h2>
             <Badge className={user.isSubscribed ? "bg-emerald/10 text-emerald border-emerald/20 text-[10px]" : "text-[10px]"} variant={user.isSubscribed ? "outline" : "secondary"}>
-              {user.isSubscribed ? "Active" : "Free"}
+              {user.isSubscribed ? t("profile.active") : t("profile.free")}
             </Badge>
           </div>
           {!user.isSubscribed && (
             <Button className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold mt-2">
-              <Crown className="h-4 w-4 mr-1" /> Upgrade — ₹10,000/yr
+              <Crown className="h-4 w-4 mr-1" /> {t("profile.upgradePrice")}
             </Button>
           )}
         </CardContent>
@@ -161,9 +195,9 @@ export default function Profile() {
         <Card className="mb-4">
           <CardContent className="p-4">
             <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
-              <Ban className="h-4 w-4 text-destructive" /> Blocked Users
+              <Ban className="h-4 w-4 text-destructive" /> {t("profile.blockedUsers")}
             </h2>
-            <p className="text-xs text-muted-foreground">{user.blockedUsers.length} user(s) blocked</p>
+            <p className="text-xs text-muted-foreground">{user.blockedUsers.length} {t("profile.blockedCount")}</p>
           </CardContent>
         </Card>
       )}
@@ -171,17 +205,17 @@ export default function Profile() {
       {/* Demo toggles */}
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
-          <span className="text-xs text-muted-foreground">Demo: Subscription</span>
+          <span className="text-xs text-muted-foreground">{t("profile.demoSub")}</span>
           <Switch checked={user.isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
         </div>
         <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
-          <span className="text-xs text-muted-foreground">Demo: Verified</span>
+          <span className="text-xs text-muted-foreground">{t("profile.demoVerified")}</span>
           <Switch checked={user.verificationStatus === "verified"} onCheckedChange={(v) => setUser((u) => ({ ...u, verificationStatus: v ? "verified" : "none" }))} />
         </div>
       </div>
 
       <Button variant="outline" className="w-full text-destructive" onClick={() => setIsLoggedIn(false)}>
-        <LogOut className="h-4 w-4 mr-1" /> Logout
+        <LogOut className="h-4 w-4 mr-1" /> {t("profile.logout")}
       </Button>
     </div>
   );
