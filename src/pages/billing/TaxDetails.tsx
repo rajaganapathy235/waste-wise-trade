@@ -21,6 +21,15 @@ export default function TaxDetails() {
   const [igstPct, setIgstPct] = useState(incoming.igstPct || "0.0");
   const [igstFlat, setIgstFlat] = useState(incoming.igstFlat || "0.0");
 
+  const handleGstTotalChange = (val: string) => {
+    setGstTotal(val);
+    const num = parseFloat(val) || 0;
+    const half = (num / 2).toFixed(1);
+    setCgstPct(half);
+    setSgstPct(half);
+    setIgstPct(num.toFixed(1));
+  };
+
   const totalPrice = incoming.totalPrice || 0;
   const taxableAmount = totalPrice;
   const taxAmount =
@@ -60,7 +69,7 @@ export default function TaxDetails() {
           <CardContent className="p-3">
             <div className={rowClass}>
               <span className={labelClass}>GST Total (%)</span>
-              <Input value={gstTotal} onChange={e => setGstTotal(e.target.value)} type="text" className={inputClass} />
+              <Input value={gstTotal} onChange={e => handleGstTotalChange(e.target.value)} type="text" className={inputClass} />
             </div>
           </CardContent>
         </Card>
