@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export interface RecurringInvoice {
 
 export default function RecurringInvoices() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { parties } = useBilling();
   const [recurring, setRecurring] = useState<RecurringInvoice[]>([
     {
@@ -79,7 +81,7 @@ export default function RecurringInvoices() {
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+        <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Recurring Invoices</h1>
       </div>
 

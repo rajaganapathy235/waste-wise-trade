@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling, BillingParty } from "@/lib/billingContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ const STATES = [
 
 export default function CreateParty() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { setParties } = useBilling();
   const [name, setName] = useState("");
   const [gstin, setGstin] = useState("");
@@ -37,13 +39,13 @@ export default function CreateParty() {
     };
     setParties(prev => [party, ...prev]);
     toast.success("Party created!");
-    navigate(-1);
+    goBack();
   };
 
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+        <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Create Party</h1>
       </div>
 

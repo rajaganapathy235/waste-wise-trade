@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function PartyLedger() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { partyId } = useParams();
   const { parties, payments } = useBilling();
   const party = parties.find(p => p.id === partyId);
@@ -23,7 +25,7 @@ export default function PartyLedger() {
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+        <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Party Statement</h1>
       </div>
 

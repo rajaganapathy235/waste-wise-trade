@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling, BankAccount } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function CashBank() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { payments, expenses, bankAccounts, setBankAccounts, setPayments } = useBilling();
   const [addOpen, setAddOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -137,7 +139,7 @@ export default function CashBank() {
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+        <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Cash & Bank</h1>
         <button onClick={handleExport} className="ml-auto text-[10px] text-primary font-semibold"><FileDown className="h-3 w-3 inline mr-0.5" />CSV</button>
       </div>

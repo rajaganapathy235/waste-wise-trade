@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, TrendingUp, FileDown } from "lucide-react";
@@ -9,6 +10,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function BillWiseProfit() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { invoices, payments } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
@@ -37,7 +39,7 @@ export default function BillWiseProfit() {
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+          <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
           <h1 className="text-lg font-bold flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Bill Wise Profit</h1>
         </div>
         <button onClick={handleExport} className="text-[10px] text-primary font-semibold flex items-center gap-1">

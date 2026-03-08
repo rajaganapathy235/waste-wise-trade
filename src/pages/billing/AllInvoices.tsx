@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBilling, type GSTInvoice } from "@/lib/billingContext";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ const typeColor = (type: GSTInvoice["type"]) => {
 
 export default function AllInvoices() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { invoices } = useBilling();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "sale" | "purchase" | "challan" | "cn-dn" | "other">("all");
@@ -65,7 +67,7 @@ export default function AllInvoices() {
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+          <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
           <h1 className="text-lg font-bold flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> All Invoices</h1>
         </div>
         <button onClick={handleExport} className="text-[10px] text-primary font-semibold flex items-center gap-1">
