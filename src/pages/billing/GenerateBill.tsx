@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { ArrowLeft, TrendingUp, Plus, Trash2 } from "lucide-react";
+import BillingHeader from "@/components/BillingHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -112,31 +113,27 @@ export default function GenerateBill() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background relative">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-accent text-accent-foreground">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button onClick={goBack}>
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-lg font-bold">{billType} Tally Bill</h1>
-          </div>
+      <BillingHeader
+        title="Create Invoice"
+        showBack
+        onBack={goBack}
+        rightAction={
           <button
             onClick={handleGeneratePDF}
-            className="flex items-center gap-1.5 bg-accent-foreground/20 rounded-lg px-3 py-1.5"
+            className="flex items-center gap-1.5 bg-navy-foreground/10 rounded-lg px-3 py-1.5 hover:bg-navy-foreground/20 transition-colors"
           >
             <span className="text-sm font-bold">Go</span>
             <TrendingUp className="h-4 w-4" />
           </button>
-        </div>
-      </header>
+        }
+      />
 
       <main className="flex-1 overflow-y-auto pb-24 px-4 pt-4 space-y-4">
         {/* Invoice Info */}
         <Card className="border-border shadow-sm">
           <CardContent className="p-4 space-y-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-xs text-muted-foreground">बिल का Number</span>
+              <span className="text-xs text-muted-foreground">Invoice Number</span>
               <span className="text-base font-bold text-foreground">Invoice{invoiceNo}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -273,7 +270,7 @@ export default function GenerateBill() {
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-bold text-accent">Add Item (+)</span>
-                  <span className="text-xs text-muted-foreground">यहां क्लिक करे</span>
+                  <span className="text-xs text-muted-foreground">Click to add</span>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">
@@ -410,7 +407,7 @@ export default function GenerateBill() {
         {/* GST Type */}
         <div className="px-2 py-3">
           <div className="flex items-center gap-4">
-            <p className="text-sm font-bold text-foreground">बिल का प्रकार</p>
+            <p className="text-sm font-bold text-foreground">Bill Type</p>
             {(["CGST/SGST", "IGST"] as GstType[]).map((type) => (
               <label key={type} className="flex items-center gap-1.5 cursor-pointer" onClick={() => setGstType(type)}>
                 <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${gstType === type ? "border-accent" : "border-muted-foreground"}`}>
