@@ -9,7 +9,7 @@ const SERVICES = [
   { key: "services.demandMap", icon: Flame, color: "text-gold", path: "/demand-heatmap" },
   { key: "services.transport", icon: Truck, color: "text-primary", path: "/transport" },
   { key: "services.tneb", icon: Zap, color: "text-gold", path: "/tneb" },
-  { key: "services.billing", icon: Receipt, color: "text-emerald", path: null },
+  { key: "services.billing", icon: Receipt, color: "text-emerald", path: "/billing" },
   { key: "services.insurance", icon: ShieldCheck, color: "text-gold", path: null },
   { key: "services.nbfc", icon: Landmark, color: "text-primary", path: null },
 ];
