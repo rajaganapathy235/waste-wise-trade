@@ -1,49 +1,20 @@
-import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
+import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
-import { DbLead } from "@/hooks/useLeads";
-import { useReviews } from "@/hooks/useReviews";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, MapPin, Package, Lock, MessageCircle, Phone, Crown, ShoppingCart, Tag, Star, Truck } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Lock, MessageCircle, Phone, Crown, ShoppingCart, Tag, Ban, Shield, Flag, Star, Truck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ReviewsList } from "./Reviews";
 
 export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile } = useProfile();
+  const { leads, user, setUser, reviews } = useApp();
   const { t } = useI18n();
-  const [lead, setLead] = useState<DbLead | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase.from("leads").select("*").eq("id", id).single();
-      setLead(data);
-      setLoading(false);
-    };
-    if (id) fetch();
-  }, [id]);
-
-  const { reviews } = useReviews(lead?.user_id);
-  const isSubscribed = profile?.is_subscribed || false;
-  const isOwnLead = lead?.user_id === user?.id;
-  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
-  const specs = (lead?.specs as any) || {};
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  const lead = leads.find((l) => l.id === id);
 
   if (!lead) {
     return (
@@ -54,6 +25,20 @@ export default function LeadDetail() {
     );
   }
 
+  const isSubscribed = user.isSubscribed;
+  const isOwnLead = lead.posterId === user.id;
+  const isBlocked = user.blockedUsers.includes(lead.posterId);
+  const posterReviews = reviews.filter((r) => r.revieweeId === lead.posterId);
+  const avgRating = posterReviews.length > 0 ? (posterReviews.reduce((s, r) => s + r.rating, 0) / posterReviews.length).toFixed(1) : null;
+
+  const handleBlock = () => {
+    setUser((u) => ({ ...u, blockedUsers: [...u.blockedUsers, lead.posterId] }));
+    toast.success(t("lead.userBlocked"));
+  };
+  const handleUnblock = () => {
+    setUser((u) => ({ ...u, blockedUsers: u.blockedUsers.filter((bid) => bid !== lead.posterId) }));
+    toast.success(t("lead.userUnblocked"));
+  };
   const handleChat = () => {
     if (!isSubscribed) { toast.error(t("lead.premiumRequired")); return; }
     navigate(`/chat/${lead.id}`);
@@ -67,27 +52,27 @@ export default function LeadDetail() {
 
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
-          {lead.lead_type === "Buy" ? <ShoppingCart className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4 text-emerald" />}
-          <h1 className="text-xl font-bold text-foreground">{lead.material_type}</h1>
+          {lead.leadType === "Buy" ? <ShoppingCart className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4 text-emerald" />}
+          <h1 className="text-xl font-bold text-foreground">{lead.materialType}</h1>
           <Badge variant="outline" className="text-[10px]">{lead.category}</Badge>
           {lead.status === "Sold" && <Badge variant="secondary" className="text-[10px]">{t("lead.sold")}</Badge>}
         </div>
         <p className="text-xs text-muted-foreground">
-          {lead.lead_type === "Buy" ? t("lead.buyer") : t("lead.seller")} · {t("lead.posted")} {new Date(lead.created_at).toLocaleDateString()} · {lead.poster_role}
+          {lead.leadType === "Buy" ? t("lead.buyer") : t("lead.seller")} · {t("lead.posted")} {lead.postedAt} · {lead.posterRole}
         </p>
       </div>
 
-      <div className={`rounded-lg p-3 mb-4 ${lead.lead_type === "Buy" ? "bg-primary/10" : "bg-emerald/10"}`}>
-        <p className={`text-xs font-semibold ${lead.lead_type === "Buy" ? "text-primary" : "text-emerald"}`}>
-          {lead.lead_type === "Buy" ? t("lead.wantsBuy") : t("lead.wantsSell")}
+      <div className={`rounded-lg p-3 mb-4 ${lead.leadType === "Buy" ? "bg-primary/10" : "bg-emerald/10"}`}>
+        <p className={`text-xs font-semibold ${lead.leadType === "Buy" ? "text-primary" : "text-emerald"}`}>
+          {lead.leadType === "Buy" ? t("lead.wantsBuy") : t("lead.wantsSell")}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">{lead.lead_type === "Buy" ? t("lead.offeringPrice") : t("lead.askingPrice")}</p>
-            <p className="text-2xl font-bold text-emerald">₹{lead.price_per_kg}<span className="text-xs font-normal text-muted-foreground">{t("lead.perKg")}</span></p>
+            <p className="text-xs text-muted-foreground mb-1">{lead.leadType === "Buy" ? t("lead.offeringPrice") : t("lead.askingPrice")}</p>
+            <p className="text-2xl font-bold text-emerald">₹{lead.pricePerKg}<span className="text-xs font-normal text-muted-foreground">{t("lead.perKg")}</span></p>
           </CardContent>
         </Card>
         <Card>
@@ -101,40 +86,38 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      {(specs.color || specs.trashPercent !== undefined || specs.count) && (
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <h2 className="text-sm font-semibold mb-3">{t("lead.specs")}</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {specs.color && (
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.color")}</p>
-                  <p className="text-sm font-medium">{specs.color}</p>
-                </div>
-              )}
-              {specs.trashPercent !== undefined && (
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.trash")}</p>
-                  <p className="text-sm font-medium">{specs.trashPercent}%</p>
-                </div>
-              )}
-              {specs.count && (
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.count")}</p>
-                  <p className="text-sm font-medium">{specs.count}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <h2 className="text-sm font-semibold mb-3">{t("lead.specs")}</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {lead.specs.color && (
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.color")}</p>
+                <p className="text-sm font-medium">{lead.specs.color}</p>
+              </div>
+            )}
+            {lead.specs.trashPercent !== undefined && (
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.trash")}</p>
+                <p className="text-sm font-medium">{lead.specs.trashPercent}%</p>
+              </div>
+            )}
+            {lead.specs.count && (
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("lead.count")}</p>
+                <p className="text-sm font-medium">{lead.specs.count}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="mb-4">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" />
-              <span className="text-sm">{lead.location_district}, Tamil Nadu</span>
+              <span className="text-sm">{lead.locationDistrict}, Tamil Nadu</span>
             </div>
             <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/transport")}>
               <Truck className="h-3.5 w-3.5 mr-1" /> {t("lead.bookTransport")}
@@ -150,7 +133,7 @@ export default function LeadDetail() {
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 fill-gold text-gold" />
                 <span className="text-sm font-semibold">{avgRating}</span>
-                <span className="text-xs text-muted-foreground">({reviews.length} {t("profile.reviews")})</span>
+                <span className="text-xs text-muted-foreground">({posterReviews.length} {t("profile.reviews")})</span>
               </div>
               {!isOwnLead && lead.status === "Sold" && (
                 <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/review/${lead.id}`)}>
@@ -167,15 +150,15 @@ export default function LeadDetail() {
           {isSubscribed ? (
             <div className="p-4 space-y-3">
               <h2 className="text-sm font-semibold flex items-center gap-1.5">
-                <Crown className="h-4 w-4 text-gold" /> {lead.lead_type === "Buy" ? t("lead.buyerContact") : t("lead.sellerContact")}
+                <Crown className="h-4 w-4 text-gold" /> {lead.leadType === "Buy" ? t("lead.buyerContact") : t("lead.sellerContact")}
               </h2>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{lead.poster_name}</span>
-                  {lead.poster_role && <Badge variant="outline" className="text-[10px]">{lead.poster_role}</Badge>}
+                  <span className="text-sm font-medium">{lead.posterName}</span>
+                  {lead.posterRole && <Badge variant="outline" className="text-[10px]">{lead.posterRole}</Badge>}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5" /> {lead.poster_phone}
+                  <Phone className="h-3.5 w-3.5" /> {lead.posterPhone}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -211,9 +194,31 @@ export default function LeadDetail() {
         </CardContent>
       </Card>
 
+      {!isOwnLead && (
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => toast.success(t("lead.reportSubmitted"))}>
+            <Flag className="h-3.5 w-3.5 mr-1" /> {t("lead.report")}
+          </Button>
+          {isBlocked ? (
+            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={handleUnblock}>
+              <Shield className="h-3.5 w-3.5 mr-1" /> {t("lead.unblock")}
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" className="flex-1 text-xs text-destructive" onClick={handleBlock}>
+              <Ban className="h-3.5 w-3.5 mr-1" /> {t("lead.block")}
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="mb-4">
-        <h2 className="text-sm font-semibold mb-2">{t("lead.reviewsFor")} {lead.poster_name}</h2>
-        <ReviewsList userId={lead.user_id} />
+        <h2 className="text-sm font-semibold mb-2">{t("lead.reviewsFor")} {lead.posterName}</h2>
+        <ReviewsList userId={lead.posterId} />
+      </div>
+
+      <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
+        <span className="text-xs text-muted-foreground">{t("lead.demoToggle")}</span>
+        <Switch checked={isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
       </div>
     </div>
   );

@@ -1,11 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
+import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
-import { useReviews, usePostReview } from "@/hooks/useReviews";
-import { supabase } from "@/integrations/supabase/client";
-import { DbLead } from "@/hooks/useLeads";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,23 +23,25 @@ function StarRating({ rating, onRate, size = "md" }: { rating: number; onRate?: 
 }
 
 export function ReviewsList({ userId }: { userId: string }) {
-  const { reviews, loading } = useReviews(userId);
+  const { reviews } = useApp();
   const { t } = useI18n();
+  const userReviews = reviews.filter((r) => r.revieweeId === userId);
 
-  if (loading) return <p className="text-xs text-muted-foreground text-center py-4">Loading...</p>;
-  if (reviews.length === 0) return <p className="text-xs text-muted-foreground text-center py-4">{t("review.noReviews")}</p>;
+  if (userReviews.length === 0) {
+    return <p className="text-xs text-muted-foreground text-center py-4">{t("review.noReviews")}</p>;
+  }
 
   return (
     <div className="space-y-2">
-      {reviews.map((review) => (
+      {userReviews.map((review) => (
         <Card key={review.id}>
           <CardContent className="p-3">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium">{review.reviewer_name}</p>
+              <p className="text-xs font-medium">{review.reviewerName}</p>
               <StarRating rating={review.rating} size="sm" />
             </div>
             <p className="text-xs text-muted-foreground">{review.comment}</p>
-            <p className="text-[10px] text-muted-foreground/60 mt-1">{new Date(review.created_at).toLocaleDateString()}</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">{review.createdAt}</p>
           </CardContent>
         </Card>
       ))}
@@ -54,23 +52,11 @@ export function ReviewsList({ userId }: { userId: string }) {
 export default function WriteReview() {
   const { leadId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile } = useProfile();
+  const { leads, user, reviews, setReviews } = useApp();
   const { t } = useI18n();
-  const { postReview } = usePostReview();
-  const [lead, setLead] = useState<DbLead | null>(null);
+  const lead = leads.find((l) => l.id === leadId);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!leadId) return;
-    supabase.from("leads").select("*").eq("id", leadId).single().then(({ data }) => setLead(data));
-  }, [leadId]);
-
-  const { reviews } = useReviews(lead?.user_id);
-  const existingReview = reviews.find((r) => r.reviewer_id === user?.id && r.lead_id === leadId);
-  const ratingLabels = [t("review.poor"), t("review.belowAvg"), t("review.average"), t("review.good"), t("review.excellent")];
 
   if (!lead) {
     return (
@@ -81,24 +67,20 @@ export default function WriteReview() {
     );
   }
 
-  const handleSubmit = async () => {
+  const existingReview = reviews.find((r) => r.reviewerId === user.id && r.leadId === leadId);
+  const ratingLabels = [t("review.poor"), t("review.belowAvg"), t("review.average"), t("review.good"), t("review.excellent")];
+
+  const handleSubmit = () => {
     if (rating === 0) { toast.error(t("review.selectRating")); return; }
     if (!comment.trim()) { toast.error(t("review.writeComment")); return; }
-    setSubmitting(true);
-    const { error } = await postReview({
-      reviewee_id: lead.user_id,
-      lead_id: lead.id,
-      rating,
-      comment: comment.trim(),
-      reviewer_name: profile?.business_name || profile?.display_name || null,
-    });
-    setSubmitting(false);
-    if (!error) {
-      toast.success(t("review.submitted"));
-      navigate(-1);
-    } else {
-      toast.error("Failed to submit review");
-    }
+    const newReview = {
+      id: `r-${Date.now()}`, reviewerId: user.id, reviewerName: user.businessName,
+      revieweeId: lead.posterId, leadId: lead.id, rating, comment: comment.trim(),
+      createdAt: new Date().toISOString().split("T")[0],
+    };
+    setReviews((prev) => [newReview, ...prev]);
+    toast.success(t("review.submitted"));
+    navigate(-1);
   };
 
   return (
@@ -111,7 +93,7 @@ export default function WriteReview() {
         <h1 className="text-lg font-bold">{t("review.rateReview")}</h1>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        {t("review.rateExperience")} <strong>{lead.poster_name}</strong> {t("review.for")} {lead.material_type}
+        {t("review.rateExperience")} <strong>{lead.posterName}</strong> {t("review.for")} {lead.materialType}
       </p>
 
       {existingReview ? (
@@ -127,8 +109,8 @@ export default function WriteReview() {
           <Card>
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground mb-1">{t("review.deal")}</p>
-              <p className="text-sm font-medium">{lead.material_type} — {lead.quantity.toLocaleString()} kg @ ₹{lead.price_per_kg}/kg</p>
-              <Badge variant="outline" className="text-[10px] mt-1">{lead.poster_role}</Badge>
+              <p className="text-sm font-medium">{lead.materialType} — {lead.quantity.toLocaleString()} kg @ ₹{lead.pricePerKg}/kg</p>
+              <Badge variant="outline" className="text-[10px] mt-1">{lead.posterRole}</Badge>
             </CardContent>
           </Card>
           <div className="text-center">
@@ -140,15 +122,15 @@ export default function WriteReview() {
             <p className="text-xs font-medium mb-1">{t("review.yourReview")}</p>
             <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t("review.placeholder")} className="text-sm min-h-[100px]" />
           </div>
-          <Button onClick={handleSubmit} disabled={submitting} className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold">
-            <Send className="h-4 w-4 mr-1" /> {submitting ? "Submitting..." : t("review.submit")}
+          <Button onClick={handleSubmit} className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold">
+            <Send className="h-4 w-4 mr-1" /> {t("review.submit")}
           </Button>
         </div>
       )}
 
       <div className="mt-6">
-        <h2 className="text-sm font-semibold mb-2">{t("review.reviewsFor")} {lead.poster_name}</h2>
-        <ReviewsList userId={lead.user_id} />
+        <h2 className="text-sm font-semibold mb-2">{t("review.reviewsFor")} {lead.posterName}</h2>
+        <ReviewsList userId={lead.posterId} />
       </div>
     </div>
   );

@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
-import { usePostLead } from "@/hooks/useLeads";
+import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
-import { MATERIAL_TYPES } from "@/lib/mockData";
+import { MATERIAL_TYPES, LeadCategory, Lead, LeadType } from "@/lib/mockData";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,14 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-type LeadType = "Buy" | "Sell";
-type LeadCategory = "Waste" | "Fiber" | "Yarn";
-
 export default function PostLead() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile } = useProfile();
-  const { postLead } = usePostLead();
+  const { setLeads, user } = useApp();
   const { t } = useI18n();
   const [leadType, setLeadType] = useState<LeadType>("Sell");
   const [category, setCategory] = useState<LeadCategory>("Waste");
@@ -29,31 +22,27 @@ export default function PostLead() {
   const [color, setColor] = useState("");
   const [trash, setTrash] = useState("");
   const [count, setCount] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!materialType || !price || !quantity) {
       toast.error(t("postLead.fillRequired"));
       return;
     }
-    setSubmitting(true);
-    const { error } = await postLead({
-      lead_type: leadType,
-      category,
-      material_type: materialType,
-      price_per_kg: Number(price),
-      quantity: Number(quantity),
+    const newLead: Lead = {
+      id: Date.now().toString(),
+      leadType, category, materialType,
+      pricePerKg: Number(price), quantity: Number(quantity),
       specs: { color: color || undefined, trashPercent: trash ? Number(trash) : undefined, count: count || undefined },
-      poster_name: profile?.business_name || profile?.display_name || null,
-      poster_phone: profile?.phone || null,
-      poster_role: null,
-      location_district: profile?.location || null,
-    });
-    setSubmitting(false);
-    if (!error) {
-      toast.success(`${leadType} ${t("postLead.posted")}`);
-      navigate("/my-leads");
-    }
+      status: "Active",
+      posterName: user.businessName, posterPhone: user.phone,
+      posterRole: user.roles[0] || "Waste Trader", posterId: user.id,
+      locationDistrict: user.locationDistrict,
+      postedAt: new Date().toISOString().split("T")[0],
+      views: 0, inquiries: 0,
+    };
+    setLeads((prev) => [newLead, ...prev]);
+    toast.success(`${leadType} ${t("postLead.posted")}`);
+    navigate("/my-leads");
   };
 
   return (
@@ -119,8 +108,8 @@ export default function PostLead() {
             <Input value={count} onChange={(e) => setCount(e.target.value)} placeholder="40s" />
           </div>
         </div>
-        <Button onClick={handleSubmit} disabled={submitting} className={`w-full ${leadType === "Sell" ? "bg-emerald hover:bg-emerald/90" : "bg-primary"}`}>
-          {submitting ? "Posting..." : `${t("postLead.post")} ${leadType} ${t("postLead.lead")}`}
+        <Button onClick={handleSubmit} className={`w-full ${leadType === "Sell" ? "bg-emerald hover:bg-emerald/90" : "bg-primary"}`}>
+          {t("postLead.post")} {leadType} {t("postLead.lead")}
         </Button>
       </div>
     </div>
