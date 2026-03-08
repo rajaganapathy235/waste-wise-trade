@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 // ─── Types ──────────────────────────────────────────────
 export interface BillingParty {
@@ -212,13 +212,38 @@ const MOCK_INVOICES: GSTInvoice[] = [
   },
 ];
 
+// ─── LocalStorage helpers ──────────────────────────────
+const STORAGE_KEY = "billing_data";
+
+function loadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed[key]) return parsed[key];
+    }
+  } catch {}
+  return fallback;
+}
+
+function saveToStorage(data: Record<string, unknown>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {}
+}
+
 export function BillingProvider({ children }: { children: ReactNode }) {
-  const [parties, setParties] = useState<BillingParty[]>(MOCK_PARTIES);
-  const [items, setItems] = useState<BillingItem[]>(MOCK_ITEMS);
-  const [payments, setPayments] = useState<Payment[]>(MOCK_PAYMENTS);
-  const [expenses, setExpenses] = useState<Expense[]>(MOCK_EXPENSES);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(MOCK_BANK_ACCOUNTS);
-  const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
+  const [parties, setParties] = useState<BillingParty[]>(() => loadFromStorage("parties", MOCK_PARTIES));
+  const [items, setItems] = useState<BillingItem[]>(() => loadFromStorage("items", MOCK_ITEMS));
+  const [payments, setPayments] = useState<Payment[]>(() => loadFromStorage("payments", MOCK_PAYMENTS));
+  const [expenses, setExpenses] = useState<Expense[]>(() => loadFromStorage("expenses", MOCK_EXPENSES));
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => loadFromStorage("bankAccounts", MOCK_BANK_ACCOUNTS));
+  const [invoices, setInvoices] = useState<GSTInvoice[]>(() => loadFromStorage("invoices", MOCK_INVOICES));
+
+  // Persist all billing data to localStorage whenever anything changes
+  useEffect(() => {
+    saveToStorage({ parties, items, payments, expenses, bankAccounts, invoices });
+  }, [parties, items, payments, expenses, bankAccounts, invoices]);
 
   return (
     <BillingContext.Provider value={{ parties, setParties, items, setItems, payments, setPayments, expenses, setExpenses, bankAccounts, setBankAccounts, invoices, setInvoices }}>
