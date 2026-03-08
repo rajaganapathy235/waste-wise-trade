@@ -18,6 +18,7 @@ import WriteReview from "./pages/Reviews";
 import Services from "./pages/Services";
 import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
+import AddProduct from "./pages/billing/AddProduct";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
