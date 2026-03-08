@@ -289,10 +289,10 @@ export default function Billing() {
                   onClick={() => navigate("/")}
                   className="relative -mt-5 flex flex-col items-center"
                 >
-                  <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg ${
-                    isActive ? "bg-destructive" : "bg-destructive/80"
-                  }`}>
-                    <Icon className="h-6 w-6 text-destructive-foreground" />
+                  <div className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg bg-navy">
+                    <span className="text-[10px] font-bold text-navy-foreground leading-tight text-center">
+                      Hi<span className="text-emerald">Tex</span>
+                    </span>
                   </div>
                 </button>
               );
