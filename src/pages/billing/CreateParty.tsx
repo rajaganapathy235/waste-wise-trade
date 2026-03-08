@@ -18,6 +18,7 @@ const STATES = [
 
 export default function CreateParty() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { setParties } = useBilling();
   const [name, setName] = useState("");
   const [gstin, setGstin] = useState("");
