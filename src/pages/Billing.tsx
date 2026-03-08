@@ -287,21 +287,11 @@ export default function Billing() {
                 <button
                   key={id}
                   onClick={() => navigate("/")}
-                  className="relative -mt-7 flex flex-col items-center group"
+                  className="relative -mt-6 flex flex-col items-center group"
                 >
-                  {/* Fixed recycling arrows ring */}
-                  <svg className="absolute h-[78px] w-[78px]" viewBox="0 0 78 78" fill="none">
-                    <circle cx="39" cy="39" r="36" stroke="hsl(var(--emerald))" strokeWidth="2" strokeDasharray="8 6" opacity="0.35" />
-                    {[0, 120, 240].map((deg) => (
-                      <g key={deg} transform={`rotate(${deg} 39 39)`}>
-                        <path d="M39 5 L43 12 L35 12Z" fill="hsl(var(--emerald))" opacity="0.6" />
-                      </g>
-                    ))}
-                  </svg>
-                  {/* Main button */}
-                  <div className="h-[66px] w-[66px] rounded-full bg-gradient-to-br from-navy via-[hsl(180,50%,20%)] to-emerald flex items-center justify-center shadow-[0_4px_28px_rgba(5,150,105,0.5)] ring-[4px] ring-card transition-transform group-active:scale-90">
-                    <span className="text-lg font-black tracking-tight leading-none text-white drop-shadow-lg">
-                      Hi<span className="text-gold">Tex</span>
+                  <div className="h-[60px] w-[60px] rounded-full bg-navy flex items-center justify-center shadow-lg ring-4 ring-card transition-transform group-active:scale-95">
+                    <span className="text-base font-bold text-navy-foreground tracking-tight leading-none">
+                      Hi<span className="text-emerald">Tex</span>
                     </span>
                   </div>
                 </button>
