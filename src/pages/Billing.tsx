@@ -341,44 +341,144 @@ export default function Billing() {
 
   const needsTax = !["delivery-challan", "quotation"].includes(docType);
 
+  // Dashboard stats
+  const totalCollect = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.totalAmount, 0);
+  const totalPay = invoices.filter(i => i.type === "purchase-invoice").reduce((s, i) => s + i.totalAmount, 0);
+  const thisWeekSales = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.totalAmount, 0);
+  const stockValue = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.taxableAmount, 0);
+
   return (
-    <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+    <div className="px-4 pt-3 pb-24 max-w-lg mx-auto">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
       <h1 className="text-lg font-bold mb-4">GST Billing</h1>
 
-      {/* Tabs: Quick Links / History */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-        <TabsList className="w-full grid grid-cols-2 h-9">
-          <TabsTrigger value="quicklinks" className="text-xs font-semibold">Quick Links</TabsTrigger>
-          <TabsTrigger value="all" className="text-xs font-semibold">History</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-4 h-9">
+          <TabsTrigger value="dashboard" className="text-[10px] font-semibold">Dashboard</TabsTrigger>
+          <TabsTrigger value="quicklinks" className="text-[10px] font-semibold">Create</TabsTrigger>
+          <TabsTrigger value="all" className="text-[10px] font-semibold">History</TabsTrigger>
+          <TabsTrigger value="parties" className="text-[10px] font-semibold">Parties</TabsTrigger>
         </TabsList>
 
-        {/* ─── Quick Links Grid ─── */}
+        {/* ─── Dashboard Tab ─── */}
+        <TabsContent value="dashboard" className="mt-4 space-y-4">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="border-l-4 border-l-emerald cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+              <CardContent className="p-3">
+                <p className="text-lg font-bold">₹ {totalCollect.toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-emerald font-semibold flex items-center gap-1">To Collect <ArrowDownLeft className="h-3 w-3" /></p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-destructive cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+              <CardContent className="p-3">
+                <p className="text-lg font-bold">₹ {totalPay.toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-destructive font-semibold flex items-center gap-1">To Pay <ArrowUpRight className="h-3 w-3" /></p>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+              <CardContent className="p-3">
+                <p className="text-xs font-bold">Stock Value</p>
+                <p className="text-[10px] text-muted-foreground">Value of Items</p>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+              <CardContent className="p-3">
+                <p className="text-xs font-bold">₹ {thisWeekSales.toLocaleString("en-IN")}</p>
+                <p className="text-[10px] text-muted-foreground">This week's sale</p>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+              <CardContent className="p-3">
+                <p className="text-xs font-bold">Total Balance</p>
+                <p className="text-[10px] text-muted-foreground">Cash + Bank Balance</p>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab("all")}>
+              <CardContent className="p-3">
+                <p className="text-xs font-bold">Reports</p>
+                <p className="text-[10px] text-muted-foreground">Sales, Party, GST...</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Transactions */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-bold">Transactions</p>
+              <button onClick={() => setActiveTab("all")} className="text-[10px] font-semibold text-primary flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> LAST 365 DAYS
+              </button>
+            </div>
+            <div className="space-y-3">
+              {invoices.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">No transactions yet. Create your first invoice!</div>
+              ) : (
+                invoices.slice(0, 5).map((inv) => (
+                  <Card key={inv.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => setPreviewInvoice(inv)}>
+                    <CardContent className="p-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-bold">{inv.buyerName}</p>
+                          <p className="text-[10px] text-muted-foreground">{typeLabel(inv.type)} {inv.invoiceNo}</p>
+                          <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">₹ {inv.totalAmount.toLocaleString("en-IN")}</p>
+                          <Badge variant="outline" className="text-[9px] mt-1">
+                            {inv.type.includes("purchase") ? "Paid" : "Open"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ─── Quick Links / Create Tab ─── */}
         <TabsContent value="quicklinks" className="mt-4">
-          <div className="grid grid-cols-3 gap-3">
-            {QUICK_LINKS.map(({ key, label, icon: Icon, type, color }) => (
-              <Card
+          {/* Sales Transactions */}
+          <p className="text-sm font-bold mb-3">Sales Transactions</p>
+          <div className="grid grid-cols-4 gap-3 mb-5">
+            {QUICK_LINKS.filter((_, i) => i < 8).map(({ key, label, icon: Icon, type, color }) => (
+              <button
                 key={key}
-                className="cursor-pointer hover:shadow-md transition-all active:scale-95"
+                className="flex flex-col items-center gap-1.5 cursor-pointer"
                 onClick={() => openCreateForType(type)}
               >
-                <CardContent className="p-3 flex flex-col items-center gap-2 text-center">
-                  <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center">
-                    <Icon className={`h-5 w-5 ${color}`} />
-                  </div>
-                  <span className="text-[10px] font-medium leading-tight">{label}</span>
-                </CardContent>
-              </Card>
+                <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center hover:shadow-md transition-all">
+                  <Icon className={`h-5 w-5 ${color}`} />
+                </div>
+                <span className="text-[10px] font-medium leading-tight text-center">{label}</span>
+              </button>
+            ))}
+          </div>
+          {/* Purchase & Other */}
+          <p className="text-sm font-bold mb-3">Purchase & Payments</p>
+          <div className="grid grid-cols-4 gap-3 mb-5">
+            {QUICK_LINKS.filter((_, i) => i >= 8).map(({ key, label, icon: Icon, type, color }) => (
+              <button
+                key={key}
+                className="flex flex-col items-center gap-1.5 cursor-pointer"
+                onClick={() => openCreateForType(type)}
+              >
+                <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center hover:shadow-md transition-all">
+                  <Icon className={`h-5 w-5 ${color}`} />
+                </div>
+                <span className="text-[10px] font-medium leading-tight text-center">{label}</span>
+              </button>
             ))}
           </div>
         </TabsContent>
 
         {/* ─── History Tab ─── */}
         <TabsContent value="all" className="mt-4">
-          {/* Sub-filter */}
           <div className="flex gap-2 mb-3 overflow-x-auto">
             {[
               { val: "all", label: "All" },
@@ -397,7 +497,6 @@ export default function Billing() {
               </button>
             ))}
           </div>
-
           <div className="space-y-3">
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">No documents yet</div>
@@ -441,7 +540,50 @@ export default function Billing() {
           </div>
         </TabsContent>
 
-        {/* Reuse history content for sub-filters */}
+        {/* ─── Parties Tab ─── */}
+        <TabsContent value="parties" className="mt-4">
+          <div className="flex gap-2 mb-4 overflow-x-auto">
+            {["To Pay", "To Collect", "All"].map(f => (
+              <button key={f} className="px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
+                {f}
+              </button>
+            ))}
+          </div>
+          {/* Extract unique parties from invoices */}
+          {(() => {
+            const parties = Array.from(new Set(invoices.map(i => i.buyerName))).map(name => {
+              const partyInvoices = invoices.filter(i => i.buyerName === name);
+              const total = partyInvoices.reduce((s, i) => s + i.totalAmount, 0);
+              const isBuyer = partyInvoices.some(i => i.type.includes("sale"));
+              return { name, total, isBuyer, gstin: partyInvoices[0]?.buyerGstin };
+            });
+            return parties.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">No parties yet. Create an invoice to add parties.</div>
+            ) : (
+              <div className="space-y-3">
+                {parties.map(p => (
+                  <Card key={p.name} className="cursor-pointer hover:shadow-md transition-all">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                        {p.name.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground">Customer</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-emerald flex items-center gap-0.5">₹ {p.total.toLocaleString("en-IN")} <ArrowDownLeft className="h-3 w-3" /></p>
+                        <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            );
+          })()}
+        </TabsContent>
+
+        {/* Reuse for sub-filters */}
         {["invoices", "challans", "cn-dn"].map(tab => (
           <TabsContent key={tab} value={tab} className="mt-4">
             <div className="space-y-3">
@@ -475,6 +617,19 @@ export default function Billing() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 flex items-center justify-center gap-3 z-20">
+        <Button onClick={() => { setDocType("sale-invoice"); resetForm(); setCreateOpen(true); }} className="rounded-full shadow-lg gap-1.5 text-xs bg-emerald hover:bg-emerald/90 text-white">
+          <IndianRupee className="h-3.5 w-3.5" /> Received Payment
+        </Button>
+        <Button onClick={() => { setActiveTab("quicklinks"); }} size="icon" className="rounded-full h-12 w-12 shadow-lg bg-primary">
+          <Plus className="h-5 w-5" />
+        </Button>
+        <Button onClick={() => { setDocType("sale-invoice"); resetForm(); setCreateOpen(true); }} className="rounded-full shadow-lg gap-1.5 text-xs">
+          <FileText className="h-3.5 w-3.5" /> + Bill / Invoice
+        </Button>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════
           CREATE INVOICE DIALOG
