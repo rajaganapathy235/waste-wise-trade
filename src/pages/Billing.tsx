@@ -446,7 +446,9 @@ export default function Billing() {
     setBuyerName(""); setBuyerGstin(""); setBuyerAddress(""); setBuyerState("");
     setShippingName(""); setShippingAddress(""); setShippingGstin(""); setShippingState("");
     setSameAsBilling(true);
-    setGstRate(18); setRefInvoice(""); setVehicleNo(""); setNotes(""); setPaymentTerms(""); setPlaceOfSupply("");
+    setGstRate(18); setRefInvoice(""); setVehicleNo(""); setVehicleType(""); setTransportMode("");
+    setTransporterName(""); setTransporterId(""); setLrNo(""); setLrDate(""); setEWayBillNo(""); setEWayBillDate("");
+    setNotes(""); setPaymentTerms(""); setPlaceOfSupply("");
     setItems([{ slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0, gstRate: 18 }]);
   };
 
