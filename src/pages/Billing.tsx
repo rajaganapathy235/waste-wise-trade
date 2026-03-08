@@ -99,8 +99,18 @@ export default function Billing() {
       <Card className="border-border shadow-sm">
         <CardContent className="p-4 flex items-center justify-between">
           <p className="text-sm font-semibold text-emerald">Licence Activation Status</p>
-          <p className="text-sm font-bold text-foreground">Activated</p>
-        </CardContent>
+          <div className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${user.isSubscribed ? "bg-emerald" : "bg-destructive"}`} />
+            <p className="text-sm font-bold text-foreground">{user.isSubscribed ? "Activated" : "Not Active"}</p>
+          </div>
+          {user.isSubscribed && user.subscriptionExpiry && (
+            <p className="text-[10px] text-muted-foreground">Expires: {user.subscriptionExpiry}</p>
+          )}
+          {!user.isSubscribed && (
+            <button onClick={() => navigate("/profile")} className="text-xs text-primary font-semibold mt-1">
+              Subscribe Now →
+            </button>
+          )}
       </Card>
 
       <Card className="border-border shadow-sm">
