@@ -36,7 +36,15 @@ export default function Billing() {
   const { lang, setLang, languages } = useI18n();
   const [billType, setBillType] = useState<BillType>("Sales");
   const [activeTab, setActiveTab] = useState<BillingTab>("send");
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+      return saved.length > 0 ? saved.map((p: any) => ({
+        id: p.id, name: p.name, sellPrice: p.sellPrice, purchasePrice: p.buyingPrice || p.purchasePrice,
+        salesStock: p.salesStock || 0, purchaseStock: p.purchaseStock || 0,
+      })) : MOCK_PRODUCTS;
+    } catch { return MOCK_PRODUCTS; }
+  });
 
   const billTypes: BillType[] = ["Sales", "Purchase", "Quotation"];
 
@@ -163,7 +171,7 @@ export default function Billing() {
       </div>
 
       {/* Floating Add Button */}
-      <button className="fixed bottom-24 right-6 max-w-md h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
+      <button onClick={() => navigate("/billing/add-product")} className="fixed bottom-24 right-6 max-w-md h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
         <Plus className="h-7 w-7" />
       </button>
     </div>
