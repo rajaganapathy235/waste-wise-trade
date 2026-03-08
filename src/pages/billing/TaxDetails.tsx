@@ -42,7 +42,8 @@ export default function TaxDetails() {
 
   const handleSave = () => {
     const taxData = { gstTotal, cgstPct, cgstFlat, sgstPct, sgstFlat, igstPct, igstFlat, taxAmount };
-    navigate("/billing/add-product", { state: { taxData } });
+    const returnTo = incoming.returnTo || "/billing/add-product";
+    navigate(returnTo, { state: { taxData, formData: incoming.formData } });
   };
 
   const rowClass = "flex items-center justify-between py-1.5";
