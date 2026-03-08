@@ -241,6 +241,14 @@ export default function Billing() {
   const [gstRate, setGstRate] = useState(18);
   const [refInvoice, setRefInvoice] = useState("");
   const [vehicleNo, setVehicleNo] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+  const [transportMode, setTransportMode] = useState("");
+  const [transporterName, setTransporterName] = useState("");
+  const [transporterId, setTransporterId] = useState("");
+  const [lrNo, setLrNo] = useState("");
+  const [lrDate, setLrDate] = useState("");
+  const [eWayBillNo, setEWayBillNo] = useState("");
+  const [eWayBillDate, setEWayBillDate] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
   const [placeOfSupply, setPlaceOfSupply] = useState("");
