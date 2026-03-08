@@ -10,6 +10,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function GSTReports() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { invoices } = useBilling();
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [activeReport, setActiveReport] = useState<"gstr1" | "gstr3b" | "hsn" | "gstr2" | null>(null);
