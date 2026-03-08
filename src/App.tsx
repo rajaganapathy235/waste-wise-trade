@@ -19,6 +19,7 @@ import Services from "./pages/Services";
 import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 import AddProduct from "./pages/billing/AddProduct";
+import ProductDetail from "./pages/billing/ProductDetail";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path="/tneb" element={<TNEB />} />
       <Route path="/billing" element={<Billing />} />
       <Route path="/billing/add-product" element={<AddProduct />} />
+      <Route path="/billing/product/:productId" element={<ProductDetail />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
