@@ -6,6 +6,7 @@ import LeadDetail from "./pages/LeadDetail";
 import MyLeads from "./pages/MyLeads";
 import PostLead from "./pages/PostLead";
 import TNEB from "./pages/TNEB";
+import JobWork from "./pages/JobWork";
 import MarketPulse from "./pages/MarketPulse";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
