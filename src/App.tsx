@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+
 function AppRoutes() {
   const { isLoggedIn } = useApp();
 
