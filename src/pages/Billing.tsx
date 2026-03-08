@@ -276,7 +276,7 @@ export default function Billing() {
       case "send": return renderSendTab();
       case "products": return renderProductsTab();
       case "party": return renderPlaceholder("Party");
-      case "bills": return renderPlaceholder("Bills");
+      case "bills": return <BillsTab />;
       default: return null;
     }
   };
