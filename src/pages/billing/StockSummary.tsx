@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
