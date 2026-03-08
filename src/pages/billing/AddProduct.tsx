@@ -19,6 +19,13 @@ export default function AddProduct() {
   const [hsn, setHsn] = useState("");
   const [tax, setTax] = useState("0");
 
+  // Receive tax data back from TaxDetails page
+  useEffect(() => {
+    if (incomingState?.taxData) {
+      setTax(String(incomingState.taxData.taxAmount || 0));
+    }
+  }, []);
+
   const handleSave = () => {
     if (!name.trim()) { toast.error("Product Name is required"); return; }
     if (!buyingPrice.trim()) { toast.error("Buying Price is required"); return; }
