@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Phone, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ const MOCK_PARTIES: Party[] = [
 ];
 
 export default function PartyTab() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<PartyFilter>("Customers");
   const [search, setSearch] = useState("");
   const filters: PartyFilter[] = ["Customers", "Suppliers"];
@@ -92,7 +94,7 @@ export default function PartyTab() {
                     Statement
                   </button>
                   <button
-                    onClick={() => toast.info(`${party.name} ledger`)}
+                    onClick={() => navigate(`/billing/ledger/${party.id}`, { state: { partyId: party.id, partyName: party.name } })}
                     className="px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[10px] font-bold hover:bg-secondary/80"
                   >
                     Ledger
