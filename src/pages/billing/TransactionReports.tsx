@@ -11,6 +11,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function TransactionReports() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { payments, expenses } = useBilling();
   const [filter, setFilter] = useState<"all" | "in" | "out" | "expense">("all");
   const [search, setSearch] = useState("");
