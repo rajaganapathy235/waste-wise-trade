@@ -37,6 +37,7 @@ const ITEM_PARTY_REPORTS = [
 
 export default function Reports() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
 
   const renderRow = (item: { label: string; icon: any; path: string }, idx: number) => {
     const Icon = item.icon;
