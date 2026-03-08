@@ -62,16 +62,6 @@ export default function Billing() {
         </div>
       </header>
 
-      {/* Sub-header with tab info */}
-      <div className="bg-emerald text-emerald-foreground px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="bg-emerald-foreground text-emerald text-xs font-bold px-3 py-1 rounded">Send</span>
-          <span className="text-sm font-semibold">Sales Bill (0)</span>
-        </div>
-        <button className="p-1">
-          <Menu className="h-5 w-5" />
-        </button>
-      </div>
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto pb-24 px-4 pt-4 space-y-4">
