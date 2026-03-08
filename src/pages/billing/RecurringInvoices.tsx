@@ -28,6 +28,7 @@ export interface RecurringInvoice {
 
 export default function RecurringInvoices() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { parties } = useBilling();
   const [recurring, setRecurring] = useState<RecurringInvoice[]>([
     {
