@@ -798,7 +798,7 @@ export default function Billing() {
                           <div>
                             <p className="text-sm font-bold">{inv.buyerName}</p>
                             <p className="text-[10px] text-muted-foreground">{typeLabel(inv.type)} {inv.invoiceNo}</p>
-                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                            <p className="text-[10px] text-muted-foreground">{formatDisplayDate(inv.date)}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-bold">₹ {inv.totalAmount.toLocaleString("en-IN")}</p>
