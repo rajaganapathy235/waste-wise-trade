@@ -7,17 +7,18 @@ const POPULAR_REPORTS = [
   { label: "Sales Summary", icon: IndianRupee, path: "/billing/sales-summary" },
   { label: "Daybook", icon: BookOpen, path: "/billing/daybook" },
   { label: "Profit and Loss", icon: TrendingUp, path: "/billing/profit-loss" },
-  { label: "Party Statement (Ledger)", icon: Users, path: null },
+  { label: "Party Statement (Ledger)", icon: Users, path: "/billing/party-reports" },
   { label: "Stock Summary", icon: Package, path: "/billing/stock-summary" },
-  { label: "Balance Sheet", icon: Scale, path: null },
+  { label: "Balance Sheet", icon: Scale, path: "/billing/balance-sheet" },
   { label: "Cash and Bank", icon: Landmark, path: "/billing/cash-bank" },
 ];
 
 const MORE_REPORTS = [
-  { label: "Party Reports", icon: Users, path: null },
-  { label: "Item Reports", icon: Package, path: null },
+  { label: "Party Reports", icon: Users, path: "/billing/party-reports" },
+  { label: "Item Reports", icon: Package, path: "/billing/item-reports" },
   { label: "GST Reports", icon: Receipt, path: "/billing/gst-reports" },
-  { label: "Transaction Reports", icon: ShoppingCart, path: null },
+  { label: "Transaction Reports", icon: ShoppingCart, path: "/billing/transaction-reports" },
+  { label: "All Invoices", icon: FileText, path: "/billing/all-invoices" },
 ];
 
 export default function Reports() {
