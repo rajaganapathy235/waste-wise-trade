@@ -152,73 +152,8 @@ export default function Billing() {
     </div>
   );
 
-  // ─── Send Tab ───
-  const filteredSendEntries = MOCK_SEND_ENTRIES.filter(e =>
-    !sendSearch || e.name.toLowerCase().includes(sendSearch.toLowerCase())
-  );
-
-  const renderSendTab = () => (
-    <div className="space-y-3">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={sendSearch}
-          onChange={e => setSendSearch(e.target.value)}
-          placeholder="Search parties..."
-          className="pl-9 h-10 text-sm bg-secondary border-0"
-        />
-      </div>
-
-      {/* Filter chips */}
-      <div className="flex gap-2">
-        {(["send", "overview"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setSendSubTab(tab)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-              sendSubTab === tab
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-            }`}
-          >
-            {tab === "send" ? "Send" : "Overview"}
-          </button>
-        ))}
-      </div>
-
-      {/* Entries */}
-      <div className="space-y-2">
-        {filteredSendEntries.map((entry) => (
-          <Card key={entry.id} className="border-border shadow-sm">
-            <CardContent className="p-3 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                <FileSpreadsheet className="h-5 w-5 text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">{entry.name}</p>
-                <p className="text-[10px] text-muted-foreground">{entry.month}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <p className="text-[10px] text-muted-foreground">{entry.date}</p>
-                <span className="px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">
-                  {entry.billCount} bills
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {filteredSendEntries.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">No entries found</div>
-        )}
-      </div>
-
-      {/* FAB */}
-      <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex items-center justify-center z-20">
-        <Plus className="h-7 w-7" />
-      </button>
-    </div>
-  );
+  // ─── Analytics Tab ───
+  const renderAnalyticsTab = () => <AnalyticsTab />;
 
   // ─── Products Tab ───
   const [productSearch, setProductSearch] = useState("");
