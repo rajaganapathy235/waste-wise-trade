@@ -664,7 +664,13 @@ export default function Billing() {
                         ₹ {p.openingBalance.toLocaleString("en-IN")}
                         {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                       </p>
-                      <button className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                      <button onClick={(e) => {
+                        e.stopPropagation();
+                        const phone = p.phone.replace(/[^0-9]/g, "");
+                        const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${p.openingBalance.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
+                        window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
+                        toast.success("Opening WhatsApp...");
+                      }} className="text-[10px] text-primary font-semibold">Send Reminder</button>
                     </div>
                   </CardContent>
                 </Card>
