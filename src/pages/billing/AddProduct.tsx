@@ -142,6 +142,7 @@ export default function AddProduct() {
       {/* Submit */}
       <div className="sticky bottom-0 bg-emerald">
         <Button onClick={handleSave} className="w-full h-14 text-lg font-bold rounded-none bg-emerald hover:bg-emerald/90 text-emerald-foreground">
+          {editId ? "Update Product" : "Add Product"}
           Add Product
         </Button>
       </div>
