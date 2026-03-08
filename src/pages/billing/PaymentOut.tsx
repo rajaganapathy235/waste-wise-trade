@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 export default function PaymentOut() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { parties, setPayments } = useBilling();
   const [partyId, setPartyId] = useState("");
   const [amount, setAmount] = useState(0);
