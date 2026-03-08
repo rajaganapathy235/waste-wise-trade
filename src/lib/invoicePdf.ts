@@ -294,5 +294,7 @@ export function generateInvoicePdf(inv: GSTInvoice, logoDataUrl?: string) {
   rect(M, M, cW, y - M);
 
   // Save
-  doc.save(`${inv.invoiceNo.replace(/\//g, "-")}.pdf`);
+  const fileName = `${inv.invoiceNo.replace(/\//g, "-")}.pdf`;
+  doc.save(fileName);
+  return doc;
 }
