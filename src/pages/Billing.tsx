@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
 import {
-  Send, Users, Home, FileText, Package,
+  BarChart3, Users, Home, FileText, Package,
   FileSpreadsheet, TrendingUp, Plus, Search
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,23 +11,10 @@ import { Input } from "@/components/ui/input";
 import BillingHeader from "@/components/BillingHeader";
 import BillsTab from "@/components/billing/BillsTab";
 import PartyTab from "@/components/billing/PartyTab";
+import AnalyticsTab from "@/components/billing/AnalyticsTab";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
-type BillingTab = "home" | "send" | "party" | "center" | "bills" | "products";
-
-interface SendEntry {
-  id: string;
-  name: string;
-  month: string;
-  date: string;
-  billCount: number;
-}
-
-const MOCK_SEND_ENTRIES: SendEntry[] = [
-  { id: "s1", name: "Raja", month: "January-2026", date: "22 Jan,2026", billCount: 10 },
-  { id: "s2", name: "SR COTTON", month: "January-2026", date: "27 Jan,2026", billCount: 5 },
-  { id: "s3", name: "KMK TEXTILES", month: "February-2026", date: "15 Feb,2026", billCount: 3 },
-];
+type BillingTab = "home" | "analytics" | "party" | "center" | "bills" | "products";
 
 interface Product {
   id: string;
@@ -47,8 +34,6 @@ export default function Billing() {
   const navigate = useNavigate();
   const { user } = useApp();
   const [activeTab, setActiveTab] = useState<BillingTab>("home");
-  const [sendSearch, setSendSearch] = useState("");
-  const [sendSubTab, setSendSubTab] = useState<"send" | "overview">("send");
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
@@ -63,7 +48,7 @@ export default function Billing() {
   const billTypes: BillType[] = ["Sales", "Purchase", "Quotation"];
 
   const TABS: { id: BillingTab; label: string; icon: React.ElementType }[] = [
-    { id: "send", label: "Send", icon: Send },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "party", label: "Party", icon: Users },
     { id: "center", label: "", icon: Home },
     { id: "bills", label: "Bills", icon: FileText },
@@ -167,73 +152,8 @@ export default function Billing() {
     </div>
   );
 
-  // ─── Send Tab ───
-  const filteredSendEntries = MOCK_SEND_ENTRIES.filter(e =>
-    !sendSearch || e.name.toLowerCase().includes(sendSearch.toLowerCase())
-  );
-
-  const renderSendTab = () => (
-    <div className="space-y-3">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={sendSearch}
-          onChange={e => setSendSearch(e.target.value)}
-          placeholder="Search parties..."
-          className="pl-9 h-10 text-sm bg-secondary border-0"
-        />
-      </div>
-
-      {/* Filter chips */}
-      <div className="flex gap-2">
-        {(["send", "overview"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setSendSubTab(tab)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-              sendSubTab === tab
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-            }`}
-          >
-            {tab === "send" ? "Send" : "Overview"}
-          </button>
-        ))}
-      </div>
-
-      {/* Entries */}
-      <div className="space-y-2">
-        {filteredSendEntries.map((entry) => (
-          <Card key={entry.id} className="border-border shadow-sm">
-            <CardContent className="p-3 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                <FileSpreadsheet className="h-5 w-5 text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground">{entry.name}</p>
-                <p className="text-[10px] text-muted-foreground">{entry.month}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <p className="text-[10px] text-muted-foreground">{entry.date}</p>
-                <span className="px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold">
-                  {entry.billCount} bills
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {filteredSendEntries.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">No entries found</div>
-        )}
-      </div>
-
-      {/* FAB */}
-      <button className="fixed bottom-24 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex items-center justify-center z-20">
-        <Plus className="h-7 w-7" />
-      </button>
-    </div>
-  );
+  // ─── Analytics Tab ───
+  const renderAnalyticsTab = () => <AnalyticsTab />;
 
   // ─── Products Tab ───
   const [productSearch, setProductSearch] = useState("");
@@ -294,7 +214,7 @@ export default function Billing() {
   const renderContent = () => {
     switch (activeTab) {
       case "home": return renderHomeTab();
-      case "send": return renderSendTab();
+      case "analytics": return renderAnalyticsTab();
       case "products": return renderProductsTab();
       case "party": return <PartyTab />;
       case "bills": return <BillsTab />;
