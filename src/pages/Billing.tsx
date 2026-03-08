@@ -348,20 +348,30 @@ export default function Billing() {
   const thisWeekSales = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.totalAmount, 0);
   const stockValue = invoices.filter(i => i.type === "sale-invoice").reduce((s, i) => s + i.taxableAmount, 0);
 
-  return (
-    <div className="px-4 pt-3 pb-24 max-w-lg mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
+  const BILLING_NAV = [
+    { key: "dashboard", label: "Dashboard", icon: Home },
+    { key: "parties", label: "Parties", icon: Users },
+    { key: "items", label: "Items", icon: Package },
+    { key: "marketplace", label: "HiTex", icon: ArrowRightLeft },
+  ];
 
-      <h1 className="text-lg font-bold mb-4">GST Billing</h1>
+  return (
+    <div className="px-4 pt-3 pb-32 max-w-lg mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-bold">GST Billing</h1>
+        <button onClick={() => setActiveTab("quicklinks")} className="flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground rounded-full px-3 py-1.5">
+          <Plus className="h-3.5 w-3.5" /> Create
+        </button>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-        <TabsList className="w-full grid grid-cols-4 h-9">
-          <TabsTrigger value="dashboard" className="text-[10px] font-semibold">Dashboard</TabsTrigger>
-          <TabsTrigger value="quicklinks" className="text-[10px] font-semibold">Create</TabsTrigger>
-          <TabsTrigger value="all" className="text-[10px] font-semibold">History</TabsTrigger>
-          <TabsTrigger value="parties" className="text-[10px] font-semibold">Parties</TabsTrigger>
+        {/* Hidden TabsList — nav is at bottom */}
+        <TabsList className="hidden">
+          <TabsTrigger value="dashboard" />
+          <TabsTrigger value="quicklinks" />
+          <TabsTrigger value="all" />
+          <TabsTrigger value="parties" />
+          <TabsTrigger value="items" />
         </TabsList>
 
         {/* ─── Dashboard Tab ─── */}
