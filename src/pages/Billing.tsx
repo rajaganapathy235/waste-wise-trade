@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Send, Users, Smartphone, FileText, Package,
+  Send, Users, Home, FileText, Package,
   FileSpreadsheet, TrendingUp, Plus
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +44,7 @@ export default function Billing() {
   const TABS: { id: BillingTab; label: string; icon: React.ElementType }[] = [
     { id: "send", label: "Send", icon: Send },
     { id: "party", label: "Party", icon: Users },
-    { id: "center", label: "", icon: Smartphone },
+    { id: "center", label: "", icon: Home },
     { id: "bills", label: "Bills", icon: FileText },
     { id: "products", label: "Products", icon: Package },
   ];
@@ -208,7 +208,7 @@ export default function Billing() {
               return (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id)}
+                  onClick={() => navigate("/")}
                   className="relative -mt-5 flex flex-col items-center"
                 >
                   <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg ${
