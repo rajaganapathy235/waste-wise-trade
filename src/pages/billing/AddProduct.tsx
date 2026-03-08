@@ -69,11 +69,7 @@ export default function AddProduct() {
 
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
-      {/* Header */}
-      <header className="bg-emerald text-emerald-foreground px-4 py-3 flex items-center gap-3">
-        <button onClick={goBack}><ArrowLeft className="h-5 w-5" /></button>
-        <h1 className="text-base font-bold">Add Product</h1>
-      </header>
+      <BillingHeader title="Add Product" showBack onBack={goBack} />
 
       <div className="flex-1 px-4 pt-6 pb-8 space-y-6">
         {fields.map((f, i) => (
