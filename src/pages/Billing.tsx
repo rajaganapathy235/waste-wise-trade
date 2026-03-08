@@ -163,7 +163,7 @@ export default function Billing() {
       </div>
 
       {/* Floating Add Button */}
-      <button className="fixed bottom-24 right-6 max-w-md h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
+      <button onClick={() => navigate("/billing/add-product")} className="fixed bottom-24 right-6 max-w-md h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
         <Plus className="h-7 w-7" />
       </button>
     </div>
