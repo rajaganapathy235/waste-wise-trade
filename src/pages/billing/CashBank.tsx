@@ -139,7 +139,7 @@ export default function CashBank() {
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+        <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Cash & Bank</h1>
         <button onClick={handleExport} className="ml-auto text-[10px] text-primary font-semibold"><FileDown className="h-3 w-3 inline mr-0.5" />CSV</button>
       </div>

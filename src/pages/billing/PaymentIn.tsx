@@ -29,7 +29,7 @@ export default function PaymentIn() {
     };
     setPayments(prev => [payment, ...prev]);
     toast.success("Payment recorded!");
-    navigate(-1);
+    goBack();
   };
 
   return (

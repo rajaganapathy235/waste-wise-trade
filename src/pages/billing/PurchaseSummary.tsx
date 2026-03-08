@@ -42,7 +42,7 @@ export default function PurchaseSummary() {
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
+          <button onClick={goBack}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
           <h1 className="text-lg font-bold flex items-center gap-2"><ShoppingCart className="h-5 w-5 text-primary" /> Purchase Summary</h1>
         </div>
         <button onClick={handleExport} className="text-[10px] text-primary font-semibold flex items-center gap-1">
