@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useApp } from "@/lib/appContext";
 import {
   Send, Users, Home, FileText, Package,
   FileSpreadsheet, TrendingUp, Plus, Search
