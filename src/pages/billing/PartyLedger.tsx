@@ -17,8 +17,7 @@ export default function PartyLedger() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("All");
   const dateFilters: DateFilter[] = ["All", "This Month", "This Year", "Date Range"];
 
-  const storedEntries = JSON.parse(localStorage.getItem(`ledger_entries_${partyId}`) || "[]");
-  const entries = [...(MOCK_ENTRIES[partyId] || []), ...storedEntries];
+  const entries = getAllEntries(partyId);
   const openingBalance = 0;
   const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
   const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
