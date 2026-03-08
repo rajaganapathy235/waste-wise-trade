@@ -238,8 +238,31 @@ export default function Billing() {
 
   // ─── Change Invoice Status ──────────────────────────
   const changeStatus = (id: string, status: GSTInvoice["status"]) => {
-    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status } : inv));
+    const inv = invoices.find(i => i.id === id);
+    setInvoices(prev => prev.map(i => i.id === id ? { ...i, status } : i));
     if (previewInvoice?.id === id) setPreviewInvoice(prev => prev ? { ...prev, status } : null);
+
+    // When marking as paid, record a payment and reduce party outstanding
+    if (status === "paid" && inv) {
+      const isSaleType = ["sale-invoice", "quotation", "proforma", "sale-order", "delivery-challan", "job-work"].includes(inv.type);
+      const existingParty = billingParties.find(
+        p => p.name.toLowerCase() === inv.buyerName.toLowerCase() || (inv.buyerGstin && p.gstin === inv.buyerGstin)
+      );
+
+      // Auto-create payment record
+      const payment: import("@/lib/billingContext").Payment = {
+        id: "autopay_" + Date.now().toString(),
+        type: isSaleType ? "in" : "out",
+        partyId: existingParty?.id || "",
+        partyName: inv.buyerName,
+        amount: inv.totalAmount,
+        paymentMode: "bank",
+        date: new Date().toISOString().slice(0, 10),
+        note: `Payment for ${inv.invoiceNo}`,
+        invoiceRef: inv.invoiceNo,
+      };
+      setPayments(prev => [payment, ...prev]);
+    }
     toast.success(`Status changed to ${statusConfig[status].label}`);
   };
 
