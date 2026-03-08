@@ -108,40 +108,6 @@ export default function Billing() {
           </CardContent>
         </Card>
 
-        {/* Backup Card */}
-        <Card className="border-border shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-emerald">Send Backup to Your Gmail</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Last Taken : {new Date().toLocaleDateString("en-IN")}</p>
-              </div>
-              <Button variant="default" size="sm" className="bg-navy hover:bg-navy/90 text-navy-foreground px-5">
-                Send
-              </Button>
-            </div>
-            <div className="mt-3 space-y-1.5 border-t border-border pt-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-emerald font-medium">How to take backup file ?</p>
-                <p className="text-xs text-destructive font-medium">See in Youtube &gt;&gt;</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-emerald font-medium">How to restore backup (in other phone) ?</p>
-                <p className="text-xs text-destructive font-medium">See in Youtube &gt;&gt;</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Support Card */}
-        <Card className="border-border shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">( App Owner ) <span className="font-semibold text-foreground">HiTex Team</span></p>
-            <Button size="sm" className="bg-emerald hover:bg-emerald/90 text-emerald-foreground px-4">
-              WhatsApp Your Queries
-            </Button>
-          </CardContent>
-        </Card>
 
         {/* Licence Status */}
         <Card className="border-border shadow-sm">
