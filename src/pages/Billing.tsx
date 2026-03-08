@@ -14,7 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, Plus, FileText, Truck, RotateCcw, Download, Trash2,
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
-  FileMinus, FilePlus, IndianRupee, CreditCard, Calendar
+  FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
+  Home, Users, Package, ArrowRightLeft
 } from "lucide-react";
 import { toast } from "sonner";
 
