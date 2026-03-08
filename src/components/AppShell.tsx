@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Home, FileText, Zap, User, ChevronDown, MessageCircle } from "lucide-react";
 import { useApp } from "@/lib/appContext";
+import { useI18n } from "@/lib/i18n";
 import { UserRole } from "@/lib/mockData";
 import {
   DropdownMenu,
@@ -9,26 +10,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const NAV_ITEMS = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/my-leads", label: "My Leads", icon: FileText },
-  { path: "/chats", label: "Chats", icon: MessageCircle },
-  { path: "/tneb", label: "TNEB", icon: Zap },
-  { path: "/profile", label: "Profile", icon: User },
-];
-
 const ALL_ROLES: UserRole[] = ["Waste Trader", "Recycling Mill", "OE Mill", "Job Worker"];
 
 export default function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeRole, setActiveRole, chatThreads, user } = useApp();
+  const { activeRole, setActiveRole, chatThreads } = useApp();
+  const { t } = useI18n();
 
   const totalUnread = chatThreads.reduce((s, t) => s + t.unreadCount, 0);
 
+  const NAV_ITEMS = [
+    { path: "/", label: t("nav.home"), icon: Home },
+    { path: "/my-leads", label: t("nav.myLeads"), icon: FileText },
+    { path: "/chats", label: t("nav.chats"), icon: MessageCircle },
+    { path: "/tneb", label: t("nav.tneb"), icon: Zap },
+    { path: "/profile", label: t("nav.profile"), icon: User },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background relative">
-      {/* Header */}
       <header className="sticky top-0 z-30 bg-navy text-navy-foreground px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold tracking-tight">Hi<span className="text-emerald">Tex</span></span>
@@ -48,12 +49,10 @@ export default function AppShell() {
         </DropdownMenu>
       </header>
 
-      {/* Content */}
       <main className="flex-1 overflow-y-auto pb-20">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-card border-t border-border z-30">
         <div className="flex items-center justify-around py-2">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
@@ -68,7 +67,7 @@ export default function AppShell() {
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{label}</span>
-                {label === "Chats" && totalUnread > 0 && (
+                {label === t("nav.chats") && totalUnread > 0 && (
                   <span className="absolute -top-1 right-0 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
                     {totalUnread}
                   </span>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "@/lib/appContext";
+import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,27 +10,27 @@ import { toast } from "sonner";
 
 export default function TNEB() {
   const { user, setUser } = useApp();
+  const { t } = useI18n();
   const [consumerNo, setConsumerNo] = useState(user.ebConsumerNumber || "");
 
   const handleSave = () => {
     if (consumerNo.length !== 12) {
-      toast.error("Please enter a valid 12-digit EB Consumer Number");
+      toast.error(t("tneb.invalidNo"));
       return;
     }
     setUser((u) => ({ ...u, ebConsumerNumber: consumerNo }));
-    toast.success("Consumer number saved!");
+    toast.success(t("tneb.saved"));
   };
 
   return (
     <div className="px-4 pt-4 pb-8">
-      <h1 className="text-lg font-bold mb-1">TNEB Dashboard</h1>
-      <p className="text-xs text-muted-foreground mb-4">Track your electricity bills</p>
+      <h1 className="text-lg font-bold mb-1">{t("tneb.title")}</h1>
+      <p className="text-xs text-muted-foreground mb-4">{t("tneb.subtitle")}</p>
 
-      {/* Consumer Number Input */}
       <Card className="mb-4">
         <CardContent className="p-4 space-y-3">
           <Label className="text-xs flex items-center gap-1">
-            <Zap className="h-3.5 w-3.5 text-gold" /> EB Consumer Number
+            <Zap className="h-3.5 w-3.5 text-gold" /> {t("tneb.consumerNo")}
           </Label>
           <div className="flex gap-2">
             <Input
@@ -40,26 +41,25 @@ export default function TNEB() {
               className="font-mono tracking-wider"
             />
             <Button onClick={handleSave} size="sm" className="bg-primary shrink-0">
-              Save
+              {t("tneb.save")}
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground">{consumerNo.length}/12 digits</p>
+          <p className="text-[10px] text-muted-foreground">{consumerNo.length}/12 {t("tneb.digits")}</p>
         </CardContent>
       </Card>
 
-      {/* Bill Info Placeholders */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="p-4 text-center">
             <Calendar className="h-5 w-5 text-primary mx-auto mb-2" />
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Next Due Date</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{t("tneb.nextDue")}</p>
             <p className="text-lg font-bold text-muted-foreground/50">--/--/----</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <IndianRupee className="h-5 w-5 text-emerald mx-auto mb-2" />
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Amount Due</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{t("tneb.amountDue")}</p>
             <p className="text-lg font-bold text-muted-foreground/50">₹ ---</p>
           </CardContent>
         </Card>
@@ -67,9 +67,7 @@ export default function TNEB() {
 
       <div className="flex items-start gap-2 bg-secondary rounded-lg p-3">
         <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-        <p className="text-xs text-muted-foreground">
-          TNEB bill data will be fetched automatically once the API integration is connected. Save your consumer number to get started.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("tneb.info")}</p>
       </div>
     </div>
   );
