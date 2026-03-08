@@ -89,7 +89,7 @@ export default function PartyTab() {
                     {party.billCount} Bills
                   </span>
                   <button
-                    onClick={() => toast.info(`${party.name} statement`)}
+                    onClick={() => setStatementParty({ id: party.id, name: party.name })}
                     className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold"
                   >
                     Statement
