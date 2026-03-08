@@ -387,7 +387,7 @@ export default function Billing() {
       id: editingInvoiceId || Date.now().toString(),
       type: docType,
       invoiceNo: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.invoiceNo || generateInvoiceNo(docType, invoices) : generateInvoiceNo(docType, invoices),
-      date: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.date || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      date: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.date || new Date().toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
       status: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.status || "unpaid" : "unpaid",
       sellerName: user.businessName,
       sellerGstin: user.gstNumber,
