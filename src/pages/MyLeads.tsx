@@ -1,25 +1,32 @@
 import { useState } from "react";
-import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
-import { LeadType } from "@/lib/mockData";
+import { useMyLeads } from "@/hooks/useLeads";
 import LeadCard from "@/components/LeadCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function MyLeads() {
-  const { leads, user } = useApp();
+  const { leads, loading } = useMyLeads();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<LeadType | "All">("All");
+  const [activeTab, setActiveTab] = useState<string>("All");
 
-  const myLeads = leads.slice(0, 4).filter((l) => activeTab === "All" || l.leadType === activeTab);
+  const myLeads = leads.filter((l) => activeTab === "All" || l.lead_type === activeTab);
 
-  const tabLabel = (tab: LeadType | "All") => {
+  const tabLabel = (tab: string) => {
     if (tab === "All") return t("home.all");
     if (tab === "Buy") return t("myLeads.iBuy");
     return t("myLeads.iSell");
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-4">

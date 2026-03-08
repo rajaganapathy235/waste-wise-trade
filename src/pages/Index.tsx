@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
-import { LeadCategory, LeadType } from "@/lib/mockData";
+import { useLeads, DbLead } from "@/hooks/useLeads";
 import LeadCard from "@/components/LeadCard";
 import { Input } from "@/components/ui/input";
 import { Search, Megaphone } from "lucide-react";
@@ -9,37 +8,45 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const CATEGORIES: (LeadCategory | "All")[] = ["All", "Waste", "Fiber", "Yarn"];
-const LEAD_TYPES: (LeadType | "All")[] = ["All", "Buy", "Sell"];
+const CATEGORIES = ["All", "Waste", "Fiber", "Yarn"] as const;
+const LEAD_TYPES = ["All", "Buy", "Sell"] as const;
 
 export default function Index() {
-  const { leads } = useApp();
+  const { leads, loading } = useLeads();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<LeadCategory | "All">("All");
-  const [activeType, setActiveType] = useState<LeadType | "All">("All");
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [activeType, setActiveType] = useState<string>("All");
 
   const filtered = leads.filter((l) => {
     const matchCategory = activeCategory === "All" || l.category === activeCategory;
-    const matchType = activeType === "All" || l.leadType === activeType;
+    const matchType = activeType === "All" || l.lead_type === activeType;
     const matchSearch =
       !search ||
-      l.materialType.toLowerCase().includes(search.toLowerCase()) ||
-      l.locationDistrict.toLowerCase().includes(search.toLowerCase());
+      l.material_type.toLowerCase().includes(search.toLowerCase()) ||
+      (l.location_district || "").toLowerCase().includes(search.toLowerCase());
     return matchCategory && matchType && matchSearch;
   });
 
-  const typeLabel = (type: LeadType | "All") => {
+  const typeLabel = (type: string) => {
     if (type === "All") return t("home.all");
     if (type === "Buy") return t("home.buy");
     return t("home.sell");
   };
 
-  const catLabel = (cat: LeadCategory | "All") => {
+  const catLabel = (cat: string) => {
     if (cat === "All") return t("home.all");
     return cat;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-4">
