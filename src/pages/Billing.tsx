@@ -673,47 +673,71 @@ export default function Billing() {
         {/* ─── Parties Tab ─── */}
         <TabsContent value="parties" className="mt-4">
           <div className="flex gap-2 mb-4 overflow-x-auto">
-            {["To Pay", "To Collect", "All"].map(f => (
-              <button key={f} className="px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
-                {f}
+            {([
+              { val: "collect" as const, label: "To Collect" },
+              { val: "pay" as const, label: "To Pay" },
+              { val: "all" as const, label: "All" },
+            ]).map(f => (
+              <button
+                key={f.val}
+                onClick={() => setPartyFilter(f.val)}
+                className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
+                  partyFilter === f.val ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-primary/10"
+                }`}
+              >
+                {f.label}
               </button>
             ))}
           </div>
-          {billingParties.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-sm font-semibold text-muted-foreground">No Parties Found</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Please search for a different party or create a new party.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {billingParties.map(p => (
-                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate(`/billing/party/${p.id}`)}>
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
-                      {p.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold">{p.name}</p>
-                      <p className="text-[10px] text-muted-foreground capitalize">{p.type}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-bold flex items-center gap-0.5 ${p.balanceType === "collect" ? "text-emerald" : "text-destructive"}`}>
-                        ₹ {p.openingBalance.toLocaleString("en-IN")}
-                        {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
-                      </p>
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        const phone = p.phone.replace(/[^0-9]/g, "");
-                        const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${p.openingBalance.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
-                        window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
-                        toast.success("Opening WhatsApp...");
-                      }} className="text-[10px] text-primary font-semibold">Send Reminder</button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          {(() => {
+            const filteredParties = partyFilter === "all"
+              ? billingParties
+              : billingParties.filter(p => p.balanceType === partyFilter);
+            return filteredParties.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-sm font-semibold text-muted-foreground">No Parties Found</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {partyFilter !== "all" ? `No "${partyFilter === "collect" ? "To Collect" : "To Pay"}" parties.` : "Create a new party to get started."}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredParties.map(p => {
+                  const partyReceived = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
+                  const partyPaid = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
+                  const outstanding = p.balanceType === "collect"
+                    ? Math.max(0, p.openingBalance - partyReceived)
+                    : Math.max(0, p.openingBalance - partyPaid);
+                  return (
+                    <Card key={p.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => navigate(`/billing/party/${p.id}`)}>
+                      <CardContent className="p-3 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                          {p.name.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold">{p.name}</p>
+                          <p className="text-[10px] text-muted-foreground capitalize">{p.type}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm font-bold flex items-center gap-0.5 ${p.balanceType === "collect" ? "text-emerald" : "text-destructive"}`}>
+                            ₹ {outstanding.toLocaleString("en-IN")}
+                            {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                          </p>
+                          <button onClick={(e) => {
+                            e.stopPropagation();
+                            const phone = p.phone.replace(/[^0-9]/g, "");
+                            const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${outstanding.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
+                            window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
+                            toast.success("Opening WhatsApp...");
+                          }} className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            );
+          })()}
           <Button onClick={() => navigate("/billing/create-party")} className="w-full mt-4 gap-1.5">
             <Plus className="h-4 w-4" /> Create Party
           </Button>
