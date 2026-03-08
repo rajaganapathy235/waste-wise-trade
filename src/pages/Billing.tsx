@@ -84,7 +84,10 @@ export default function Billing() {
               ))}
             </div>
           </div>
-          <Button className="w-full h-12 text-base font-bold rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button
+            onClick={() => navigate("/billing/generate-bill", { state: { billType } })}
+            className="w-full h-12 text-base font-bold rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground"
+          >
             Generate Bill
           </Button>
         </CardContent>
