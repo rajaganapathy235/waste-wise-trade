@@ -14,6 +14,355 @@ export type Database = {
   }
   public: {
     Tables: {
+      bills: {
+        Row: {
+          bill_no: number
+          bill_type: string
+          created_at: string
+          date: string
+          id: string
+          items: Json | null
+          notes: string | null
+          party_id: string | null
+          subtotal: number | null
+          tax_amount: number | null
+          total: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bill_no: number
+          bill_type: string
+          created_at?: string
+          date: string
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          party_id?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          total?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bill_no?: number
+          bill_type?: string
+          created_at?: string
+          date?: string
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          party_id?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          total?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          sender_id: string
+          text: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sender_id: string
+          text: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sender_id?: string
+          text?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_participants: {
+        Row: {
+          display_name: string | null
+          id: string
+          thread_id: string
+          unread_count: number | null
+          user_id: string
+        }
+        Insert: {
+          display_name?: string | null
+          id?: string
+          thread_id: string
+          unread_count?: number | null
+          user_id: string
+        }
+        Update: {
+          display_name?: string | null
+          id?: string
+          thread_id?: string
+          unread_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_participants_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          lead_id: string | null
+          lead_title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          lead_id?: string | null
+          lead_title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          lead_id?: string | null
+          lead_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_threads_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          inquiries: number | null
+          lead_type: string
+          location_district: string | null
+          material_type: string
+          poster_name: string | null
+          poster_phone: string | null
+          poster_role: string | null
+          price_per_kg: number
+          quantity: number
+          specs: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+          views: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          inquiries?: number | null
+          lead_type: string
+          location_district?: string | null
+          material_type: string
+          poster_name?: string | null
+          poster_phone?: string | null
+          poster_role?: string | null
+          price_per_kg?: number
+          quantity?: number
+          specs?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          views?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          inquiries?: number | null
+          lead_type?: string
+          location_district?: string | null
+          material_type?: string
+          poster_name?: string | null
+          poster_phone?: string | null
+          poster_role?: string | null
+          price_per_kg?: number
+          quantity?: number
+          specs?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          views?: number | null
+        }
+        Relationships: []
+      }
+      ledger_entries: {
+        Row: {
+          created_at: string
+          credit: number | null
+          date: string
+          debit: number | null
+          id: string
+          invoice_no: number | null
+          particular: string | null
+          party_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit?: number | null
+          date: string
+          debit?: number | null
+          id?: string
+          invoice_no?: number | null
+          particular?: string | null
+          party_id: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credit?: number | null
+          date?: string
+          debit?: number | null
+          id?: string
+          invoice_no?: number | null
+          particular?: string | null
+          party_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parties: {
+        Row: {
+          bill_count: number | null
+          created_at: string
+          gstin: string | null
+          id: string
+          initials: string | null
+          location: string | null
+          name: string
+          phone: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bill_count?: number | null
+          created_at?: string
+          gstin?: string | null
+          id?: string
+          initials?: string | null
+          location?: string | null
+          name: string
+          phone?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bill_count?: number | null
+          created_at?: string
+          gstin?: string | null
+          id?: string
+          initials?: string | null
+          location?: string | null
+          name?: string
+          phone?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          gst_rate: number | null
+          hsn_code: string | null
+          id: string
+          name: string
+          purchase_price: number | null
+          sale_price: number | null
+          stock: number | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          gst_rate?: number | null
+          hsn_code?: string | null
+          id?: string
+          name: string
+          purchase_price?: number | null
+          sale_price?: number | null
+          stock?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          gst_rate?: number | null
+          hsn_code?: string | null
+          id?: string
+          name?: string
+          purchase_price?: number | null
+          sale_price?: number | null
+          stock?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -24,10 +373,16 @@ export type Database = {
           email: string | null
           gstin: string | null
           id: string
+          is_subscribed: boolean | null
           location: string | null
           phone: string | null
+          subscription_expiry: string | null
+          total_reviews: number | null
+          trust_score: number | null
           updated_at: string
           user_id: string
+          verification_documents: Json | null
+          verification_status: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -38,10 +393,16 @@ export type Database = {
           email?: string | null
           gstin?: string | null
           id?: string
+          is_subscribed?: boolean | null
           location?: string | null
           phone?: string | null
+          subscription_expiry?: string | null
+          total_reviews?: number | null
+          trust_score?: number | null
           updated_at?: string
           user_id: string
+          verification_documents?: Json | null
+          verification_status?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -52,12 +413,121 @@ export type Database = {
           email?: string | null
           gstin?: string | null
           id?: string
+          is_subscribed?: boolean | null
           location?: string | null
           phone?: string | null
+          subscription_expiry?: string | null
+          total_reviews?: number | null
+          trust_score?: number | null
           updated_at?: string
           user_id?: string
+          verification_documents?: Json | null
+          verification_status?: string | null
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          reviewer_name: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          reviewer_name?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+          reviewer_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_requests: {
+        Row: {
+          created_at: string
+          estimated_cost: number | null
+          from_district: string | null
+          id: string
+          lead_id: string | null
+          material_type: string | null
+          provider_name: string | null
+          provider_phone: string | null
+          quantity: number | null
+          requested_date: string | null
+          status: string
+          to_district: string | null
+          updated_at: string
+          user_id: string
+          vehicle_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          estimated_cost?: number | null
+          from_district?: string | null
+          id?: string
+          lead_id?: string | null
+          material_type?: string | null
+          provider_name?: string | null
+          provider_phone?: string | null
+          quantity?: number | null
+          requested_date?: string | null
+          status?: string
+          to_district?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          estimated_cost?: number | null
+          from_district?: string | null
+          id?: string
+          lead_id?: string | null
+          material_type?: string | null
+          provider_name?: string | null
+          provider_phone?: string | null
+          quantity?: number | null
+          requested_date?: string | null
+          status?: string
+          to_district?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_requests_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
