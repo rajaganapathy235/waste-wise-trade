@@ -98,7 +98,13 @@ export interface GSTInvoice {
   referenceInvoiceNo?: string;
   transportMode?: string;
   vehicleNo?: string;
+  vehicleType?: string;
+  transporterName?: string;
+  transporterId?: string;
+  lrNo?: string;
+  lrDate?: string;
   eWayBillNo?: string;
+  eWayBillDate?: string;
   notes?: string;
   paymentTerms?: string;
   declaration?: string;
@@ -235,6 +241,14 @@ export default function Billing() {
   const [gstRate, setGstRate] = useState(18);
   const [refInvoice, setRefInvoice] = useState("");
   const [vehicleNo, setVehicleNo] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+  const [transportMode, setTransportMode] = useState("");
+  const [transporterName, setTransporterName] = useState("");
+  const [transporterId, setTransporterId] = useState("");
+  const [lrNo, setLrNo] = useState("");
+  const [lrDate, setLrDate] = useState("");
+  const [eWayBillNo, setEWayBillNo] = useState("");
+  const [eWayBillDate, setEWayBillDate] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
   const [placeOfSupply, setPlaceOfSupply] = useState("");
@@ -283,6 +297,14 @@ export default function Billing() {
     setPlaceOfSupply(inv.placeOfSupply);
     setRefInvoice(inv.referenceInvoiceNo || "");
     setVehicleNo(inv.vehicleNo || "");
+    setVehicleType(inv.vehicleType || "");
+    setTransportMode(inv.transportMode || "");
+    setTransporterName(inv.transporterName || "");
+    setTransporterId(inv.transporterId || "");
+    setLrNo(inv.lrNo || "");
+    setLrDate(inv.lrDate || "");
+    setEWayBillNo(inv.eWayBillNo || "");
+    setEWayBillDate(inv.eWayBillDate || "");
     setNotes(inv.notes || "");
     setPaymentTerms(inv.paymentTerms || "");
     setGstRate(inv.isIgst ? inv.igstRate : inv.cgstRate * 2);
@@ -387,7 +409,15 @@ export default function Billing() {
       amountInWords: numberToWords(total),
       taxAmountInWords: numberToWords(taxTotal),
       referenceInvoiceNo: refInvoice || undefined,
+      transportMode: transportMode || undefined,
       vehicleNo: vehicleNo || undefined,
+      vehicleType: vehicleType || undefined,
+      transporterName: transporterName || undefined,
+      transporterId: transporterId || undefined,
+      lrNo: lrNo || undefined,
+      lrDate: lrDate || undefined,
+      eWayBillNo: eWayBillNo || undefined,
+      eWayBillDate: eWayBillDate || undefined,
       notes: notes || undefined,
       paymentTerms: paymentTerms || undefined,
       declaration: "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
@@ -416,7 +446,9 @@ export default function Billing() {
     setBuyerName(""); setBuyerGstin(""); setBuyerAddress(""); setBuyerState("");
     setShippingName(""); setShippingAddress(""); setShippingGstin(""); setShippingState("");
     setSameAsBilling(true);
-    setGstRate(18); setRefInvoice(""); setVehicleNo(""); setNotes(""); setPaymentTerms(""); setPlaceOfSupply("");
+    setGstRate(18); setRefInvoice(""); setVehicleNo(""); setVehicleType(""); setTransportMode("");
+    setTransporterName(""); setTransporterId(""); setLrNo(""); setLrDate(""); setEWayBillNo(""); setEWayBillDate("");
+    setNotes(""); setPaymentTerms(""); setPlaceOfSupply("");
     setItems([{ slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0, gstRate: 18 }]);
   };
 
@@ -1218,13 +1250,72 @@ export default function Billing() {
               ))}
             </div>
 
-            {/* Transport */}
-            {docType === "delivery-challan" && (
-              <div>
-                <Label className="text-xs">Vehicle No.</Label>
-                <Input value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} placeholder="TN 39 AB 1234" />
+            {/* Transport & Vehicle Details */}
+            <div className="border rounded-lg p-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                <Truck className="h-3.5 w-3.5" /> Transport Details
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Transport Mode</Label>
+                  <Select value={transportMode} onValueChange={setTransportMode}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {["Road", "Rail", "Air", "Ship/Vessel"].map(m => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-[10px]">Vehicle Type</Label>
+                  <Select value={vehicleType} onValueChange={setVehicleType}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {["Regular", "Over Dimensional Cargo (ODC)"].map(v => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Vehicle No. *</Label>
+                  <Input className="h-8 text-xs" value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} placeholder="TN 39 AB 1234" />
+                </div>
+                <div>
+                  <Label className="text-[10px]">Transporter Name</Label>
+                  <Input className="h-8 text-xs" value={transporterName} onChange={(e) => setTransporterName(e.target.value)} placeholder="Sri Logistics" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Transporter ID (GSTIN)</Label>
+                  <Input className="h-8 text-xs" value={transporterId} onChange={(e) => setTransporterId(e.target.value.toUpperCase())} placeholder="33XXXXX1234X1Z5" maxLength={15} />
+                </div>
+                <div>
+                  <Label className="text-[10px]">LR / GR No.</Label>
+                  <Input className="h-8 text-xs" value={lrNo} onChange={(e) => setLrNo(e.target.value)} placeholder="LR-2026-001" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">LR Date</Label>
+                  <Input className="h-8 text-xs" type="date" value={lrDate} onChange={(e) => setLrDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-[10px]">E-Way Bill No.</Label>
+                  <Input className="h-8 text-xs" value={eWayBillNo} onChange={(e) => setEWayBillNo(e.target.value)} placeholder="3714XXXXXXXX" />
+                </div>
+              </div>
+              {eWayBillNo && (
+                <div className="w-1/2">
+                  <Label className="text-[10px]">E-Way Bill Date</Label>
+                  <Input className="h-8 text-xs" type="date" value={eWayBillDate} onChange={(e) => setEWayBillDate(e.target.value)} />
+                </div>
+              )}
+            </div>
 
             {/* Payment Terms */}
             <div>
@@ -1405,13 +1496,49 @@ export default function Billing() {
                   </div>
                   <div className="col-span-5 p-1 space-y-0.5">
                     <div className="grid grid-cols-2 gap-0.5">
-                      <p className="font-semibold">Dispatched through</p>
-                      <p className="font-semibold">Destination</p>
+                      <div>
+                        <p className="font-semibold">Dispatched through</p>
+                        <p>{previewInvoice.transporterName || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Destination</p>
+                        <p>{previewInvoice.consigneeState || "-"}</p>
+                      </div>
                     </div>
                     <p className="font-semibold">Terms of Delivery</p>
                     {previewInvoice.termsOfDelivery && <p>{previewInvoice.termsOfDelivery}</p>}
                   </div>
                 </div>
+
+                {/* Transport Details Row */}
+                {(previewInvoice.vehicleNo || previewInvoice.transporterName || previewInvoice.lrNo || previewInvoice.eWayBillNo) && (
+                  <div className="border-b border-foreground/80 px-2 py-1.5">
+                    <p className="text-[9px] text-muted-foreground font-semibold mb-0.5">Transport Details</p>
+                    <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
+                      {previewInvoice.transportMode && (
+                        <p><span className="font-semibold">Mode:</span> {previewInvoice.transportMode}</p>
+                      )}
+                      {previewInvoice.vehicleNo && (
+                        <p><span className="font-semibold">Vehicle No:</span> {previewInvoice.vehicleNo}</p>
+                      )}
+                      {previewInvoice.vehicleType && (
+                        <p><span className="font-semibold">Vehicle Type:</span> {previewInvoice.vehicleType}</p>
+                      )}
+                      {previewInvoice.transporterName && (
+                        <p><span className="font-semibold">Transporter:</span> {previewInvoice.transporterName}</p>
+                      )}
+                      {previewInvoice.transporterId && (
+                        <p><span className="font-semibold">Transporter ID:</span> {previewInvoice.transporterId}</p>
+                      )}
+                      {previewInvoice.lrNo && (
+                        <p><span className="font-semibold">LR/GR No:</span> {previewInvoice.lrNo} {previewInvoice.lrDate ? `(${previewInvoice.lrDate})` : ""}</p>
+                      )}
+                      {previewInvoice.eWayBillNo && (
+                        <p><span className="font-semibold">E-Way Bill:</span> {previewInvoice.eWayBillNo} {previewInvoice.eWayBillDate ? `(${previewInvoice.eWayBillDate})` : ""}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Items Table Header */}
                 <div className="border-b border-foreground/80">
