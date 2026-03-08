@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { mockUser, UserProfile, UserRole, Lead, mockLeads } from "./mockData";
+import { mockUser, UserProfile, UserRole, Lead, mockLeads, ChatThread, mockChatThreads } from "./mockData";
 
 interface AppContextType {
   user: UserProfile;
   setUser: React.Dispatch<React.SetStateAction<UserProfile>>;
   leads: Lead[];
   setLeads: React.Dispatch<React.SetStateAction<Lead[]>>;
+  chatThreads: ChatThread[];
+  setChatThreads: React.Dispatch<React.SetStateAction<ChatThread[]>>;
   activeRole: UserRole;
   setActiveRole: React.Dispatch<React.SetStateAction<UserRole>>;
   isLoggedIn: boolean;
@@ -17,11 +19,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile>(mockUser);
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const [chatThreads, setChatThreads] = useState<ChatThread[]>(mockChatThreads);
   const [activeRole, setActiveRole] = useState<UserRole>(mockUser.roles[0] || "Waste Trader");
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   return (
-    <AppContext.Provider value={{ user, setUser, leads, setLeads, activeRole, setActiveRole, isLoggedIn, setIsLoggedIn }}>
+    <AppContext.Provider value={{ user, setUser, leads, setLeads, chatThreads, setChatThreads, activeRole, setActiveRole, isLoggedIn, setIsLoggedIn }}>
       {children}
     </AppContext.Provider>
   );

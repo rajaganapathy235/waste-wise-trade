@@ -13,6 +13,9 @@ import TNEB from "./pages/TNEB";
 import MarketPulse from "./pages/MarketPulse";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
+import ChatList, { ChatThread } from "./pages/Chat";
+import Analytics from "./pages/Analytics";
+import DemandHeatmap from "./pages/DemandHeatmap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,12 +36,16 @@ function AppRoutes() {
       <Route element={<AppShell />}>
         <Route path="/" element={<Index />} />
         <Route path="/my-leads" element={<MyLeads />} />
+        <Route path="/chats" element={<ChatList />} />
         <Route path="/tneb" element={<TNEB />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
       <Route path="/lead/:id" element={<LeadDetail />} />
       <Route path="/post-lead" element={<PostLead />} />
       <Route path="/market-pulse" element={<MarketPulse />} />
+      <Route path="/chat/:leadId" element={<ChatThread />} />
+      <Route path="/analytics" element={<Analytics />} />
+      <Route path="/demand-heatmap" element={<DemandHeatmap />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
