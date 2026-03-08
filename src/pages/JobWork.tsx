@@ -74,6 +74,7 @@ const MOCK_JOB_WORKS: JobWorkPost[] = [
 export default function JobWork() {
   const { user } = useApp();
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<JobWorkPost[]>(MOCK_JOB_WORKS);
   const [activeTab, setActiveTab] = useState<"all" | "Offer" | "Request">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
