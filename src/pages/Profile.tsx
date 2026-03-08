@@ -3,15 +3,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban } from "lucide-react";
+import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Truck } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { ReviewsList } from "./Reviews";
 
 export default function Profile() {
-  const { user, setUser, setIsLoggedIn } = useApp();
+  const { user, setUser, setIsLoggedIn, reviews } = useApp();
+  const navigate = useNavigate();
+
+  const myReviews = reviews.filter((r) => r.revieweeId === user.id);
+  const avgRating = myReviews.length > 0 ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(1) : null;
 
   const handleSubmitVerification = () => {
     setUser((u) => ({ ...u, verificationStatus: "pending" }));
-    toast.success("Verification documents submitted! We'll review within 24 hours.");
+    toast.success("Verification documents submitted!");
   };
 
   return (
@@ -56,6 +62,50 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* Trust Score */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold flex items-center gap-1.5">
+              <Star className="h-4 w-4 fill-gold text-gold" /> Trust Score
+            </h2>
+            {avgRating ? (
+              <div className="flex items-center gap-1">
+                <span className="text-lg font-bold">{avgRating}</span>
+                <span className="text-xs text-muted-foreground">/ 5</span>
+                <span className="text-[10px] text-muted-foreground ml-1">({myReviews.length} reviews)</span>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">No reviews yet</span>
+            )}
+          </div>
+          {avgRating && (
+            <div className="flex gap-0.5 mb-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star key={n} className={`h-4 w-4 ${n <= Math.round(Number(avgRating)) ? "fill-gold text-gold" : "text-muted-foreground/20"}`} />
+              ))}
+            </div>
+          )}
+          {myReviews.length > 0 && (
+            <div className="mt-2">
+              <ReviewsList userId={user.id} />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/transport")}>
+          <Truck className="h-5 w-5 text-primary" />
+          <span className="text-xs">Transport</span>
+        </Button>
+        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/analytics")}>
+          <Star className="h-5 w-5 text-gold" />
+          <span className="text-xs">Analytics</span>
+        </Button>
+      </div>
+
       {/* Verification Section */}
       {user.verificationStatus === "none" && (
         <Card className="mb-4 border-emerald/20">
@@ -63,19 +113,13 @@ export default function Profile() {
             <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
               <Shield className="h-4 w-4 text-emerald" /> Get Verified
             </h2>
-            <p className="text-xs text-muted-foreground mb-3">
-              Upload documents to earn a trust badge on your profile and listings.
-            </p>
+            <p className="text-xs text-muted-foreground mb-3">Upload documents to earn a trust badge.</p>
             <div className="grid grid-cols-3 gap-2 mb-3">
-              <button className="flex flex-col items-center gap-1 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
-                <Upload className="h-4 w-4" /><span className="text-[8px]">GST Cert</span>
-              </button>
-              <button className="flex flex-col items-center gap-1 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
-                <Upload className="h-4 w-4" /><span className="text-[8px]">Incorp Cert</span>
-              </button>
-              <button className="flex flex-col items-center gap-1 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
-                <Upload className="h-4 w-4" /><span className="text-[8px]">Tax Docs</span>
-              </button>
+              {["GST Cert", "Incorp Cert", "Tax Docs"].map((doc) => (
+                <button key={doc} className="flex flex-col items-center gap-1 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
+                  <Upload className="h-4 w-4" /><span className="text-[8px]">{doc}</span>
+                </button>
+              ))}
             </div>
             <Button onClick={handleSubmitVerification} size="sm" className="w-full bg-emerald hover:bg-emerald/90 text-emerald-foreground">
               Submit for Verification
@@ -88,7 +132,7 @@ export default function Profile() {
         <Card className="mb-4 border-gold/20 bg-gold/5">
           <CardContent className="p-4 text-center">
             <p className="text-sm font-medium">⏳ Verification Under Review</p>
-            <p className="text-xs text-muted-foreground mt-1">We'll notify you once verified (usually within 24 hours).</p>
+            <p className="text-xs text-muted-foreground mt-1">Usually within 24 hours.</p>
           </CardContent>
         </Card>
       )}
@@ -106,11 +150,8 @@ export default function Profile() {
           </div>
           {!user.isSubscribed && (
             <Button className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold mt-2">
-              <Crown className="h-4 w-4 mr-1" /> Upgrade to Premium — ₹10,000/yr
+              <Crown className="h-4 w-4 mr-1" /> Upgrade — ₹10,000/yr
             </Button>
-          )}
-          {user.isSubscribed && user.subscriptionExpiry && (
-            <p className="text-xs text-muted-foreground">Expires: {user.subscriptionExpiry}</p>
           )}
         </CardContent>
       </Card>
@@ -127,17 +168,16 @@ export default function Profile() {
         </Card>
       )}
 
-      {/* Demo toggle */}
-      <div className="flex items-center justify-between bg-secondary rounded-lg p-3 mb-3">
-        <span className="text-xs text-muted-foreground">Demo: Toggle subscription</span>
-        <Switch checked={user.isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
-      </div>
-      <div className="flex items-center justify-between bg-secondary rounded-lg p-3 mb-4">
-        <span className="text-xs text-muted-foreground">Demo: Toggle verified</span>
-        <Switch
-          checked={user.verificationStatus === "verified"}
-          onCheckedChange={(v) => setUser((u) => ({ ...u, verificationStatus: v ? "verified" : "none" }))}
-        />
+      {/* Demo toggles */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
+          <span className="text-xs text-muted-foreground">Demo: Subscription</span>
+          <Switch checked={user.isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
+        </div>
+        <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
+          <span className="text-xs text-muted-foreground">Demo: Verified</span>
+          <Switch checked={user.verificationStatus === "verified"} onCheckedChange={(v) => setUser((u) => ({ ...u, verificationStatus: v ? "verified" : "none" }))} />
+        </div>
       </div>
 
       <Button variant="outline" className="w-full text-destructive" onClick={() => setIsLoggedIn(false)}>

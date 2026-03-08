@@ -3,14 +3,15 @@ import { useApp } from "@/lib/appContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, MapPin, Package, Lock, MessageCircle, Phone, Crown, ShoppingCart, Tag, Ban, Shield, Flag } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Lock, MessageCircle, Phone, Crown, ShoppingCart, Tag, Ban, Shield, Flag, Star, Truck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { ReviewsList } from "./Reviews";
 
 export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { leads, user, setUser } = useApp();
+  const { leads, user, setUser, reviews } = useApp();
   const lead = leads.find((l) => l.id === id);
 
   if (!lead) {
@@ -26,25 +27,22 @@ export default function LeadDetail() {
   const isOwnLead = lead.posterId === user.id;
   const isBlocked = user.blockedUsers.includes(lead.posterId);
 
+  // Poster review stats
+  const posterReviews = reviews.filter((r) => r.revieweeId === lead.posterId);
+  const avgRating = posterReviews.length > 0 ? (posterReviews.reduce((s, r) => s + r.rating, 0) / posterReviews.length).toFixed(1) : null;
+
   const handleBlock = () => {
     setUser((u) => ({ ...u, blockedUsers: [...u.blockedUsers, lead.posterId] }));
     toast.success("User blocked");
   };
 
   const handleUnblock = () => {
-    setUser((u) => ({ ...u, blockedUsers: u.blockedUsers.filter((id) => id !== lead.posterId) }));
+    setUser((u) => ({ ...u, blockedUsers: u.blockedUsers.filter((bid) => bid !== lead.posterId) }));
     toast.success("User unblocked");
   };
 
-  const handleReport = () => {
-    toast.success("Report submitted. We'll review it shortly.");
-  };
-
   const handleChat = () => {
-    if (!isSubscribed) {
-      toast.error("Premium subscription required for chat");
-      return;
-    }
+    if (!isSubscribed) { toast.error("Premium subscription required for chat"); return; }
     navigate(`/chat/${lead.id}`);
   };
 
@@ -120,13 +118,40 @@ export default function LeadDetail() {
         </CardContent>
       </Card>
 
-      {/* Location */}
+      {/* Location + Transport */}
       <Card className="mb-4">
-        <CardContent className="p-4 flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-primary" />
-          <span className="text-sm">{lead.locationDistrict}, Tamil Nadu</span>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span className="text-sm">{lead.locationDistrict}, Tamil Nadu</span>
+            </div>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/transport")}>
+              <Truck className="h-3.5 w-3.5 mr-1" /> Book Transport
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Poster Trust Score */}
+      {avgRating && (
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 fill-gold text-gold" />
+                <span className="text-sm font-semibold">{avgRating}</span>
+                <span className="text-xs text-muted-foreground">({posterReviews.length} review{posterReviews.length !== 1 ? "s" : ""})</span>
+              </div>
+              {!isOwnLead && lead.status === "Sold" && (
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/review/${lead.id}`)}>
+                  <Star className="h-3.5 w-3.5 mr-1" /> Rate Deal
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Contact Section */}
       <Card className="mb-4 overflow-hidden">
@@ -145,9 +170,16 @@ export default function LeadDetail() {
                   <Phone className="h-3.5 w-3.5" /> {lead.posterPhone}
                 </div>
               </div>
-              <Button onClick={handleChat} className="w-full bg-emerald hover:bg-emerald/90 text-emerald-foreground">
-                <MessageCircle className="h-4 w-4 mr-1" /> Open Chat
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleChat} className="flex-1 bg-emerald hover:bg-emerald/90 text-emerald-foreground">
+                  <MessageCircle className="h-4 w-4 mr-1" /> Chat
+                </Button>
+                {!isOwnLead && (
+                  <Button variant="outline" className="flex-1" onClick={() => navigate(`/review/${lead.id}`)}>
+                    <Star className="h-4 w-4 mr-1" /> Review
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="relative">
@@ -174,7 +206,7 @@ export default function LeadDetail() {
       {/* Report / Block */}
       {!isOwnLead && (
         <div className="flex gap-2 mb-4">
-          <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={handleReport}>
+          <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => toast.success("Report submitted.")}>
             <Flag className="h-3.5 w-3.5 mr-1" /> Report
           </Button>
           {isBlocked ? (
@@ -189,13 +221,16 @@ export default function LeadDetail() {
         </div>
       )}
 
+      {/* Reviews section */}
+      <div className="mb-4">
+        <h2 className="text-sm font-semibold mb-2">Reviews for {lead.posterName}</h2>
+        <ReviewsList userId={lead.posterId} />
+      </div>
+
       {/* Demo toggle */}
       <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
         <span className="text-xs text-muted-foreground">Demo: Toggle subscription</span>
-        <Switch
-          checked={isSubscribed}
-          onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))}
-        />
+        <Switch checked={isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
       </div>
     </div>
   );
