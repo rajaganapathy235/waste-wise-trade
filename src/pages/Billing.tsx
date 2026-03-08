@@ -193,7 +193,7 @@ export default function Billing() {
   const { user } = useApp();
   const { t } = useI18n();
   const [invoices, setInvoices] = useState<GSTInvoice[]>(MOCK_INVOICES);
-  const [activeTab, setActiveTab] = useState("quicklinks");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [createOpen, setCreateOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<GSTInvoice | null>(null);
   const [docType, setDocType] = useState<GSTInvoice["type"]>("sale-invoice");
