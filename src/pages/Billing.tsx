@@ -321,8 +321,13 @@ export default function Billing() {
   };
 
   const handleCreate = () => {
-    if (!buyerName || !buyerGstin || !buyerState || items.some((i) => !i.description)) {
-      toast.error("Please fill all required fields");
+    const needsGstin = !["quotation", "proforma", "delivery-challan"].includes(docType);
+    if (!buyerName || (needsGstin && !buyerGstin) || !buyerState || items.some((i) => !i.description)) {
+      toast.error("Please fill all required fields (Party Name, State, Item Description" + (needsGstin ? ", GSTIN" : "") + ")");
+      return;
+    }
+    if (items.every(i => i.amount === 0)) {
+      toast.error("Please add at least one item with quantity and rate");
       return;
     }
 
