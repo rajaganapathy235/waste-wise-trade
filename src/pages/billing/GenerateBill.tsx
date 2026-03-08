@@ -121,7 +121,7 @@ export default function GenerateBill() {
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background relative">
       <BillingHeader
-        title="Create Invoice"
+        title={config.title}
         showBack
         onBack={goBack}
         rightAction={
