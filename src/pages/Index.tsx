@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { LeadCategory, LeadType } from "@/lib/mockData";
 import LeadCard from "@/components/LeadCard";
 import { Input } from "@/components/ui/input";
-import { Search, Wrench, ArrowRight, Megaphone } from "lucide-react";
+import { Search, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
