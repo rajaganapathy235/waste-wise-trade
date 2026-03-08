@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
 import { LayoutGrid, Film } from "lucide-react";
 import BillingHeader from "@/components/BillingHeader";
@@ -11,6 +11,8 @@ export default function AddProduct() {
   const goBack = useSafeBack("/billing");
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const incomingState = (location.state as any) || {};
   const [name, setName] = useState("");
   const [buyingPrice, setBuyingPrice] = useState("");
@@ -19,6 +21,25 @@ export default function AddProduct() {
   const [unit, setUnit] = useState("nos");
   const [hsn, setHsn] = useState("");
   const [tax, setTax] = useState("0");
+
+  // Load existing product for editing
+  useEffect(() => {
+    if (editId) {
+      try {
+        const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+        const found = saved.find((p: any) => p.id === editId);
+        if (found) {
+          setName(found.name || "");
+          setBuyingPrice(String(found.buyingPrice ?? found.purchasePrice ?? ""));
+          setSellPrice(String(found.sellPrice ?? ""));
+          setMrp(found.mrp ? String(found.mrp) : "");
+          setUnit(found.unit || "nos");
+          setHsn(found.hsn || "");
+          setTax(String(found.tax ?? 0));
+        }
+      } catch {}
+    }
+  }, [editId]);
 
   // Receive tax data back from TaxDetails page
   useEffect(() => {
@@ -33,9 +54,8 @@ export default function AddProduct() {
     if (!sellPrice.trim()) { toast.error("Sell Price is required"); return; }
     if (!unit.trim()) { toast.error("Unit is required"); return; }
 
-    // Save to localStorage
     const product = {
-      id: Date.now().toString(),
+      id: editId || Date.now().toString(),
       name: name.trim(),
       buyingPrice: parseFloat(buyingPrice) || 0,
       sellPrice: parseFloat(sellPrice) || 0,
@@ -50,11 +70,23 @@ export default function AddProduct() {
 
     try {
       const existing = JSON.parse(localStorage.getItem("billing_products") || "[]");
-      existing.unshift(product);
+      if (editId) {
+        const idx = existing.findIndex((p: any) => p.id === editId);
+        if (idx !== -1) {
+          product.salesStock = existing[idx].salesStock || 0;
+          product.purchaseStock = existing[idx].purchaseStock || 0;
+          product.createdAt = existing[idx].createdAt || product.createdAt;
+          existing[idx] = product;
+        } else {
+          existing.unshift(product);
+        }
+      } else {
+        existing.unshift(product);
+      }
       localStorage.setItem("billing_products", JSON.stringify(existing));
     } catch {}
 
-    toast.success("Product added!");
+    toast.success(editId ? "Product updated!" : "Product added!");
     goBack();
   };
 
