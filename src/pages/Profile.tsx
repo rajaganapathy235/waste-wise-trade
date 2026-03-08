@@ -29,30 +29,6 @@ export default function Profile() {
       </button>
       <h1 className="text-lg font-bold mb-4">{t("profile.title")}</h1>
 
-      {/* Language Selector */}
-      <Card className="mb-4">
-        <CardContent className="p-4">
-          <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-3">
-            <Globe className="h-4 w-4 text-primary" /> {t("profile.language")}
-          </h2>
-          <div className="flex gap-2">
-            {languages.map(({ code, label }) => (
-              <button
-                key={code}
-                onClick={() => setLang(code)}
-                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  lang === code
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Business Card */}
       <Card className="mb-4">
         <CardContent className="p-4">

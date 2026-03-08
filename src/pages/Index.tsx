@@ -104,26 +104,6 @@ export default function Index() {
         ))}
       </div>
 
-      {/* Job Work Section */}
-      <Card className="mb-4 border-primary/20 bg-primary/5">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Wrench className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-foreground">{t("home.jobWork")}</h3>
-                <p className="text-[10px] text-muted-foreground">{t("home.jobWorkDesc")}</p>
-              </div>
-            </div>
-            <Button size="sm" variant="outline" className="text-xs h-8 border-primary/30 text-primary hover:bg-primary/10">
-              {t("home.findJobWorkers")} <ArrowRight className="h-3 w-3 ml-1" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Feed */}
       <div className="space-y-3 pb-4">
         {filtered.length === 0 ? (
