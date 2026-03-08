@@ -1,10 +1,10 @@
 import { useApp } from "@/lib/appContext";
-import { useI18n, Language } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Truck, TrendingUp, BarChart3, Flame, Globe } from "lucide-react";
+import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, Globe, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ReviewsList } from "./Reviews";
@@ -23,7 +23,10 @@ export default function Profile() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-8">
+    <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+        <ArrowLeft className="h-4 w-4" /> {t("lead.back")}
+      </button>
       <h1 className="text-lg font-bold mb-4">{t("profile.title")}</h1>
 
       {/* Language Selector */}
@@ -68,7 +71,6 @@ export default function Profile() {
               <Badge variant="secondary" className="text-[10px]">{t("profile.unverified")}</Badge>
             )}
           </div>
-
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <FileText className="h-3.5 w-3.5" />
@@ -79,7 +81,6 @@ export default function Profile() {
               <span className="text-xs">{user.locationDistrict}, Tamil Nadu</span>
             </div>
           </div>
-
           <div className="flex flex-wrap gap-1.5 mt-3">
             {user.roles.map((role) => (
               <Badge key={role} variant="outline" className="text-[10px]">{role}</Badge>
@@ -119,26 +120,6 @@ export default function Profile() {
           )}
         </CardContent>
       </Card>
-
-      {/* Quick Actions — now includes Market Pulse, Analytics, Demand, Transport */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/market-pulse")}>
-          <TrendingUp className="h-5 w-5 text-emerald" />
-          <span className="text-xs">{t("profile.marketPulse")}</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/analytics")}>
-          <BarChart3 className="h-5 w-5 text-primary" />
-          <span className="text-xs">{t("profile.analytics")}</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/demand-heatmap")}>
-          <Flame className="h-5 w-5 text-gold" />
-          <span className="text-xs">{t("profile.demandMap")}</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate("/transport")}>
-          <Truck className="h-5 w-5 text-primary" />
-          <span className="text-xs">{t("profile.transport")}</span>
-        </Button>
-      </div>
 
       {/* Verification Section */}
       {user.verificationStatus === "none" && (

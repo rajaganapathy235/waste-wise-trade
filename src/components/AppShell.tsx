@@ -1,21 +1,12 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, FileText, Zap, User, ChevronDown, MessageCircle } from "lucide-react";
+import { Home, FileText, Zap, Grid3X3, MessageCircle, User } from "lucide-react";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
-import { UserRole } from "@/lib/mockData";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-const ALL_ROLES: UserRole[] = ["Waste Trader", "Recycling Mill", "OE Mill", "Job Worker"];
 
 export default function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeRole, setActiveRole, chatThreads } = useApp();
+  const { chatThreads } = useApp();
   const { t } = useI18n();
 
   const totalUnread = chatThreads.reduce((s, t) => s + t.unreadCount, 0);
@@ -25,7 +16,7 @@ export default function AppShell() {
     { path: "/my-leads", label: t("nav.myLeads"), icon: FileText },
     { path: "/chats", label: t("nav.chats"), icon: MessageCircle },
     { path: "/tneb", label: t("nav.tneb"), icon: Zap },
-    { path: "/profile", label: t("nav.profile"), icon: User },
+    { path: "/services", label: t("nav.services"), icon: Grid3X3 },
   ];
 
   return (
@@ -34,19 +25,10 @@ export default function AppShell() {
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold tracking-tight">Hi<span className="text-emerald">Tex</span></span>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-1.5 text-xs font-medium bg-navy-foreground/10 rounded-full px-3 py-1.5 hover:bg-navy-foreground/20 transition-colors">
-            <span className="max-w-[120px] truncate">{activeRole}</span>
-            <ChevronDown className="h-3 w-3" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[160px]">
-            {ALL_ROLES.map((role) => (
-              <DropdownMenuItem key={role} onClick={() => setActiveRole(role)} className={activeRole === role ? "bg-accent/10 font-semibold" : ""}>
-                {role}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button onClick={() => navigate("/profile")} className="flex items-center gap-1.5 text-xs font-medium bg-navy-foreground/10 rounded-full px-3 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+          <User className="h-3.5 w-3.5" />
+          <span>{t("nav.profile")}</span>
+        </button>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-20">
