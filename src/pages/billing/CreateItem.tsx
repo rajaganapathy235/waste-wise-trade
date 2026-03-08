@@ -16,6 +16,7 @@ const CATEGORIES = ["Waste", "Fiber", "Yarn", "Service", "Other"];
 
 export default function CreateItem() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing");
   const { setItems } = useBilling();
   const [name, setName] = useState("");
   const [itemType, setItemType] = useState<"product" | "service">("product");
