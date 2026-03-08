@@ -88,6 +88,7 @@ export interface UserProfile {
   trustScore: number;
   totalReviews: number;
   companyLogo?: string; // base64 data URL
+  upiId?: string;
 }
 
 export const MATERIAL_TYPES: Record<LeadCategory, string[]> = {

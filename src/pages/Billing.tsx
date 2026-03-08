@@ -18,10 +18,12 @@ import {
   Receipt, ShoppingCart, FileCheck, ClipboardList, Briefcase,
   FileMinus, FilePlus, IndianRupee, CreditCard, Calendar,
   Home, Users, Package, ArrowRightLeft, BarChart3, Wallet, Search,
-  MessageCircle, Upload, Bell, Repeat, Share2, Image, Globe, User
+  MessageCircle, Upload, Bell, Repeat, Share2, Image, Globe, User,
+  Pencil, QrCode, AlertTriangle, FileDown, CheckCircle2, Clock, XCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
+import { exportToCSV } from "@/lib/csvExport";
 
 // ─── Types ──────────────────────────────────────────────
 export interface InvoiceItem {
@@ -34,6 +36,7 @@ export interface InvoiceItem {
   per: string;
   discount: number;
   amount: number;
+  gstRate: number;
 }
 
 export interface GSTInvoice {
@@ -41,6 +44,7 @@ export interface GSTInvoice {
   type: "sale-invoice" | "purchase-invoice" | "quotation" | "delivery-challan" | "proforma" | "purchase-order" | "sale-order" | "job-work" | "credit-note" | "debit-note";
   invoiceNo: string;
   date: string;
+  status: "unpaid" | "partial" | "paid";
   // IRN / Ack
   irn?: string;
   ackNo?: string;
@@ -94,6 +98,7 @@ export interface GSTInvoice {
   referenceInvoiceNo?: string;
   transportMode?: string;
   vehicleNo?: string;
+  eWayBillNo?: string;
   notes?: string;
   paymentTerms?: string;
   declaration?: string;
@@ -151,6 +156,12 @@ function generateInvoiceNo(type: string): string {
   return `${prefix}/${new Date().getFullYear()}-${new Date().getFullYear() + 1}/${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
 }
 
+const statusConfig = {
+  unpaid: { label: "Unpaid", color: "bg-destructive/10 text-destructive", icon: XCircle },
+  partial: { label: "Partial", color: "bg-gold/10 text-gold", icon: Clock },
+  paid: { label: "Paid", color: "bg-emerald/10 text-emerald", icon: CheckCircle2 },
+};
+
 // ─── Quick Links Config ──────────────────────────────────
 const QUICK_LINKS: { key: string; label: string; icon: any; type: GSTInvoice["type"]; color: string }[] = [
   { key: "sale", label: "Sale Invoice", icon: Receipt, type: "sale-invoice", color: "text-emerald" },
@@ -171,6 +182,7 @@ const QUICK_LINKS: { key: string; label: string; icon: any; type: GSTInvoice["ty
 const MOCK_INVOICES: GSTInvoice[] = [
   {
     id: "inv1", type: "sale-invoice", invoiceNo: "SHB/456/20", date: "20-Dec-20",
+    status: "unpaid",
     irn: "fef1df90406b928db28a62f816debc9bb5256d9375e6-0dc4226653cc23a8c595",
     ackNo: "112010036563310", ackDate: "21-Dec-20",
     sellerName: "Surabhi Hardwares, Bangalore", sellerGstin: "29AACCT3705E000",
@@ -182,7 +194,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
     deliveryNote: "Delivery Note", modeOfPayment: "Other References",
     placeOfSupply: "Karnataka",
     items: [
-      { slNo: 1, description: "12MM**", hsnSac: "1005", qty: 7, unit: "No", rate: 500, per: "No", discount: 0, amount: 3500 },
+      { slNo: 1, description: "12MM**", hsnSac: "1005", qty: 7, unit: "No", rate: 500, per: "No", discount: 0, amount: 3500, gstRate: 18 },
     ],
     isIgst: false, taxableAmount: 3500, cgstRate: 9, sgstRate: 9, igstRate: 0,
     cgstAmount: 315, sgstAmount: 315, igstAmount: 0, totalAmount: 4130,
@@ -196,7 +208,7 @@ const MOCK_INVOICES: GSTInvoice[] = [
 export default function Billing() {
   const navigate = useNavigate();
   const { user, setUser } = useApp();
-  const { parties: billingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
+  const { parties: billingParties, setParties: setBillingParties, items: billingItems, payments: billingPayments, expenses: billingExpenses } = useBilling();
   const i18n = useI18n();
   const { t, lang, setLang, languages } = i18n;
 
@@ -206,6 +218,9 @@ export default function Billing() {
   const [previewInvoice, setPreviewInvoice] = useState<GSTInvoice | null>(null);
   const [docType, setDocType] = useState<GSTInvoice["type"]>("sale-invoice");
   const [partyFilter, setPartyFilter] = useState<"all" | "collect" | "pay">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
 
   // ─── Form State ──────────────────────────────────
   const [buyerName, setBuyerName] = useState("");
@@ -224,10 +239,10 @@ export default function Billing() {
   const [paymentTerms, setPaymentTerms] = useState("");
   const [placeOfSupply, setPlaceOfSupply] = useState("");
   const [items, setItems] = useState<InvoiceItem[]>([
-    { slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0 },
+    { slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0, gstRate: 18 },
   ]);
 
-  const addItem = () => setItems([...items, { slNo: items.length + 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0 }]);
+  const addItem = () => setItems([...items, { slNo: items.length + 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0, gstRate: 18 }]);
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const updated = [...items];
@@ -252,8 +267,57 @@ export default function Billing() {
 
   const openCreateForType = (type: GSTInvoice["type"]) => {
     setDocType(type);
+    setEditingInvoiceId(null);
     resetForm();
     setCreateOpen(true);
+  };
+
+  // ─── Edit Invoice ──────────────────────────────────
+  const editInvoice = (inv: GSTInvoice) => {
+    setEditingInvoiceId(inv.id);
+    setDocType(inv.type);
+    setBuyerName(inv.buyerName);
+    setBuyerGstin(inv.buyerGstin);
+    setBuyerAddress(inv.buyerAddress);
+    setBuyerState(inv.buyerState);
+    setPlaceOfSupply(inv.placeOfSupply);
+    setRefInvoice(inv.referenceInvoiceNo || "");
+    setVehicleNo(inv.vehicleNo || "");
+    setNotes(inv.notes || "");
+    setPaymentTerms(inv.paymentTerms || "");
+    setGstRate(inv.isIgst ? inv.igstRate : inv.cgstRate * 2);
+    setItems(inv.items.map(i => ({ ...i })));
+    if (inv.consigneeName !== inv.buyerName) {
+      setSameAsBilling(false);
+      setShippingName(inv.consigneeName);
+      setShippingAddress(inv.consigneeAddress);
+      setShippingGstin(inv.consigneeGstin);
+      setShippingState(inv.consigneeState);
+    } else {
+      setSameAsBilling(true);
+    }
+    setPreviewInvoice(null);
+    setCreateOpen(true);
+  };
+
+  // ─── Delete Invoice ──────────────────────────────────
+  const deleteInvoice = (id: string) => {
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+    setPreviewInvoice(null);
+    toast.success("Invoice deleted");
+  };
+
+  // ─── Delete Party ──────────────────────────────────
+  const deleteParty = (id: string) => {
+    setBillingParties(prev => prev.filter(p => p.id !== id));
+    toast.success("Party deleted");
+  };
+
+  // ─── Change Invoice Status ──────────────────────────
+  const changeStatus = (id: string, status: GSTInvoice["status"]) => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status } : inv));
+    if (previewInvoice?.id === id) setPreviewInvoice(prev => prev ? { ...prev, status } : null);
+    toast.success(`Status changed to ${statusConfig[status].label}`);
   };
 
   const handleCreate = () => {
@@ -263,22 +327,36 @@ export default function Billing() {
     }
 
     const taxableAmount = items.reduce((s, i) => s + i.amount, 0);
-    const halfRate = gstRate / 2;
-    const cgst = isInterstate ? 0 : Math.round(taxableAmount * halfRate / 100);
-    const sgst = isInterstate ? 0 : Math.round(taxableAmount * halfRate / 100);
-    const igst = isInterstate ? Math.round(taxableAmount * gstRate / 100) : 0;
-    const total = taxableAmount + cgst + sgst + igst;
-    const taxTotal = cgst + sgst + igst;
+    // Per-item GST calculation
+    let totalCgst = 0, totalSgst = 0, totalIgst = 0;
+    const needsTaxCalc = !["delivery-challan", "quotation"].includes(docType);
+    if (needsTaxCalc) {
+      items.forEach(item => {
+        const rate = item.gstRate || gstRate;
+        if (isInterstate) {
+          totalIgst += Math.round(item.amount * rate / 100);
+        } else {
+          totalCgst += Math.round(item.amount * rate / 200);
+          totalSgst += Math.round(item.amount * rate / 200);
+        }
+      });
+    }
+    const total = taxableAmount + totalCgst + totalSgst + totalIgst;
+    const taxTotal = totalCgst + totalSgst + totalIgst;
+    // Primary rate for display (from first item or global)
+    const primaryRate = items[0]?.gstRate || gstRate;
+    const halfRate = primaryRate / 2;
 
     const consignee = sameAsBilling
       ? { consigneeName: buyerName, consigneeAddress: buyerAddress, consigneeGstin: buyerGstin, consigneeState: buyerState, consigneeStateCode: selectedBuyerState?.code || "" }
       : { consigneeName: shippingName, consigneeAddress: shippingAddress, consigneeGstin: shippingGstin, consigneeState: shippingState, consigneeStateCode: STATES.find(s => s.name === shippingState)?.code || "" };
 
     const invoice: GSTInvoice = {
-      id: Date.now().toString(),
+      id: editingInvoiceId || Date.now().toString(),
       type: docType,
-      invoiceNo: generateInvoiceNo(docType),
-      date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      invoiceNo: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.invoiceNo || generateInvoiceNo(docType) : generateInvoiceNo(docType),
+      date: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.date || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }) : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      status: editingInvoiceId ? invoices.find(i => i.id === editingInvoiceId)?.status || "unpaid" : "unpaid",
       sellerName: user.businessName,
       sellerGstin: user.gstNumber,
       sellerAddress: `${user.locationDistrict}, Tamil Nadu`,
@@ -296,10 +374,10 @@ export default function Billing() {
       taxableAmount,
       cgstRate: isInterstate ? 0 : halfRate,
       sgstRate: isInterstate ? 0 : halfRate,
-      igstRate: isInterstate ? gstRate : 0,
-      cgstAmount: cgst,
-      sgstAmount: sgst,
-      igstAmount: igst,
+      igstRate: isInterstate ? primaryRate : 0,
+      cgstAmount: totalCgst,
+      sgstAmount: totalSgst,
+      igstAmount: totalIgst,
       totalAmount: total,
       amountInWords: numberToWords(total),
       taxAmountInWords: numberToWords(taxTotal),
@@ -310,9 +388,21 @@ export default function Billing() {
       declaration: "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
     };
 
-    setInvoices((prev) => [invoice, ...prev]);
-    toast.success(`${docType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())} created!`);
+    if (editingInvoiceId) {
+      setInvoices(prev => prev.map(inv => inv.id === editingInvoiceId ? invoice : inv));
+      toast.success("Invoice updated!");
+    } else {
+      setInvoices((prev) => [invoice, ...prev]);
+      toast.success(`${docType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())} created!`);
+    }
+
+    // E-Way Bill warning
+    if (total > 50000 && !["quotation", "proforma"].includes(docType)) {
+      toast.info("⚠️ E-Way Bill required for goods value > ₹50,000. Generate from GST portal.", { duration: 6000 });
+    }
+
     setCreateOpen(false);
+    setEditingInvoiceId(null);
     resetForm();
   };
 
@@ -321,7 +411,7 @@ export default function Billing() {
     setShippingName(""); setShippingAddress(""); setShippingGstin(""); setShippingState("");
     setSameAsBilling(true);
     setGstRate(18); setRefInvoice(""); setVehicleNo(""); setNotes(""); setPaymentTerms(""); setPlaceOfSupply("");
-    setItems([{ slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0 }]);
+    setItems([{ slNo: 1, description: "", hsnSac: "", qty: 0, unit: "KG", rate: 0, per: "KG", discount: 0, amount: 0, gstRate: 18 }]);
   };
 
   const typeLabel = (type: GSTInvoice["type"]) => {
@@ -340,7 +430,13 @@ export default function Billing() {
     return "bg-emerald/10 text-emerald";
   };
 
-  const filtered = invoices.filter((i) => {
+  // ─── Search & Filter ──────────────────────────────
+  const sq = searchQuery.toLowerCase();
+  const searchedInvoices = sq
+    ? invoices.filter(inv => inv.buyerName.toLowerCase().includes(sq) || inv.invoiceNo.toLowerCase().includes(sq) || inv.items.some(it => it.description.toLowerCase().includes(sq)))
+    : invoices;
+
+  const filtered = searchedInvoices.filter((i) => {
     if (activeTab === "all" || activeTab === "quicklinks") return true;
     if (activeTab === "invoices") return i.type === "sale-invoice" || i.type === "purchase-invoice";
     if (activeTab === "challans") return i.type === "delivery-challan";
@@ -351,7 +447,6 @@ export default function Billing() {
   const needsTax = !["delivery-challan", "quotation"].includes(docType);
 
   // Dashboard stats from billing context
-  // To Collect = opening balance of collect parties minus payments received from them
   const collectParties = billingParties.filter(p => p.balanceType === "collect");
   const payParties = billingParties.filter(p => p.balanceType === "pay");
   const totalCollect = collectParties.reduce((s, p) => {
@@ -364,7 +459,54 @@ export default function Billing() {
   }, 0);
   const thisWeekSales = billingPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
   const stockValue = billingItems.filter(i => i.itemType === "product").reduce((s, i) => s + i.salesPrice * i.stockQty, 0);
-  const totalExpenseAmt = billingExpenses.reduce((s, e) => s + e.amount, 0);
+
+  // ─── CSV Export ──────────────────────────────────
+  const handleExportInvoices = () => {
+    const headers = ["Invoice No", "Date", "Type", "Buyer", "GSTIN", "Taxable", "CGST", "SGST", "IGST", "Total", "Status"];
+    const rows = invoices.map(inv => [inv.invoiceNo, inv.date, typeLabel(inv.type), inv.buyerName, inv.buyerGstin, inv.taxableAmount, inv.cgstAmount, inv.sgstAmount, inv.igstAmount, inv.totalAmount, inv.status]);
+    exportToCSV("invoices_export.csv", headers, rows);
+    toast.success("Invoices exported to CSV!");
+  };
+
+  const handleExportParties = () => {
+    const headers = ["Name", "GSTIN", "Phone", "Address", "State", "Type", "Opening Balance", "Balance Type"];
+    const rows = billingParties.map(p => [p.name, p.gstin, p.phone, p.address, p.state, p.type, p.openingBalance, p.balanceType]);
+    exportToCSV("parties_export.csv", headers, rows);
+    toast.success("Parties exported to CSV!");
+  };
+
+  const handleExportItems = () => {
+    const headers = ["Name", "Type", "Unit", "Sales Price", "Purchase Price", "GST Rate", "HSN/SAC", "Stock Qty", "Category"];
+    const rows = billingItems.map(i => [i.name, i.itemType, i.unit, i.salesPrice, i.purchasePrice, i.gstRate, i.hsnSac, i.stockQty, i.category]);
+    exportToCSV("items_export.csv", headers, rows);
+    toast.success("Items exported to CSV!");
+  };
+
+  // ─── UPI QR URL ──────────────────────────────────
+  const getUpiQrUrl = (inv: GSTInvoice) => {
+    const upiId = user.upiId || "business@upi";
+    const name = encodeURIComponent(inv.sellerName);
+    const amt = inv.totalAmount.toFixed(2);
+    const note = encodeURIComponent(`Payment for ${inv.invoiceNo}`);
+    const upiLink = `upi://pay?pa=${upiId}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiLink)}`;
+  };
+
+  // ─── Tax Summary Computation (per-item) ──────────
+  const computeTaxSummary = (invItems: InvoiceItem[], interstate: boolean) => {
+    const taxableAmount = invItems.reduce((s, i) => s + i.amount, 0);
+    let totalCgst = 0, totalSgst = 0, totalIgst = 0;
+    invItems.forEach(item => {
+      const rate = item.gstRate || gstRate;
+      if (interstate) {
+        totalIgst += Math.round(item.amount * rate / 100);
+      } else {
+        totalCgst += Math.round(item.amount * rate / 200);
+        totalSgst += Math.round(item.amount * rate / 200);
+      }
+    });
+    return { taxableAmount, totalCgst, totalSgst, totalIgst, total: taxableAmount + totalCgst + totalSgst + totalIgst };
+  };
 
   const BILLING_NAV = [
     { key: "dashboard", label: "Dashboard", icon: Home },
@@ -376,32 +518,49 @@ export default function Billing() {
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background relative">
       {/* HiTex-style Header */}
-      <header className="sticky top-0 z-30 bg-navy text-navy-foreground px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold tracking-tight">Hi<span className="text-emerald">Tex</span></span>
-          <span className="text-[10px] bg-navy-foreground/10 rounded-full px-2 py-0.5 font-medium">Billing</span>
+      <header className="sticky top-0 z-30 bg-navy text-navy-foreground px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold tracking-tight">Hi<span className="text-emerald">Tex</span></span>
+            <span className="text-[10px] bg-navy-foreground/10 rounded-full px-2 py-0.5 font-medium">Billing</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSearchOpen(!searchOpen)} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+              <Search className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={() => setActiveTab("quicklinks")} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+              <Plus className="h-3.5 w-3.5" /> Create
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+                <Globe className="h-3.5 w-3.5" />
+                <span>{languages.find((l) => l.code === lang)?.label?.slice(0, 2).toUpperCase()}</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[120px]">
+                {languages.map(({ code, label }) => (
+                  <DropdownMenuItem key={code} onClick={() => setLang(code)} className={lang === code ? "bg-accent/10 font-semibold" : ""}>
+                    {label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button onClick={() => navigate("/profile")} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
+              <User className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setActiveTab("quicklinks")} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
-            <Plus className="h-3.5 w-3.5" /> Create
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
-              <Globe className="h-3.5 w-3.5" />
-              <span>{languages.find((l) => l.code === lang)?.label?.slice(0, 2).toUpperCase()}</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[120px]">
-              {languages.map(({ code, label }) => (
-                <DropdownMenuItem key={code} onClick={() => setLang(code)} className={lang === code ? "bg-accent/10 font-semibold" : ""}>
-                  {label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button onClick={() => navigate("/profile")} className="flex items-center gap-1 text-xs font-medium bg-navy-foreground/10 rounded-full px-2.5 py-1.5 hover:bg-navy-foreground/20 transition-colors">
-            <User className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        {/* Global Search Bar */}
+        {searchOpen && (
+          <div className="mt-2">
+            <Input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search invoices, parties, items..."
+              className="h-8 text-xs bg-navy-foreground/10 border-0 text-navy-foreground placeholder:text-navy-foreground/50"
+              autoFocus
+            />
+          </div>
+        )}
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 pt-3 pb-32">
@@ -539,33 +698,42 @@ export default function Billing() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-bold">Transactions</p>
-              <button onClick={() => setActiveTab("all")} className="text-[10px] font-semibold text-primary flex items-center gap-1">
-                <Calendar className="h-3 w-3" /> LAST 365 DAYS
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={handleExportInvoices} className="text-[10px] font-semibold text-primary flex items-center gap-1">
+                  <FileDown className="h-3 w-3" /> CSV
+                </button>
+                <button onClick={() => setActiveTab("all")} className="text-[10px] font-semibold text-primary flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> ALL
+                </button>
+              </div>
             </div>
             <div className="space-y-3">
-              {invoices.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-sm">No transactions yet. Create your first invoice!</div>
+              {searchedInvoices.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">{searchQuery ? "No matching invoices" : "No transactions yet. Create your first invoice!"}</div>
               ) : (
-                invoices.slice(0, 5).map((inv) => (
-                  <Card key={inv.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => setPreviewInvoice(inv)}>
-                    <CardContent className="p-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-bold">{inv.buyerName}</p>
-                          <p className="text-[10px] text-muted-foreground">{typeLabel(inv.type)} {inv.invoiceNo}</p>
-                          <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                searchedInvoices.slice(0, 5).map((inv) => {
+                  const sc = statusConfig[inv.status];
+                  const StatusIcon = sc.icon;
+                  return (
+                    <Card key={inv.id} className="cursor-pointer hover:shadow-md transition-all" onClick={() => setPreviewInvoice(inv)}>
+                      <CardContent className="p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-bold">{inv.buyerName}</p>
+                            <p className="text-[10px] text-muted-foreground">{typeLabel(inv.type)} {inv.invoiceNo}</p>
+                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold">₹ {inv.totalAmount.toLocaleString("en-IN")}</p>
+                            <Badge variant="outline" className={`text-[9px] mt-1 ${sc.color}`}>
+                              <StatusIcon className="h-2.5 w-2.5 mr-0.5" /> {sc.label}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold">₹ {inv.totalAmount.toLocaleString("en-IN")}</p>
-                          <Badge variant="outline" className="text-[9px] mt-1">
-                            {inv.type.includes("purchase") ? "Paid" : "Open"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </div>
@@ -573,15 +741,10 @@ export default function Billing() {
 
         {/* ─── Quick Links / Create Tab ─── */}
         <TabsContent value="quicklinks" className="mt-4">
-          {/* Sales Transactions */}
           <p className="text-sm font-bold mb-3">Sales Transactions</p>
           <div className="grid grid-cols-4 gap-3 mb-5">
             {QUICK_LINKS.filter((_, i) => i < 8).map(({ key, label, icon: Icon, type, color }) => (
-              <button
-                key={key}
-                className="flex flex-col items-center gap-1.5 cursor-pointer"
-                onClick={() => openCreateForType(type)}
-              >
+              <button key={key} className="flex flex-col items-center gap-1.5 cursor-pointer" onClick={() => openCreateForType(type)}>
                 <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center hover:shadow-md transition-all">
                   <Icon className={`h-5 w-5 ${color}`} />
                 </div>
@@ -589,15 +752,10 @@ export default function Billing() {
               </button>
             ))}
           </div>
-          {/* Purchase & Other */}
           <p className="text-sm font-bold mb-3">Purchase & Payments</p>
           <div className="grid grid-cols-4 gap-3 mb-5">
             {QUICK_LINKS.filter((_, i) => i >= 8).map(({ key, label, icon: Icon, type, color }) => (
-              <button
-                key={key}
-                className="flex flex-col items-center gap-1.5 cursor-pointer"
-                onClick={() => openCreateForType(type)}
-              >
+              <button key={key} className="flex flex-col items-center gap-1.5 cursor-pointer" onClick={() => openCreateForType(type)}>
                 <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center hover:shadow-md transition-all">
                   <Icon className={`h-5 w-5 ${color}`} />
                 </div>
@@ -609,91 +767,107 @@ export default function Billing() {
 
         {/* ─── History Tab ─── */}
         <TabsContent value="all" className="mt-4">
-          <div className="flex gap-2 mb-3 overflow-x-auto">
-            {[
-              { val: "all", label: "All" },
-              { val: "invoices", label: "Invoices" },
-              { val: "challans", label: "Challans" },
-              { val: "cn-dn", label: "CN/DN" },
-            ].map(({ val, label }) => (
-              <button
-                key={val}
-                onClick={() => setActiveTab(val === "all" ? "all" : val)}
-                className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
-                  activeTab === val ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex gap-2 overflow-x-auto">
+              {[
+                { val: "all", label: "All" },
+                { val: "invoices", label: "Invoices" },
+                { val: "challans", label: "Challans" },
+                { val: "cn-dn", label: "CN/DN" },
+              ].map(({ val, label }) => (
+                <button
+                  key={val}
+                  onClick={() => setActiveTab(val === "all" ? "all" : val)}
+                  className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
+                    activeTab === val ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button onClick={handleExportInvoices} className="text-[10px] font-semibold text-primary flex items-center gap-1">
+              <FileDown className="h-3 w-3" /> CSV
+            </button>
           </div>
           <div className="space-y-3">
             {filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">No documents yet</div>
             ) : (
-              filtered.map((inv) => (
-                <Card key={inv.id} className="overflow-hidden cursor-pointer" onClick={() => setPreviewInvoice(inv)}>
-                  <CardContent className="p-0">
-                    <div className={`px-4 py-1.5 flex items-center justify-between ${typeColor(inv.type)}`}>
-                      <div className="flex items-center gap-2">
-                        {inv.type.includes("challan") ? <Truck className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
-                        <span className="text-[10px] font-bold">{typeLabel(inv.type)}</span>
-                      </div>
-                      <span className="text-[10px] font-mono">{inv.invoiceNo}</span>
-                    </div>
-                    <div className="p-3">
-                      <div className="flex justify-between items-start mb-1">
-                        <div>
-                          <p className="text-sm font-semibold">{inv.buyerName}</p>
-                          <p className="text-[10px] text-muted-foreground">{inv.buyerGstin}</p>
+              filtered.map((inv) => {
+                const sc = statusConfig[inv.status];
+                const StatusIcon = sc.icon;
+                return (
+                  <Card key={inv.id} className="overflow-hidden cursor-pointer" onClick={() => setPreviewInvoice(inv)}>
+                    <CardContent className="p-0">
+                      <div className={`px-4 py-1.5 flex items-center justify-between ${typeColor(inv.type)}`}>
+                        <div className="flex items-center gap-2">
+                          {inv.type.includes("challan") ? <Truck className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+                          <span className="text-[10px] font-bold">{typeLabel(inv.type)}</span>
                         </div>
-                        <div className="text-right">
-                          {inv.totalAmount > 0 && (
-                            <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>
-                          )}
-                          <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={`text-[8px] py-0 ${sc.color}`}><StatusIcon className="h-2 w-2 mr-0.5" />{sc.label}</Badge>
+                          <span className="text-[10px] font-mono">{inv.invoiceNo}</span>
                         </div>
                       </div>
-                      <div className="flex gap-1 mt-1 flex-wrap">
-                        {inv.items.slice(0, 2).map((item, i) => (
-                          <Badge key={i} variant="outline" className="text-[9px]">{item.description.slice(0, 20)}</Badge>
-                        ))}
-                        {inv.items.length > 2 && (
-                          <Badge variant="outline" className="text-[9px]">+{inv.items.length - 2}</Badge>
-                        )}
+                      <div className="p-3">
+                        <div className="flex justify-between items-start mb-1">
+                          <div>
+                            <p className="text-sm font-semibold">{inv.buyerName}</p>
+                            <p className="text-[10px] text-muted-foreground">{inv.buyerGstin}</p>
+                          </div>
+                          <div className="text-right">
+                            {inv.totalAmount > 0 && <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>}
+                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 mt-1 flex-wrap items-center">
+                          {inv.items.slice(0, 2).map((item, i) => (
+                            <Badge key={i} variant="outline" className="text-[9px]">{item.description.slice(0, 20)}</Badge>
+                          ))}
+                          {inv.items.length > 2 && <Badge variant="outline" className="text-[9px]">+{inv.items.length - 2}</Badge>}
+                          <div className="ml-auto flex gap-1">
+                            <button onClick={e => { e.stopPropagation(); editInvoice(inv); }} className="p-1 hover:bg-secondary rounded"><Pencil className="h-3 w-3 text-muted-foreground" /></button>
+                            <button onClick={e => { e.stopPropagation(); deleteInvoice(inv.id); }} className="p-1 hover:bg-secondary rounded"><Trash2 className="h-3 w-3 text-destructive" /></button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </TabsContent>
 
         {/* ─── Parties Tab ─── */}
         <TabsContent value="parties" className="mt-4">
-          <div className="flex gap-2 mb-4 overflow-x-auto">
-            {([
-              { val: "collect" as const, label: "To Collect" },
-              { val: "pay" as const, label: "To Pay" },
-              { val: "all" as const, label: "All" },
-            ]).map(f => (
-              <button
-                key={f.val}
-                onClick={() => setPartyFilter(f.val)}
-                className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
-                  partyFilter === f.val ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-primary/10"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex gap-2 overflow-x-auto">
+              {([
+                { val: "collect" as const, label: "To Collect" },
+                { val: "pay" as const, label: "To Pay" },
+                { val: "all" as const, label: "All" },
+              ]).map(f => (
+                <button
+                  key={f.val}
+                  onClick={() => setPartyFilter(f.val)}
+                  className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
+                    partyFilter === f.val ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-primary/10"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={handleExportParties} className="text-[10px] font-semibold text-primary flex items-center gap-1">
+              <FileDown className="h-3 w-3" /> CSV
+            </button>
           </div>
           {(() => {
-            const filteredParties = partyFilter === "all"
-              ? billingParties
-              : billingParties.filter(p => p.balanceType === partyFilter);
-            return filteredParties.length === 0 ? (
+            let fp = partyFilter === "all" ? billingParties : billingParties.filter(p => p.balanceType === partyFilter);
+            if (sq) fp = fp.filter(p => p.name.toLowerCase().includes(sq) || p.gstin.toLowerCase().includes(sq));
+            return fp.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-sm font-semibold text-muted-foreground">No Parties Found</p>
                 <p className="text-[10px] text-muted-foreground mt-1">
@@ -702,7 +876,7 @@ export default function Billing() {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredParties.map(p => {
+                {fp.map(p => {
                   const partyReceived = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((s, pay) => s + pay.amount, 0);
                   const partyPaid = billingPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((s, pay) => s + pay.amount, 0);
                   const outstanding = p.balanceType === "collect"
@@ -723,13 +897,16 @@ export default function Billing() {
                             ₹ {outstanding.toLocaleString("en-IN")}
                             {p.balanceType === "collect" ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                           </p>
-                          <button onClick={(e) => {
-                            e.stopPropagation();
-                            const phone = p.phone.replace(/[^0-9]/g, "");
-                            const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${outstanding.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
-                            window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
-                            toast.success("Opening WhatsApp...");
-                          }} className="text-[10px] text-primary font-semibold">Send Reminder</button>
+                          <div className="flex gap-1 items-center justify-end mt-0.5">
+                            <button onClick={(e) => {
+                              e.stopPropagation();
+                              const phone = p.phone.replace(/[^0-9]/g, "");
+                              const msg = encodeURIComponent(`🔔 Payment Reminder\n\nDear ${p.name},\n\nKindly reminder: ₹${outstanding.toLocaleString("en-IN")} is pending.\n\nPlease arrange payment at the earliest.\n\nThank you! 🙏`);
+                              window.open(`https://wa.me/${phone.startsWith("91") ? phone : "91" + phone}?text=${msg}`, "_blank");
+                              toast.success("Opening WhatsApp...");
+                            }} className="text-[10px] text-primary font-semibold">Remind</button>
+                            <button onClick={e => { e.stopPropagation(); deleteParty(p.id); }} className="p-0.5 hover:bg-secondary rounded"><Trash2 className="h-3 w-3 text-destructive" /></button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -750,35 +927,40 @@ export default function Billing() {
               <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-secondary text-muted-foreground">Low Stock</button>
               <button className="px-3 py-1 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">All Items</button>
             </div>
-            <Search className="h-4 w-4 text-muted-foreground" />
+            <button onClick={handleExportItems} className="text-[10px] font-semibold text-primary flex items-center gap-1">
+              <FileDown className="h-3 w-3" /> CSV
+            </button>
           </div>
-          {billingItems.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm">No items yet. Create an item to get started.</div>
-          ) : (
-            <div className="space-y-3">
-              {billingItems.map(item => (
-                <Card key={item.id} className="cursor-pointer hover:shadow-md transition-all">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
-                      {item.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold">{item.name}</p>
-                      <p className="text-[10px] text-muted-foreground">HSN: {item.hsnSac || "N/A"}</p>
-                      <div className="flex gap-4 mt-1">
-                        <span className="text-[10px] text-muted-foreground">Sales: ₹{item.salesPrice.toLocaleString("en-IN")}</span>
-                        <span className="text-[10px] text-muted-foreground">Purchase: ₹{item.purchasePrice.toLocaleString("en-IN")}</span>
+          {(() => {
+            const filteredItems = sq ? billingItems.filter(i => i.name.toLowerCase().includes(sq) || i.hsnSac.toLowerCase().includes(sq)) : billingItems;
+            return filteredItems.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">No items yet. Create an item to get started.</div>
+            ) : (
+              <div className="space-y-3">
+                {filteredItems.map(item => (
+                  <Card key={item.id} className="cursor-pointer hover:shadow-md transition-all">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-primary">
+                        {item.name.charAt(0)}
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">{item.stockQty}</p>
-                      <p className="text-[10px] text-muted-foreground">{item.unit}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                      <div className="flex-1">
+                        <p className="text-sm font-bold">{item.name}</p>
+                        <p className="text-[10px] text-muted-foreground">HSN: {item.hsnSac || "N/A"} • GST: {item.gstRate}%</p>
+                        <div className="flex gap-4 mt-1">
+                          <span className="text-[10px] text-muted-foreground">Sales: ₹{item.salesPrice.toLocaleString("en-IN")}</span>
+                          <span className="text-[10px] text-muted-foreground">Purchase: ₹{item.purchasePrice.toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold">{item.stockQty}</p>
+                        <p className="text-[10px] text-muted-foreground">{item.unit}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            );
+          })()}
           <Button onClick={() => navigate("/billing/create-item")} className="w-full mt-4 gap-1.5">
             <Plus className="h-4 w-4" /> Create New Item
           </Button>
@@ -790,28 +972,40 @@ export default function Billing() {
               {filtered.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">No documents yet</div>
               ) : (
-                filtered.map((inv) => (
-                  <Card key={inv.id} className="overflow-hidden cursor-pointer" onClick={() => setPreviewInvoice(inv)}>
-                    <CardContent className="p-0">
-                      <div className={`px-4 py-1.5 flex items-center justify-between ${typeColor(inv.type)}`}>
-                        <span className="text-[10px] font-bold">{typeLabel(inv.type)}</span>
-                        <span className="text-[10px] font-mono">{inv.invoiceNo}</span>
-                      </div>
-                      <div className="p-3">
-                        <div className="flex justify-between">
-                          <div>
-                            <p className="text-sm font-semibold">{inv.buyerName}</p>
-                            <p className="text-[10px] text-muted-foreground">{inv.buyerGstin}</p>
-                          </div>
-                          <div className="text-right">
-                            {inv.totalAmount > 0 && <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>}
-                            <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                filtered.map((inv) => {
+                  const sc = statusConfig[inv.status];
+                  const StatusIcon = sc.icon;
+                  return (
+                    <Card key={inv.id} className="overflow-hidden cursor-pointer" onClick={() => setPreviewInvoice(inv)}>
+                      <CardContent className="p-0">
+                        <div className={`px-4 py-1.5 flex items-center justify-between ${typeColor(inv.type)}`}>
+                          <span className="text-[10px] font-bold">{typeLabel(inv.type)}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={`text-[8px] py-0 ${sc.color}`}><StatusIcon className="h-2 w-2 mr-0.5" />{sc.label}</Badge>
+                            <span className="text-[10px] font-mono">{inv.invoiceNo}</span>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                        <div className="p-3">
+                          <div className="flex justify-between">
+                            <div>
+                              <p className="text-sm font-semibold">{inv.buyerName}</p>
+                              <p className="text-[10px] text-muted-foreground">{inv.buyerGstin}</p>
+                            </div>
+                            <div className="text-right">
+                              {inv.totalAmount > 0 && <p className="text-sm font-bold">₹{inv.totalAmount.toLocaleString("en-IN")}</p>}
+                              <p className="text-[10px] text-muted-foreground">{inv.date}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1 mt-1 items-center">
+                            <div className="flex-1" />
+                            <button onClick={e => { e.stopPropagation(); editInvoice(inv); }} className="p-1 hover:bg-secondary rounded"><Pencil className="h-3 w-3 text-muted-foreground" /></button>
+                            <button onClick={e => { e.stopPropagation(); deleteInvoice(inv.id); }} className="p-1 hover:bg-secondary rounded"><Trash2 className="h-3 w-3 text-destructive" /></button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </TabsContent>
@@ -851,10 +1045,10 @@ export default function Billing() {
       {/* ═══════════════════════════════════════════════════════
           CREATE INVOICE DIALOG
          ═══════════════════════════════════════════════════════ */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) setEditingInvoiceId(null); }}>
         <DialogContent className="max-w-[400px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base">{typeLabel(docType)}</DialogTitle>
+            <DialogTitle className="text-base">{editingInvoiceId ? "Edit" : "Create"} {typeLabel(docType)}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
 
@@ -948,7 +1142,7 @@ export default function Billing() {
               )}
             </div>
 
-            {/* Items */}
+            {/* Items with per-item GST */}
             <div className="border rounded-lg p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Item Details</p>
@@ -963,7 +1157,7 @@ export default function Billing() {
                       <span className="text-[10px] text-muted-foreground font-mono">{item.slNo}</span>
                     </div>
                     <div className="flex-1">
-                      <Label className="text-[10px]">Description of Goods/Services *</Label>
+                      <Label className="text-[10px]">Description *</Label>
                       <Input className="h-8 text-xs" value={item.description} onChange={(e) => updateItem(idx, "description", e.target.value)} placeholder="Cotton Comber Noil" />
                     </div>
                     <div className="w-20">
@@ -993,6 +1187,17 @@ export default function Billing() {
                       <Label className="text-[10px]">Disc %</Label>
                       <Input className="h-8 text-xs" type="number" value={item.discount || ""} onChange={(e) => updateItem(idx, "discount", Number(e.target.value))} />
                     </div>
+                    {needsTax && (
+                      <div className="w-16">
+                        <Label className="text-[10px]">GST %</Label>
+                        <Select value={String(item.gstRate)} onValueChange={(v) => updateItem(idx, "gstRate", Number(v))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {GST_RATES.map((r) => <SelectItem key={r} value={String(r)}>{r}%</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="w-20">
                       <Label className="text-[10px]">Amount</Label>
                       <Input className="h-8 text-xs" value={`₹${item.amount.toLocaleString("en-IN")}`} disabled />
@@ -1006,19 +1211,6 @@ export default function Billing() {
                 </div>
               ))}
             </div>
-
-            {/* GST Rate */}
-            {needsTax && (
-              <div>
-                <Label className="text-xs">GST Rate</Label>
-                <Select value={String(gstRate)} onValueChange={(v) => setGstRate(Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {GST_RATES.map((r) => <SelectItem key={r} value={String(r)}>{r}%</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {/* Transport */}
             {docType === "delivery-challan" && (
@@ -1039,39 +1231,54 @@ export default function Billing() {
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes..." className="h-16 text-xs" />
             </div>
 
-            {/* Tax Summary */}
-            {needsTax && (
-              <div className="bg-secondary rounded-lg p-3 space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span>Taxable Value</span>
-                  <span>₹{items.reduce((s, i) => s + i.amount, 0).toLocaleString("en-IN")}</span>
-                </div>
-                {isInterstate ? (
+            {/* Per-item Tax Summary */}
+            {needsTax && (() => {
+              const ts = computeTaxSummary(items, isInterstate);
+              return (
+                <div className="bg-secondary rounded-lg p-3 space-y-1 text-xs">
                   <div className="flex justify-between">
-                    <span>IGST @ {gstRate}%</span>
-                    <span>₹{Math.round(items.reduce((s, i) => s + i.amount, 0) * gstRate / 100).toLocaleString("en-IN")}</span>
+                    <span>Taxable Value</span>
+                    <span>₹{ts.taxableAmount.toLocaleString("en-IN")}</span>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span>CGST @ {gstRate / 2}%</span>
-                      <span>₹{Math.round(items.reduce((s, i) => s + i.amount, 0) * gstRate / 200).toLocaleString("en-IN")}</span>
+                  {/* Per-rate breakdown */}
+                  {Array.from(new Set(items.map(i => i.gstRate))).sort((a, b) => a - b).map(rate => {
+                    const rateItems = items.filter(i => i.gstRate === rate);
+                    const rateTotal = rateItems.reduce((s, i) => s + i.amount, 0);
+                    if (rateTotal === 0) return null;
+                    return isInterstate ? (
+                      <div key={rate} className="flex justify-between text-muted-foreground">
+                        <span>IGST @ {rate}%</span>
+                        <span>₹{Math.round(rateTotal * rate / 100).toLocaleString("en-IN")}</span>
+                      </div>
+                    ) : (
+                      <div key={rate}>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>CGST @ {rate / 2}%</span>
+                          <span>₹{Math.round(rateTotal * rate / 200).toLocaleString("en-IN")}</span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>SGST @ {rate / 2}%</span>
+                          <span>₹{Math.round(rateTotal * rate / 200).toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex justify-between text-sm font-bold border-t border-border pt-1 mt-1">
+                    <span>Total</span>
+                    <span>₹{ts.total.toLocaleString("en-IN")}</span>
+                  </div>
+                  {ts.total > 50000 && (
+                    <div className="flex items-center gap-1 text-gold mt-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      <span className="text-[10px]">E-Way Bill required (value &gt; ₹50,000)</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>SGST @ {gstRate / 2}%</span>
-                      <span>₹{Math.round(items.reduce((s, i) => s + i.amount, 0) * gstRate / 200).toLocaleString("en-IN")}</span>
-                    </div>
-                  </>
-                )}
-                <div className="flex justify-between text-sm font-bold border-t border-border pt-1 mt-1">
-                  <span>Total</span>
-                  <span>₹{(items.reduce((s, i) => s + i.amount, 0) * (1 + gstRate / 100)).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <Button onClick={handleCreate} className="w-full">
-              Create {typeLabel(docType)}
+              {editingInvoiceId ? "Update" : "Create"} {typeLabel(docType)}
             </Button>
           </div>
         </DialogContent>
@@ -1084,6 +1291,36 @@ export default function Billing() {
         <DialogContent className="max-w-[440px] max-h-[95vh] overflow-y-auto p-0">
           {previewInvoice && (
             <div className="bg-background">
+              {/* Status Bar + Actions at top */}
+              <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge className={`${statusConfig[previewInvoice.status].color} text-[10px]`}>
+                    {statusConfig[previewInvoice.status].label}
+                  </Badge>
+                  {previewInvoice.totalAmount > 50000 && (
+                    <Badge variant="outline" className="text-[9px] text-gold border-gold/30">
+                      <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> E-Way Bill
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1">Status ▾</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {(["unpaid", "partial", "paid"] as const).map(s => (
+                        <DropdownMenuItem key={s} onClick={() => changeStatus(previewInvoice.id, s)} className={previewInvoice.status === s ? "font-bold" : ""}>
+                          {statusConfig[s].label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <button onClick={() => editInvoice(previewInvoice)} className="p-1 hover:bg-secondary rounded"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                  <button onClick={() => deleteInvoice(previewInvoice.id)} className="p-1 hover:bg-secondary rounded"><Trash2 className="h-3.5 w-3.5 text-destructive" /></button>
+                </div>
+              </div>
+
               {/* Tally-style bordered invoice */}
               <div className="border-2 border-foreground/80 m-3 text-[10px] leading-tight">
                 {/* Title */}
@@ -1183,7 +1420,6 @@ export default function Billing() {
                     <div className="col-span-3 p-1 text-right">Amount</div>
                   </div>
 
-                  {/* Items */}
                   {previewInvoice.items.map((item, i) => (
                     <div key={i} className="grid grid-cols-24 text-[10px]">
                       <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{item.slNo}</div>
@@ -1197,7 +1433,7 @@ export default function Billing() {
                     </div>
                   ))}
 
-                  {/* Tax rows within items */}
+                  {/* Tax rows */}
                   {previewInvoice.type !== "delivery-challan" && (
                     <>
                       {previewInvoice.isIgst ? (
@@ -1269,7 +1505,6 @@ export default function Billing() {
                       <div className="col-span-2 p-1 border-r border-foreground/30 text-center">{previewInvoice.isIgst ? "IGST" : "Total Tax"}<br/>Rate | Amt</div>
                       <div className="col-span-2 p-1 text-right">Total Tax Amount</div>
                     </div>
-                    {/* Group by HSN */}
                     {Array.from(new Set(previewInvoice.items.map(i => i.hsnSac))).map(hsn => {
                       const hsnItems = previewInvoice.items.filter(i => i.hsnSac === hsn);
                       const hsnTaxable = hsnItems.reduce((s, i) => s + i.amount, 0);
@@ -1296,7 +1531,6 @@ export default function Billing() {
                         </div>
                       );
                     })}
-                    {/* HSN Total Row */}
                     <div className="grid grid-cols-12 text-[9px] font-bold border-t border-foreground/50">
                       <div className="col-span-2 p-1 border-r border-foreground/30">Total</div>
                       <div className="col-span-2 p-1 border-r border-foreground/30 text-right">{previewInvoice.taxableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
@@ -1342,6 +1576,32 @@ export default function Billing() {
                 </div>
               </div>
 
+              {/* UPI QR Code */}
+              <div className="px-3 pb-2">
+                <div className="border rounded-lg p-3 flex items-center gap-3">
+                  <img src={getUpiQrUrl(previewInvoice)} alt="UPI QR" className="h-24 w-24 rounded" />
+                  <div>
+                    <p className="text-xs font-bold flex items-center gap-1"><QrCode className="h-3.5 w-3.5" /> Scan to Pay</p>
+                    <p className="text-[10px] text-muted-foreground">UPI payment for ₹{previewInvoice.totalAmount.toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] text-primary mt-1">{user.upiId || "Set UPI ID in profile"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* E-Way Bill Warning */}
+              {previewInvoice.totalAmount > 50000 && !["quotation", "proforma"].includes(previewInvoice.type) && (
+                <div className="px-3 pb-2">
+                  <div className="border border-gold/30 bg-gold/5 rounded-lg p-3 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-gold mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-gold">E-Way Bill Required</p>
+                      <p className="text-[10px] text-muted-foreground">Goods value exceeds ₹50,000. Generate E-Way Bill from the GST portal before dispatch.</p>
+                      {previewInvoice.eWayBillNo && <p className="text-[10px] font-semibold mt-1">E-Way Bill: {previewInvoice.eWayBillNo}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="px-3 pb-3 space-y-2">
                 <Button variant="outline" className="w-full gap-1 text-xs" onClick={() => { generateInvoicePdf(previewInvoice!, user.companyLogo); toast.success("PDF downloaded!"); }}>
@@ -1351,7 +1611,6 @@ export default function Billing() {
                   variant="outline"
                   className="w-full gap-1 text-xs text-emerald border-emerald/30"
                   onClick={() => {
-                    const phone = previewInvoice!.buyerGstin ? "" : "";
                     const msg = encodeURIComponent(
                       `📄 *${typeLabel(previewInvoice!.type)}*\n\nInvoice: ${previewInvoice!.invoiceNo}\nDate: ${previewInvoice!.date}\nAmount: ₹${previewInvoice!.totalAmount.toLocaleString("en-IN")}\n\nFrom: ${previewInvoice!.sellerName}\nGSTIN: ${previewInvoice!.sellerGstin}\n\nPlease find the invoice details above. PDF copy available on request.\n\nThank you! 🙏`
                     );

@@ -52,6 +52,18 @@ export interface Expense {
   paymentMode: "cash" | "upi" | "bank";
 }
 
+export interface BankAccount {
+  id: string;
+  bankName: string;
+  accountNumber: string;
+  ifsc: string;
+  accountType: "current" | "savings";
+  upiId?: string;
+  openingBalance: number;
+  isDefault: boolean;
+  createdAt: string;
+}
+
 // ─── Context ──────────────────────────────────────────────
 interface BillingContextType {
   parties: BillingParty[];
@@ -62,6 +74,8 @@ interface BillingContextType {
   setPayments: React.Dispatch<React.SetStateAction<Payment[]>>;
   expenses: Expense[];
   setExpenses: React.Dispatch<React.SetStateAction<Expense[]>>;
+  bankAccounts: BankAccount[];
+  setBankAccounts: React.Dispatch<React.SetStateAction<BankAccount[]>>;
 }
 
 const BillingContext = createContext<BillingContextType | undefined>(undefined);
@@ -90,14 +104,20 @@ const MOCK_EXPENSES: Expense[] = [
   { id: "exp2", category: "Office", amount: 800, date: "2026-03-02", note: "Stationery & printing", paymentMode: "upi" },
 ];
 
+const MOCK_BANK_ACCOUNTS: BankAccount[] = [
+  { id: "ba1", bankName: "HDFC Bank", accountNumber: "50100XXXX1234", ifsc: "HDFC0001234", accountType: "current", upiId: "business@hdfcbank", openingBalance: 125000, isDefault: true, createdAt: "2026-01-01" },
+  { id: "ba2", bankName: "SBI", accountNumber: "38XXXX5678", ifsc: "SBIN0001234", accountType: "savings", openingBalance: 45000, isDefault: false, createdAt: "2026-01-15" },
+];
+
 export function BillingProvider({ children }: { children: ReactNode }) {
   const [parties, setParties] = useState<BillingParty[]>(MOCK_PARTIES);
   const [items, setItems] = useState<BillingItem[]>(MOCK_ITEMS);
   const [payments, setPayments] = useState<Payment[]>(MOCK_PAYMENTS);
   const [expenses, setExpenses] = useState<Expense[]>(MOCK_EXPENSES);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(MOCK_BANK_ACCOUNTS);
 
   return (
-    <BillingContext.Provider value={{ parties, setParties, items, setItems, payments, setPayments, expenses, setExpenses }}>
+    <BillingContext.Provider value={{ parties, setParties, items, setItems, payments, setPayments, expenses, setExpenses, bankAccounts, setBankAccounts }}>
       {children}
     </BillingContext.Provider>
   );
