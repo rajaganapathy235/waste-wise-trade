@@ -672,16 +672,34 @@ export default function Billing() {
         ))}
       </Tabs>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 flex items-center justify-center gap-3 z-20">
-        <Button onClick={() => { setDocType("sale-invoice"); resetForm(); setCreateOpen(true); }} className="rounded-full shadow-lg gap-1.5 text-xs bg-emerald hover:bg-emerald/90 text-white">
-          <IndianRupee className="h-3.5 w-3.5" /> Received Payment
-        </Button>
-        <Button onClick={() => { setActiveTab("quicklinks"); }} size="icon" className="rounded-full h-12 w-12 shadow-lg bg-primary">
-          <Plus className="h-5 w-5" />
-        </Button>
-        <Button onClick={() => { setDocType("sale-invoice"); resetForm(); setCreateOpen(true); }} className="rounded-full shadow-lg gap-1.5 text-xs">
-          <FileText className="h-3.5 w-3.5" /> + Bill / Invoice
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-card border-t border-border z-30">
+        <div className="flex items-center justify-around py-2">
+          {BILLING_NAV.map(({ key, label, icon: Icon }) => {
+            const isActive = activeTab === key;
+            if (key === "marketplace") {
+              return (
+                <button key={key} onClick={() => navigate("/")} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                  <Icon className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">{label}</span>
+                </button>
+              );
+            }
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
         </Button>
       </div>
 
