@@ -62,6 +62,19 @@ function App() {
       <Route path="/transport" element={<Transport />} />
       <Route path="/tneb" element={<TNEB />} />
       <Route path="/billing" element={<Billing />} />
+      <Route path="/billing/create-party" element={<CreateParty />} />
+      <Route path="/billing/party/:partyId" element={<PartyLedger />} />
+      <Route path="/billing/create-item" element={<CreateItem />} />
+      <Route path="/billing/payment-in" element={<PaymentIn />} />
+      <Route path="/billing/payment-out" element={<PaymentOut />} />
+      <Route path="/billing/expenses" element={<ExpensePage />} />
+      <Route path="/billing/reports" element={<Reports />} />
+      <Route path="/billing/sales-summary" element={<SalesSummary />} />
+      <Route path="/billing/stock-summary" element={<StockSummary />} />
+      <Route path="/billing/profit-loss" element={<ProfitLoss />} />
+      <Route path="/billing/cash-bank" element={<CashBank />} />
+      <Route path="/billing/gst-reports" element={<GSTReports />} />
+      <Route path="/billing/daybook" element={<Daybook />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />
