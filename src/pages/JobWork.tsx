@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, MapPin, Phone, Wrench, Factory, Crown, Lock } from "lucide-react";
+import { Plus, MapPin, MessageCircle, Wrench, Factory, Crown, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -272,11 +272,11 @@ export default function JobWork() {
                     </div>
                     {user.isSubscribed ? (
                       <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => navigate(`/chat/${post.id}`)}>
-                        <Phone className="h-3 w-3" /> {t("jobWork.contact")}
+                        <MessageCircle className="h-3 w-3" /> {t("jobWork.chat")}
                       </Button>
                     ) : (
                       <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 border-gold/30 text-gold" onClick={() => { toast(t("jobWork.premiumOnly"), { icon: "👑" }); navigate("/profile"); }}>
-                        <Crown className="h-3 w-3" /> <Lock className="h-2.5 w-2.5" /> {t("jobWork.contact")}
+                        <Crown className="h-3 w-3" /> <Lock className="h-2.5 w-2.5" /> {t("jobWork.chat")}
                       </Button>
                     )}
                   </div>
