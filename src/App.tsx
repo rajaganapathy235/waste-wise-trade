@@ -18,6 +18,20 @@ import WriteReview from "./pages/Reviews";
 import Services from "./pages/Services";
 import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
+// Billing sub-pages
+import CreateParty from "./pages/billing/CreateParty";
+import PartyLedger from "./pages/billing/PartyLedger";
+import CreateItem from "./pages/billing/CreateItem";
+import PaymentIn from "./pages/billing/PaymentIn";
+import PaymentOut from "./pages/billing/PaymentOut";
+import ExpensePage from "./pages/billing/ExpensePage";
+import Reports from "./pages/billing/Reports";
+import SalesSummary from "./pages/billing/SalesSummary";
+import StockSummary from "./pages/billing/StockSummary";
+import ProfitLoss from "./pages/billing/ProfitLoss";
+import CashBank from "./pages/billing/CashBank";
+import GSTReports from "./pages/billing/GSTReports";
+import Daybook from "./pages/billing/Daybook";
 
 function App() {
   const { isLoggedIn } = useApp();
