@@ -11,6 +11,7 @@ import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/Dat
 
 export default function PartyReports() {
   const navigate = useNavigate();
+  const goBack = useSafeBack("/billing/reports");
   const { parties, payments } = useBilling();
   const [filter, setFilter] = useState<"all" | "collect" | "pay">("all");
   const [search, setSearch] = useState("");
