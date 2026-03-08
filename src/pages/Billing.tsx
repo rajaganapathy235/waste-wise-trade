@@ -791,7 +791,7 @@ export default function Billing() {
             const isActive = activeTab === key;
             if (key === "services") {
               return (
-                <button key={key} onClick={() => navigate("/services")} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+                <button key={key} onClick={() => navigate("/services", { state: { from: "billing" } })} className="relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                   <Icon className="h-5 w-5" />
                   <span className="text-[10px] font-medium">{label}</span>
                 </button>
