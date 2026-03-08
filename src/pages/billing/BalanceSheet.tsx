@@ -1,46 +1,49 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Scale, TrendingUp, TrendingDown, FileDown } from "lucide-react";
 import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function BalanceSheet() {
   const navigate = useNavigate();
   const { parties, items, payments, expenses, bankAccounts } = useBilling();
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
-  // ASSETS
+  const filteredPayments = payments.filter(p => isInDateRange(p.date, dateRange));
+  const filteredExpenses = expenses.filter(e => isInDateRange(e.date, dateRange));
+
   const stockValue = items.filter(i => i.itemType === "product").reduce((s, i) => s + i.salesPrice * i.stockQty, 0);
 
-  const cashInHand = payments.reduce((s, p) => {
+  const cashInHand = filteredPayments.reduce((s, p) => {
     if (p.paymentMode === "cash") return s + (p.type === "in" ? p.amount : -p.amount);
     return s;
-  }, 0) - expenses.filter(e => e.paymentMode === "cash").reduce((s, e) => s + e.amount, 0);
+  }, 0) - filteredExpenses.filter(e => e.paymentMode === "cash").reduce((s, e) => s + e.amount, 0);
 
   const bankBalance = bankAccounts.reduce((s, b) => s + b.openingBalance, 0)
-    + payments.filter(p => p.paymentMode === "bank" || p.paymentMode === "upi").reduce((s, p) => s + (p.type === "in" ? p.amount : -p.amount), 0)
-    - expenses.filter(e => e.paymentMode === "bank" || e.paymentMode === "upi").reduce((s, e) => s + e.amount, 0);
+    + filteredPayments.filter(p => p.paymentMode === "bank" || p.paymentMode === "upi").reduce((s, p) => s + (p.type === "in" ? p.amount : -p.amount), 0)
+    - filteredExpenses.filter(e => e.paymentMode === "bank" || e.paymentMode === "upi").reduce((s, e) => s + e.amount, 0);
 
   const receivables = parties
     .filter(p => p.balanceType === "collect")
     .reduce((s, p) => {
-      const received = payments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((a, pay) => a + pay.amount, 0);
+      const received = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "in").reduce((a, pay) => a + pay.amount, 0);
       return s + Math.max(0, p.openingBalance - received);
     }, 0);
 
   const totalAssets = stockValue + Math.max(0, cashInHand) + Math.max(0, bankBalance) + receivables;
 
-  // LIABILITIES
   const payables = parties
     .filter(p => p.balanceType === "pay")
     .reduce((s, p) => {
-      const paid = payments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((a, pay) => a + pay.amount, 0);
+      const paid = filteredPayments.filter(pay => pay.partyId === p.id && pay.type === "out").reduce((a, pay) => a + pay.amount, 0);
       return s + Math.max(0, p.openingBalance - paid);
     }, 0);
 
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalExpenses = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const totalLiabilities = payables + totalExpenses;
-
   const netWorth = totalAssets - totalLiabilities;
 
   const assetRows = [
@@ -70,7 +73,7 @@ export default function BalanceSheet() {
 
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
           <h1 className="text-lg font-bold flex items-center gap-2"><Scale className="h-5 w-5 text-primary" /> Balance Sheet</h1>
@@ -80,18 +83,17 @@ export default function BalanceSheet() {
         </button>
       </div>
 
-      {/* Net Worth */}
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+
       <Card className={`mb-5 ${netWorth >= 0 ? "bg-emerald/5 border-emerald/20" : "bg-destructive/5 border-destructive/20"}`}>
         <CardContent className="p-4 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Net Worth</p>
           <p className={`text-2xl font-bold ${netWorth >= 0 ? "text-emerald" : "text-destructive"}`}>
             ₹ {Math.abs(netWorth).toLocaleString("en-IN")}
           </p>
-          <p className="text-[10px] text-muted-foreground">As of {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</p>
         </CardContent>
       </Card>
 
-      {/* Assets */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-2">
           <TrendingUp className="h-4 w-4 text-emerald" />
@@ -113,7 +115,6 @@ export default function BalanceSheet() {
         </Card>
       </div>
 
-      {/* Liabilities */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <TrendingDown className="h-4 w-4 text-destructive" />

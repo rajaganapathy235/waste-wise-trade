@@ -1,23 +1,31 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function ProfitLoss() {
   const navigate = useNavigate();
   const { payments, expenses } = useBilling();
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
-  const totalRevenue = payments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
-  const totalPurchases = payments.filter(p => p.type === "out").reduce((s, p) => s + p.amount, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const netProfit = totalRevenue - totalPurchases - totalExpenses;
+  const filteredPayments = payments.filter(p => isInDateRange(p.date, dateRange));
+  const filteredExpenses = expenses.filter(e => isInDateRange(e.date, dateRange));
+
+  const totalRevenue = filteredPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
+  const totalPurchases = filteredPayments.filter(p => p.type === "out").reduce((s, p) => s + p.amount, 0);
+  const totalExp = filteredExpenses.reduce((s, e) => s + e.amount, 0);
+  const netProfit = totalRevenue - totalPurchases - totalExp;
 
   return (
     <div className="px-4 pt-3 pb-8 max-w-lg mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Profit & Loss</h1>
       </div>
+
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
 
       <Card className={`mb-4 ${netProfit >= 0 ? "bg-emerald/5" : "bg-destructive/5"}`}>
         <CardContent className="p-4 text-center">
@@ -65,7 +73,7 @@ export default function ProfitLoss() {
                 <p className="text-[10px] text-muted-foreground">Business expenses</p>
               </div>
             </div>
-            <p className="text-sm font-bold text-gold">₹{totalExpenses.toLocaleString("en-IN")}</p>
+            <p className="text-sm font-bold text-gold">₹{totalExp.toLocaleString("en-IN")}</p>
           </CardContent>
         </Card>
       </div>

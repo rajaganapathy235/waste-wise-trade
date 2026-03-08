@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function SalesSummary() {
   const navigate = useNavigate();
   const { payments } = useBilling();
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
-  const salesPayments = payments.filter(p => p.type === "in");
+  const salesPayments = payments.filter(p => p.type === "in" && isInDateRange(p.date, dateRange));
   const totalSales = salesPayments.reduce((s, p) => s + p.amount, 0);
 
   return (
@@ -17,14 +20,7 @@ export default function SalesSummary() {
         <h1 className="text-lg font-bold">Sales Summary</h1>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs">This week</span>
-        <span className="text-[10px] text-muted-foreground">
-          {new Date(Date.now() - 7 * 86400000).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} - {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-        </span>
-        <button className="text-[10px] text-primary font-semibold ml-auto">CHANGE</button>
-      </div>
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
 
       <Card className="mb-4">
         <CardContent className="p-4 text-center">

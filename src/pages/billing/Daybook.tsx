@@ -1,17 +1,21 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar } from "lucide-react";
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function Daybook() {
   const navigate = useNavigate();
   const { payments, expenses } = useBilling();
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
-  // Combine all transactions into one chronological list
   const allTxns = [
     ...payments.map(p => ({ id: p.id, date: p.date, label: p.type === "in" ? "Payment Received" : "Payment Made", party: p.partyName, amount: p.amount, type: p.type as "in" | "out", mode: p.paymentMode, note: p.note })),
     ...expenses.map(e => ({ id: e.id, date: e.date, label: `Expense: ${e.category}`, party: "", amount: e.amount, type: "out" as const, mode: e.paymentMode, note: e.note })),
-  ].sort((a, b) => b.date.localeCompare(a.date));
+  ]
+    .filter(t => isInDateRange(t.date, dateRange))
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const totalIn = allTxns.filter(t => t.type === "in").reduce((s, t) => s + t.amount, 0);
   const totalOut = allTxns.filter(t => t.type === "out").reduce((s, t) => s + t.amount, 0);
@@ -23,10 +27,7 @@ export default function Daybook() {
         <h1 className="text-lg font-bold">Daybook</h1>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs font-medium">All Transactions</span>
-      </div>
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card className="bg-emerald/5">

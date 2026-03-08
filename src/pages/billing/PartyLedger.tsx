@@ -1,18 +1,21 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBilling } from "@/lib/billingContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { DateRangeFilter, isInDateRange, type DateRange } from "@/components/DateRangeFilter";
 
 export default function PartyLedger() {
   const navigate = useNavigate();
   const { partyId } = useParams();
   const { parties, payments } = useBilling();
   const party = parties.find(p => p.id === partyId);
-  const partyPayments = payments.filter(p => p.partyId === partyId);
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
 
   if (!party) return <div className="p-4 text-center text-muted-foreground">Party not found</div>;
 
+  const partyPayments = payments.filter(p => p.partyId === partyId && isInDateRange(p.date, dateRange));
   const totalIn = partyPayments.filter(p => p.type === "in").reduce((s, p) => s + p.amount, 0);
   const totalOut = partyPayments.filter(p => p.type === "out").reduce((s, p) => s + p.amount, 0);
   const balance = party.openingBalance + totalIn - totalOut;
@@ -23,6 +26,8 @@ export default function PartyLedger() {
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5 text-muted-foreground" /></button>
         <h1 className="text-lg font-bold">Party Statement</h1>
       </div>
+
+      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
 
       <Card className="mb-4">
         <CardContent className="p-4">
