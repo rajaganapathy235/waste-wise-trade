@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useSafeBack } from "@/hooks/use-safe-back";
 import { ArrowLeft, FileText, IndianRupee, BookOpen, TrendingUp, Users, Package, Scale, Landmark, Receipt, ShoppingCart, Wallet, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
