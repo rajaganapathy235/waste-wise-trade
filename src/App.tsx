@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { useApp } from "@/lib/appContext";
+import { useAuth } from "@/hooks/useAuth";
 import AppShell from "@/components/AppShell";
 import Index from "./pages/Index";
 import LeadDetail from "./pages/LeadDetail";
@@ -9,7 +9,6 @@ import TNEB from "./pages/TNEB";
 import JobWork from "./pages/JobWork";
 import MarketPulse from "./pages/MarketPulse";
 import Profile from "./pages/Profile";
-import Onboarding from "./pages/Onboarding";
 import ChatList, { ChatThread } from "./pages/Chat";
 import Analytics from "./pages/Analytics";
 import DemandHeatmap from "./pages/DemandHeatmap";
@@ -24,14 +23,23 @@ import TaxDetails from "./pages/billing/TaxDetails";
 import PartyLedger from "./pages/billing/PartyLedger";
 import AddLedgerEntry from "./pages/billing/AddLedgerEntry";
 import GenerateBill from "./pages/billing/GenerateBill";
+import Auth from "./pages/Auth";
 
 function AppRoutes() {
-  const { isLoggedIn } = useApp();
+  const { user, loading } = useAuth();
 
-  if (!isLoggedIn) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <Routes>
-        <Route path="*" element={<Onboarding />} />
+        <Route path="*" element={<Auth />} />
       </Routes>
     );
   }
