@@ -6,6 +6,7 @@ import LeadDetail from "./pages/LeadDetail";
 import MyLeads from "./pages/MyLeads";
 import PostLead from "./pages/PostLead";
 import TNEB from "./pages/TNEB";
+import JobWork from "./pages/JobWork";
 import MarketPulse from "./pages/MarketPulse";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
@@ -34,7 +35,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/my-leads" element={<MyLeads />} />
         <Route path="/chats" element={<ChatList />} />
-        <Route path="/tneb" element={<TNEB />} />
+        <Route path="/job-work" element={<JobWork />} />
         <Route path="/services" element={<Services />} />
       </Route>
       <Route path="/lead/:id" element={<LeadDetail />} />
@@ -44,6 +45,7 @@ function App() {
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/demand-heatmap" element={<DemandHeatmap />} />
       <Route path="/transport" element={<Transport />} />
+      <Route path="/tneb" element={<TNEB />} />
       <Route path="/review/:leadId" element={<WriteReview />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<NotFound />} />

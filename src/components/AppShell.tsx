@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, FileText, Zap, Grid3X3, MessageCircle, User } from "lucide-react";
+import { Home, FileText, Wrench, User, Grid3X3, MessageCircle } from "lucide-react";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
 
@@ -15,7 +15,7 @@ export default function AppShell() {
     { path: "/", label: t("nav.home"), icon: Home },
     { path: "/my-leads", label: t("nav.myLeads"), icon: FileText },
     { path: "/chats", label: t("nav.chats"), icon: MessageCircle },
-    { path: "/tneb", label: t("nav.tneb"), icon: Zap },
+    { path: "/job-work", label: t("nav.jobWork"), icon: Wrench },
     { path: "/services", label: t("nav.services"), icon: Grid3X3 },
   ];
 
