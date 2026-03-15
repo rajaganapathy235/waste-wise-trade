@@ -8,13 +8,11 @@ import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, ArrowLeft }
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ReviewsList } from "./Reviews";
-import { useIsAdmin } from "@/hooks/useProfile";
 
 export default function Profile() {
   const { user, setUser, setIsLoggedIn, reviews } = useApp();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdmin();
 
   const myReviews = reviews.filter((r) => r.revieweeId === user.id);
   const avgRating = myReviews.length > 0 ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(1) : null;
@@ -126,17 +124,6 @@ export default function Profile() {
           <CardContent className="p-4 text-center">
             <p className="text-sm font-medium">{t("profile.verificationPending")}</p>
             <p className="text-xs text-muted-foreground mt-1">{t("profile.verificationTime")}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Admin Panel Link */}
-      {isAdmin && (
-        <Card className="mb-4 border-primary/20">
-          <CardContent className="p-4">
-            <Button onClick={() => navigate("/admin")} className="w-full" variant="outline">
-              <Shield className="h-4 w-4 mr-2" /> Admin Panel
-            </Button>
           </CardContent>
         </Card>
       )}
