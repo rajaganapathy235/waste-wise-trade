@@ -7,7 +7,7 @@ const BASE_SERVICES = [
   { key: "services.marketPulse", icon: TrendingUp, color: "text-emerald", path: "/market-pulse" },
   { key: "services.analytics", icon: BarChart3, color: "text-primary", path: "/analytics" },
   { key: "services.demandMap", icon: Flame, color: "text-gold", path: "/demand-heatmap" },
-  { key: "services.transport", icon: Truck, color: "text-primary", path: "/transport" },
+  { key: "services.transport", icon: Truck, color: "text-primary", path: null },
   { key: "services.tneb", icon: Zap, color: "text-gold", path: "/tneb" },
   { key: "services.insurance", icon: ShieldCheck, color: "text-gold", path: null },
   { key: "services.nbfc", icon: Landmark, color: "text-primary", path: null },
@@ -28,7 +28,7 @@ export default function Services() {
         ...BASE_SERVICES,
       ]
     : [
-        { key: "services.billing", icon: Receipt, color: "text-emerald", path: "/billing" },
+        { key: "services.billing", icon: Receipt, color: "text-emerald", path: null },
         ...BASE_SERVICES,
       ];
 
