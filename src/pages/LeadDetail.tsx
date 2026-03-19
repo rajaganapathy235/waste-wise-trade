@@ -52,7 +52,6 @@ export default function LeadDetail() {
       </button>
 
       <LeadImageCarousel materialType={lead.materialType} />
-      </button>
 
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
