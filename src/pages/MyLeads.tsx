@@ -26,9 +26,26 @@ export default function MyLeads() {
     <div className="px-4 pt-4">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-bold">{t("myLeads.title")}</h1>
-        <Button size="sm" onClick={() => navigate("/post-lead")} className="bg-primary">
-          <Plus className="h-4 w-4 mr-1" /> {t("myLeads.postLead")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              const url = `${window.location.origin}/catalog/${user.id}`;
+              if (navigator.share) {
+                await navigator.share({ title: "My Catalog", url });
+              } else {
+                await navigator.clipboard.writeText(url);
+                toast.success("Catalog link copied!");
+              }
+            }}
+          >
+            <Share2 className="h-4 w-4 mr-1" /> Share
+          </Button>
+          <Button size="sm" onClick={() => navigate("/post-lead")} className="bg-primary">
+            <Plus className="h-4 w-4 mr-1" /> {t("myLeads.postLead")}
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4">
