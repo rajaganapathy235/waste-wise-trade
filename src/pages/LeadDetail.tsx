@@ -117,14 +117,9 @@ export default function LeadDetail() {
 
       <Card className="mb-4">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span className="text-sm">{lead.locationDistrict}, Tamil Nadu</span>
-            </div>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate("/transport")}>
-              <Truck className="h-3.5 w-3.5 mr-1" /> {t("lead.bookTransport")}
-            </Button>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span className="text-sm">{lead.locationDistrict}, Tamil Nadu</span>
           </div>
         </CardContent>
       </Card>
