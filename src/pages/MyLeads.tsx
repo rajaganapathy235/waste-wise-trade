@@ -4,8 +4,9 @@ import { useI18n } from "@/lib/i18n";
 import { LeadType } from "@/lib/mockData";
 import LeadCard from "@/components/LeadCard";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function MyLeads() {
   const { leads, user } = useApp();
