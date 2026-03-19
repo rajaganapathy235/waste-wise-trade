@@ -8,6 +8,7 @@ import { ArrowLeft, MapPin, Package, Lock, MessageCircle, Phone, Crown, Shopping
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ReviewsList } from "./Reviews";
+import LeadImageCarousel from "@/components/LeadImageCarousel";
 
 export default function LeadDetail() {
   const { id } = useParams();
