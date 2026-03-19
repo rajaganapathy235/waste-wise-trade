@@ -21,44 +21,46 @@ import NotFound from "./pages/NotFound";
 import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
+import Catalog from "./pages/Catalog";
 
 function AppRoutes() {
   const { isLoggedIn } = useApp();
 
-  if (!isLoggedIn) {
-    return (
-      <Routes>
-        <Route path="*" element={<Onboarding />} />
-      </Routes>
-    );
-  }
-
+  // Catalog is always public
   return (
     <Routes>
-      <Route element={<AppShell />}>
-        <Route path="/" element={<Index />} />
-        <Route path="/my-leads" element={<MyLeads />} />
-        <Route path="/chats" element={<ChatList />} />
-        <Route path="/job-work" element={<JobWork />} />
-        <Route path="/services" element={<Services />} />
-      </Route>
-      <Route path="/lead/:id" element={<LeadDetail />} />
-      <Route path="/post-lead" element={<PostLead />} />
-      <Route path="/market-pulse" element={<MarketPulse />} />
-      <Route path="/chat/:leadId" element={<ChatThread />} />
-      <Route path="/analytics" element={<Analytics />} />
-      <Route path="/demand-heatmap" element={<DemandHeatmap />} />
-      <Route path="/transport" element={<Transport />} />
-      <Route path="/tneb" element={<TNEB />} />
-      <Route path="/billing" element={<Billing />} />
-      <Route path="/billing/add-product" element={<AddProduct />} />
-      <Route path="/billing/product/:productId" element={<ProductDetail />} />
-      <Route path="/billing/tax-details" element={<TaxDetails />} />
-      <Route path="/review/:leadId" element={<WriteReview />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="*" element={<NotFound />} />
+      <Route path="/catalog/:userId" element={<Catalog />} />
+      {!isLoggedIn ? (
+        <Route path="*" element={<Onboarding />} />
+      ) : (
+        <>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/my-leads" element={<MyLeads />} />
+            <Route path="/chats" element={<ChatList />} />
+            <Route path="/job-work" element={<JobWork />} />
+            <Route path="/services" element={<Services />} />
+          </Route>
+          <Route path="/lead/:id" element={<LeadDetail />} />
+          <Route path="/post-lead" element={<PostLead />} />
+          <Route path="/market-pulse" element={<MarketPulse />} />
+          <Route path="/chat/:leadId" element={<ChatThread />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/demand-heatmap" element={<DemandHeatmap />} />
+          <Route path="/transport" element={<Transport />} />
+          <Route path="/tneb" element={<TNEB />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/billing/add-product" element={<AddProduct />} />
+          <Route path="/billing/product/:productId" element={<ProductDetail />} />
+          <Route path="/billing/tax-details" element={<TaxDetails />} />
+          <Route path="/review/:leadId" element={<WriteReview />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<NotFound />} />
+        </>
+      )}
     </Routes>
   );
+
 }
 
 function App() {
