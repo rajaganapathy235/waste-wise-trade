@@ -51,6 +51,9 @@ export default function LeadDetail() {
         <ArrowLeft className="h-4 w-4" /> {t("lead.back")}
       </button>
 
+      <LeadImageCarousel materialType={lead.materialType} />
+      </button>
+
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
           {lead.leadType === "Buy" ? <ShoppingCart className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4 text-emerald" />}
