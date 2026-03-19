@@ -8,6 +8,7 @@ import { ArrowLeft, MapPin, Package, Lock, MessageCircle, Phone, Crown, Shopping
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ReviewsList } from "./Reviews";
+import LeadImageCarousel from "@/components/LeadImageCarousel";
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -49,6 +50,8 @@ export default function LeadDetail() {
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4 hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" /> {t("lead.back")}
       </button>
+
+      <LeadImageCarousel materialType={lead.materialType} />
 
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
