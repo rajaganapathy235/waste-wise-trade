@@ -28,7 +28,7 @@ export default function Services() {
         ...BASE_SERVICES,
       ]
     : [
-        { key: "services.billing", icon: Receipt, color: "text-emerald", path: "/billing" },
+        { key: "services.billing", icon: Receipt, color: "text-emerald", path: null },
         ...BASE_SERVICES,
       ];
 
