@@ -31,7 +31,7 @@ interface CatalogLead {
   material_type: string;
   price_per_kg: number;
   quantity: number;
-  specs: Record<string, unknown> | null;
+  specs: unknown;
   status: string;
   location_district: string | null;
   created_at: string;
