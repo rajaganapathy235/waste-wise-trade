@@ -25,11 +25,18 @@ export default function PostLead() {
   const [trash, setTrash] = useState("");
   const [count, setCount] = useState("");
 
-  const handleSubmit = () => {
+  const { checkAndUseCredit, showLimitModal, setShowLimitModal } = useCredits();
+
+  const handleSubmit = async () => {
     if (!materialType || !price || !quantity) {
       toast.error(t("postLead.fillRequired"));
       return;
     }
+
+    // Check credits before posting
+    const canProceed = await checkAndUseCredit();
+    if (!canProceed) return;
+
     const newLead: Lead = {
       id: Date.now().toString(),
       leadType, category, materialType,
