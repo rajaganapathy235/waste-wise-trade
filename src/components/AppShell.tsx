@@ -22,7 +22,7 @@ export default function AppShell() {
     { path: "/my-leads", label: t("nav.myLeads"), icon: FileText },
     { path: "/chats", label: t("nav.chats"), icon: MessageCircle },
     { path: "/job-work", label: t("nav.jobWork"), icon: Wrench },
-    { path: "/services", label: t("nav.services"), icon: Grid3X3 },
+    { path: "/more", label: t("nav.more"), icon: MoreHorizontal },
   ];
 
   return (
