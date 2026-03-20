@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Phone,
   Mail,
@@ -13,6 +12,9 @@ import {
   ArrowLeft,
   ChevronRight,
   MessageCircle,
+  TrendingUp,
+  BarChart3,
+  Flame,
 } from "lucide-react";
 
 type Section = "menu" | "contact" | "about" | "terms" | "privacy";
