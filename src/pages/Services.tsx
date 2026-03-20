@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Phone,
   Mail,
@@ -13,6 +12,9 @@ import {
   ArrowLeft,
   ChevronRight,
   MessageCircle,
+  TrendingUp,
+  BarChart3,
+  Flame,
 } from "lucide-react";
 
 type Section = "menu" | "contact" | "about" | "terms" | "privacy";
@@ -219,8 +221,13 @@ export default function More() {
     );
   }
 
-  // Menu view
-  const MENU_ITEMS = [
+  const FEATURES = [
+    { label: "Market Pulse", icon: TrendingUp, color: "text-emerald", path: "/market-pulse" },
+    { label: "Analytics", icon: BarChart3, color: "text-primary", path: "/analytics" },
+    { label: "Demand Heatmap", icon: Flame, color: "text-gold", path: "/demand-heatmap" },
+  ];
+
+  const INFO_ITEMS = [
     { key: "contact", label: "Contact Us", icon: Phone, color: "text-emerald" },
     { key: "about", label: "About HiTex", icon: Info, color: "text-primary" },
     { key: "terms", label: "Terms of Service", icon: FileText, color: "text-gold" },
@@ -230,8 +237,30 @@ export default function More() {
   return (
     <div className="px-4 pt-4 pb-8">
       <h1 className="text-lg font-bold mb-4">{t("nav.more")}</h1>
+
+      {/* Features grid */}
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tools</p>
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        {FEATURES.map(({ label, icon: Icon, color, path }) => (
+          <Card
+            key={path}
+            className="cursor-pointer transition-all hover:shadow-md active:scale-[0.97]"
+            onClick={() => navigate(path)}
+          >
+            <CardContent className="p-3 flex flex-col items-center gap-1.5 text-center">
+              <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center">
+                <Icon className={`h-5 w-5 ${color}`} />
+              </div>
+              <span className="text-[11px] font-medium leading-tight">{label}</span>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Info & Legal */}
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Information</p>
       <div className="space-y-2">
-        {MENU_ITEMS.map(({ key, label, icon: Icon, color }) => (
+        {INFO_ITEMS.map(({ key, label, icon: Icon, color }) => (
           <Card
             key={key}
             className="cursor-pointer transition-all hover:shadow-md active:scale-[0.98]"
