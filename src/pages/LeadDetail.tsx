@@ -17,6 +17,7 @@ export default function LeadDetail() {
   const navigate = useNavigate();
   const { leads, user, setUser, reviews } = useApp();
   const { t } = useI18n();
+  const { checkAndUseCredit, showLimitModal, setShowLimitModal } = useCredits();
   const lead = leads.find((l) => l.id === id);
 
   if (!lead) {
@@ -42,8 +43,9 @@ export default function LeadDetail() {
     setUser((u) => ({ ...u, blockedUsers: u.blockedUsers.filter((bid) => bid !== lead.posterId) }));
     toast.success(t("lead.userUnblocked"));
   };
-  const handleChat = () => {
-    if (!isSubscribed) { toast.error(t("lead.premiumRequired")); return; }
+  const handleChat = async () => {
+    const canProceed = await checkAndUseCredit();
+    if (!canProceed) return;
     navigate(`/chat/${lead.id}`);
   };
 
