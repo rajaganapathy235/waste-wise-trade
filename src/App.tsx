@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
+import { supabase } from "@/integrations/supabase/client";
 import AppShell from "@/components/AppShell";
 import Index from "./pages/Index";
 import LeadDetail from "./pages/LeadDetail";
@@ -22,16 +24,39 @@ import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
 import Catalog from "./pages/Catalog";
+import Landing from "./pages/Landing";
 
 function AppRoutes() {
-  const { isLoggedIn } = useApp();
+  const { isLoggedIn, setIsLoggedIn } = useApp();
+  const [authChecked, setAuthChecked] = useState(false);
 
-  // Catalog is always public
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session);
+      setAuthChecked(true);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+      setAuthChecked(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setIsLoggedIn]);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/catalog/:userId" element={<Catalog />} />
       {!isLoggedIn ? (
-        <Route path="*" element={<Onboarding />} />
+        <Route path="*" element={<Landing />} />
       ) : (
         <>
           <Route element={<AppShell />}>
@@ -60,7 +85,6 @@ function AppRoutes() {
       )}
     </Routes>
   );
-
 }
 
 function App() {
