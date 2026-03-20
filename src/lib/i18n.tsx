@@ -638,7 +638,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.chats": "चैट्स",
     "nav.tneb": "TNEB",
     "nav.profile": "प्रोफ़ाइल",
-    "nav.services": "सेवाएं",
+    "nav.more": "और",
     "services.title": "सेवाएं",
     "services.marketPulse": "बाज़ार की नब्ज़",
     "services.analytics": "विश्लेषण",
