@@ -1,73 +1,152 @@
-# Welcome to your Lovable project
+# HiTex Marketplace
 
-## Project info
+A mobile-first B2B marketplace for the textile waste recycling industry, connecting traders, manufacturers, and transporters across Tamil Nadu.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🌟 Features
 
-## How can I edit this code?
+### Core Marketplace
+- **Lead Feed** — Browse buy/sell listings for Waste, Fiber, and Yarn with search, category filters, and type toggles
+- **Post Lead** — Create new buy or sell listings with material specs, pricing, quantity, and location
+- **Lead Detail** — View full listing details with image carousels, specs, and seller info
+- **My Leads** — Manage your active listings with status tracking
 
-There are several ways of editing your application.
+### Catalog Storefront
+- **Public Catalog** (`/catalog/:userId`) — Each user gets a shareable storefront link displaying their active listings
+- **Share Catalog** — Share via native share API or clipboard from My Leads page
+- **Visitor Enquiry** — Visitors can send in-app chat enquiries directly from the catalog
 
-**Use Lovable**
+### Communication
+- **Chat** — Real-time messaging between buyers and sellers, organized by lead/thread
+- **Reviews** — Rate and review trade partners after transactions
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Business Tools
+- **Billing** — Invoice management with product catalog, tax details (GST/HSN), and party ledger
+- **Analytics** — Trade performance dashboards and insights
+- **Market Pulse** — Live market price trends for textile materials
+- **Demand Heatmap** — Geographic demand visualization across districts
 
-Changes made via Lovable will be committed automatically to this repo.
+### Utilities
+- **TNEB** — Tamil Nadu Electricity Board rate reference
+- **Job Work** — Job work listings and management
+- **Transport** — Transport request management (Coming Soon)
+- **Services** — Directory of available platform services
 
-**Use your preferred IDE**
+### User Management
+- **Profile** — Business profile with verification, trust score, and bio
+- **Onboarding** — Guided setup for new users
+- **Multi-role Support** — Waste Trader, Manufacturer, Transporter roles
+- **Multi-language** — i18n support with Tamil/English
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠 Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript, Vite |
+| Styling | Tailwind CSS, shadcn/ui |
+| Backend | Lovable Cloud (Supabase) |
+| Database | PostgreSQL with RLS policies |
+| Auth | Email/password with profile auto-creation |
+| State | React Context + TanStack Query |
+| Routing | React Router v6 |
+| Charts | Recharts |
 
-Follow these steps:
+## 📁 Project Structure
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/              # shadcn/ui primitives
+│   ├── AppShell.tsx     # Main layout with bottom nav
+│   ├── LeadCard.tsx     # Lead listing card
+│   ├── LeadImageCarousel.tsx
+│   ├── BillingHeader.tsx
+│   ├── DateRangeFilter.tsx
+│   └── NavLink.tsx
+├── pages/               # Route pages
+│   ├── billing/         # Billing sub-pages
+│   │   ├── AddProduct.tsx
+│   │   ├── ProductDetail.tsx
+│   │   └── TaxDetails.tsx
+│   ├── Index.tsx        # Home feed
+│   ├── Catalog.tsx      # Public storefront
+│   ├── LeadDetail.tsx   # Lead detail view
+│   ├── MyLeads.tsx      # User's listings
+│   ├── PostLead.tsx     # Create listing
+│   ├── Chat.tsx         # Messaging
+│   ├── Analytics.tsx    # Dashboards
+│   ├── Billing.tsx      # Invoice management
+│   ├── Profile.tsx      # User profile
+│   └── ...
+├── lib/                 # Utilities & context
+│   ├── appContext.tsx    # Global app state
+│   ├── i18n.tsx         # Internationalization
+│   ├── mockData.ts      # Mock data models
+│   ├── materialImages.ts
+│   ├── csvExport.ts
+│   └── utils.ts
+├── hooks/               # Custom React hooks
+├── integrations/        # Supabase client & types
+└── main.tsx             # App entry point
+```
+
+## 🗄 Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `profiles` | User business profiles, verification, trust scores |
+| `leads` | Buy/sell material listings |
+| `chat_threads` | Conversation threads linked to leads |
+| `chat_messages` | Individual messages in threads |
+| `chat_participants` | Thread membership and unread counts |
+| `reviews` | Trader ratings and feedback |
+| `bills` | Invoices and billing records |
+| `products` | Product catalog for billing |
+| `parties` | Business contacts / trading partners |
+| `ledger_entries` | Financial ledger for parties |
+| `transport_requests` | Transport booking requests |
+| `user_roles` | Role-based access (admin, trader, transporter, manufacturer) |
+
+## 🚀 Getting Started
+
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Navigate to the project
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🔗 Routes
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Path | Page | Auth |
+|------|------|------|
+| `/` | Home Feed | ✅ |
+| `/catalog/:userId` | Public Catalog | ❌ |
+| `/lead/:id` | Lead Detail | ✅ |
+| `/my-leads` | My Listings | ✅ |
+| `/post-lead` | Create Listing | ✅ |
+| `/chats` | Chat List | ✅ |
+| `/chat/:leadId` | Chat Thread | ✅ |
+| `/billing` | Billing Dashboard | ✅ |
+| `/billing/add-product` | Add Product | ✅ |
+| `/billing/product/:id` | Product Detail | ✅ |
+| `/billing/tax-details` | Tax Details | ✅ |
+| `/analytics` | Analytics | ✅ |
+| `/market-pulse` | Market Prices | ✅ |
+| `/demand-heatmap` | Demand Map | ✅ |
+| `/transport` | Transport | ✅ |
+| `/tneb` | TNEB Rates | ✅ |
+| `/job-work` | Job Work | ✅ |
+| `/services` | Services | ✅ |
+| `/review/:leadId` | Write Review | ✅ |
+| `/profile` | User Profile | ✅ |
 
-**Use GitHub Codespaces**
+## 📄 License
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Private — All rights reserved.
