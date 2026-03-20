@@ -222,6 +222,7 @@ export default function LeadDetail() {
         <span className="text-xs text-muted-foreground">{t("lead.demoToggle")}</span>
         <Switch checked={isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
       </div>
+      <CreditLimitModal open={showLimitModal} onOpenChange={setShowLimitModal} />
     </div>
   );
 }
