@@ -1,44 +1,29 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  ArrowLeft, Send, Crown, Lock, 
-  MessageCircle, Loader2, Sparkles, ShieldCheck 
-} from "lucide-react";
+import { ArrowLeft, Send, Crown, Lock, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { 
-  useChatThreads, useChatMessages, 
-  useSendMessage, useCreateOrGetThread 
-} from "@/hooks/useChat";
-import { useLead } from "@/hooks/useLeads";
 
 export default function ChatList() {
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { user, chatThreads } = useApp();
   const { t } = useI18n();
-  const { data: threads = [], isLoading } = useChatThreads(user.id);
 
   if (!user.isSubscribed) {
     return (
-      <div className="px-6 pt-8 pb-8 max-w-md mx-auto animate-fade-in">
-        <h1 className="text-2xl font-black mb-6 tracking-tight">{t("chat.title")}</h1>
-        <Card className="border-none shadow-2xl bg-navy text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 opacity-20 blur-2xl h-32 w-32 bg-emerald rounded-full -translate-y-1/2 translate-x-1/2" />
-          <CardContent className="p-8 text-center relative z-10">
-            <div className="p-4 rounded-3xl bg-white/10 w-fit mx-auto mb-6">
-              <Lock className="h-8 w-8 text-gold" />
-            </div>
-            <h2 className="text-xl font-bold mb-2">{t("chat.premium")}</h2>
-            <p className="text-sm text-white/60 mb-8 leading-relaxed">{t("chat.premiumDesc")}</p>
-            <Button 
-                onClick={() => navigate("/subscribe")}
-                className="w-full bg-gold hover:bg-gold/90 text-navy font-black h-12 rounded-xl shadow-lg transition-all active:scale-[0.98]"
-            >
-              <Crown className="h-4 w-4 mr-2" /> {t("chat.upgrade")}
+      <div className="px-4 pt-4 pb-8 max-w-md mx-auto">
+        <h1 className="text-lg font-bold mb-4">{t("chat.title")}</h1>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Lock className="h-8 w-8 text-gold mx-auto mb-3" />
+            <h2 className="font-semibold mb-1">{t("chat.premium")}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t("chat.premiumDesc")}</p>
+            <Button className="bg-gold hover:bg-gold/90 text-gold-foreground font-semibold">
+              <Crown className="h-4 w-4 mr-1" /> {t("chat.upgrade")}
             </Button>
           </CardContent>
         </Card>
@@ -47,76 +32,40 @@ export default function ChatList() {
   }
 
   return (
-    <div className="px-6 pt-8 pb-8 max-w-md mx-auto animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-black tracking-tight">{t("chat.title")}</h1>
-        {threads.length > 0 && (
-          <Badge className="bg-emerald/10 text-emerald border-none text-[10px] font-bold px-3">
-            {threads.length} ACTIVE
-          </Badge>
-        )}
-      </div>
-
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
-          <p className="text-sm text-slate-400 font-medium">Loading conversations...</p>
-        </div>
-      ) : threads.length === 0 ? (
-        <div className="text-center py-24 bg-white rounded-[2.5rem] shadow-sm border border-dashed border-slate-200">
-          <div className="p-5 rounded-full bg-slate-50 w-fit mx-auto mb-4">
-            <MessageCircle className="h-10 w-10 text-slate-200" />
-          </div>
-          <p className="text-slate-400 font-bold">{t("chat.noChats")}</p>
-          <Button 
-            variant="link" 
-            onClick={() => navigate("/")} 
-            className="text-primary font-bold mt-2"
-          >
-            Explore Marketplace
-          </Button>
+    <div className="px-4 pt-4 pb-8 max-w-md mx-auto">
+      <h1 className="text-lg font-bold mb-4">{t("chat.title")}</h1>
+      {chatThreads.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground text-sm">
+          <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          {t("chat.noChats")}
         </div>
       ) : (
-        <div className="space-y-4">
-          {threads.map((thread: any) => {
-            const participants = thread.chat_participants || [];
-            const other = participants.find((p: any) => p.user_id !== user.id);
+        <div className="space-y-2">
+          {chatThreads.map((thread) => {
+            const other = thread.participants.find((p) => p.id !== user.id);
             return (
               <button
                 key={thread.id}
-                onClick={() => navigate(`/chat/${thread.lead_id}`, { state: { threadId: thread.id } })}
-                className="w-full text-left bg-white shadow-sm border border-slate-100 rounded-[2rem] p-5 hover:shadow-xl hover:border-transparent transition-all group active:scale-[0.98]"
+                onClick={() => navigate(`/chat/${thread.leadId}`)}
+                className="w-full text-left bg-card border border-border rounded-lg p-3 hover:shadow-sm transition-all"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-primary font-bold text-lg group-hover:bg-primary group-hover:text-white transition-colors">
-                      {other?.display_name?.[0] || "?"}
-                    </div>
-                    <div>
-                      <p className="text-base font-black text-slate-900 leading-tight">{other?.display_name || "Merchant"}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 truncate max-w-[150px]">
-                        {thread.lead_title}
-                      </p>
-                    </div>
+                <div className="flex items-start justify-between mb-1">
+                  <div>
+                    <p className="text-sm font-semibold">{other?.name || "Unknown"}</p>
+                    <p className="text-[10px] text-muted-foreground">{thread.leadTitle}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    <p className="text-[10px] font-bold text-slate-300">
-                      {thread.last_message_at ? new Date(thread.last_message_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : ""}
-                    </p>
-                    {other?.unread_count > 0 && (
-                      <Badge className="bg-emerald text-white text-[10px] h-5 min-w-[20px] justify-center border-none font-bold">
-                        {other.unread_count}
+                  <div className="flex items-center gap-2">
+                    {thread.unreadCount > 0 && (
+                      <Badge className="bg-primary text-primary-foreground text-[10px] h-5 min-w-[20px] justify-center">
+                        {thread.unreadCount}
                       </Badge>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                   {thread.last_message ? (
-                     <p className="text-sm text-slate-500 truncate w-full italic">"{thread.last_message}"</p>
-                   ) : (
-                     <p className="text-sm text-slate-300 italic">No messages yet</p>
-                   )}
-                </div>
+                <p className="text-xs text-muted-foreground truncate">{thread.lastMessage}</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  {new Date(thread.lastMessageAt).toLocaleDateString()}
+                </p>
               </button>
             );
           })}
@@ -129,52 +78,26 @@ export default function ChatList() {
 export function ChatThread() {
   const { leadId } = useParams();
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { user, chatThreads, setChatThreads, leads } = useApp();
   const { t } = useI18n();
   const [message, setMessage] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: lead } = useLead(leadId);
-  const { mutateAsync: createThread } = useCreateOrGetThread();
-  const [threadId, setThreadId] = useState<string | null>(null);
-
-  const { data: messages = [], isLoading: isMsgsLoading } = useChatMessages(threadId || undefined);
-  const { mutate: sendMessage } = useSendMessage();
-
-  useEffect(() => {
-    if (lead && user.id) {
-       createThread({
-         leadId: lead.id,
-         leadTitle: `${lead.materialType} - ${lead.quantity}kg`,
-         participantIds: [user.id, lead.posterId]
-       }).then(id => setThreadId(id));
-    }
-  }, [lead, user.id, createThread]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+  const thread = chatThreads.find((t) => t.leadId === leadId);
+  const lead = leads.find((l) => l.id === leadId);
 
   if (!user.isSubscribed) {
     return (
-      <div className="px-6 pt-12 max-w-md mx-auto">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-slate-400 mb-8 group">
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back
+      <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+          <ArrowLeft className="h-4 w-4" /> {t("chat.back")}
         </button>
-        <Card className="border-none shadow-2xl bg-navy text-white overflow-hidden">
-          <CardContent className="p-8 text-center">
-            <div className="p-4 rounded-3xl bg-white/10 w-fit mx-auto mb-6">
-              <Lock className="h-8 w-8 text-gold" />
-            </div>
-            <h2 className="text-xl font-bold mb-2">{t("chat.premiumRequired")}</h2>
-            <p className="text-sm text-white/60 mb-8 leading-relaxed">{t("chat.premiumSubDesc")}</p>
-            <Button 
-                onClick={() => navigate("/subscribe")}
-                className="w-full bg-gold hover:bg-gold/90 text-navy font-black h-12 rounded-xl shadow-lg"
-            >
-              <Crown className="h-4 w-4 mr-2" /> Upgrade Now
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Lock className="h-8 w-8 text-gold mx-auto mb-3" />
+            <h2 className="font-semibold mb-1">{t("chat.premiumRequired")}</h2>
+            <p className="text-xs text-muted-foreground mb-4">{t("chat.premiumSubDesc")}</p>
+            <Button className="bg-gold hover:bg-gold/90 text-gold-foreground font-semibold">
+              <Crown className="h-4 w-4 mr-1" /> {t("chat.upgradeShort")}
             </Button>
           </CardContent>
         </Card>
@@ -183,101 +106,86 @@ export function ChatThread() {
   }
 
   const handleSend = () => {
-    if (!message.trim() || !threadId) return;
-    sendMessage({ threadId, senderId: user.id, text: message.trim() });
+    if (!message.trim()) return;
+    const newMsg = { id: Date.now().toString(), senderId: user.id, text: message.trim(), timestamp: new Date().toISOString() };
+
+    if (thread) {
+      setChatThreads((prev) =>
+        prev.map((t) =>
+          t.leadId === leadId
+            ? { ...t, messages: [...t.messages, newMsg], lastMessage: message.trim(), lastMessageAt: newMsg.timestamp }
+            : t
+        )
+      );
+    } else {
+      const otherName = lead?.posterName || "Unknown";
+      const otherId = lead?.posterId || "unknown";
+      setChatThreads((prev) => [
+        ...prev,
+        {
+          id: `chat-${Date.now()}`,
+          leadId: leadId || "",
+          leadTitle: `${lead?.materialType || "Lead"} — ${lead?.quantity?.toLocaleString() || "?"} kg`,
+          participants: [{ id: user.id, name: user.businessName }, { id: otherId, name: otherName }],
+          messages: [newMsg],
+          lastMessage: message.trim(),
+          lastMessageAt: newMsg.timestamp,
+          unreadCount: 0,
+        },
+      ]);
+    }
     setMessage("");
   };
 
+  const messages = thread?.messages || [];
+  const other = thread?.participants.find((p) => p.id !== user.id);
+
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-50 relative overflow-hidden">
-      {/* Premium Header */}
-      <div className="bg-navy text-white px-5 py-4 flex items-center justify-between shadow-lg relative z-20">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-white/60 hover:text-white transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-3">
-             <div className="h-10 w-10 rounded-2xl bg-white/10 flex items-center justify-center font-bold text-emerald">
-               {lead?.posterName?.[0] || "?"}
-             </div>
-             <div>
-               <p className="text-sm font-black leading-tight">{lead?.posterName || "Merchant"}</p>
-               <p className="text-[10px] text-emerald font-bold uppercase tracking-wider flex items-center gap-1">
-                 <ShieldCheck className="h-2.5 w-2.5" /> SECURE CHANNEL
-               </p>
-             </div>
-          </div>
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
+      <div className="bg-navy text-navy-foreground px-4 py-3 flex items-center gap-3">
+        <button onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <p className="text-sm font-semibold">{other?.name || lead?.posterName || "Chat"}</p>
+          <p className="text-[10px] text-navy-foreground/60">{lead?.materialType || "Lead"}</p>
         </div>
-        <Badge className="bg-emerald/20 text-emerald border-none text-[9px] font-black">ENCRYPTED</Badge>
       </div>
 
-      {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {lead && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-slate-100 mb-6 flex items-center justify-between group">
-            <div className="flex items-center gap-3">
-               <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                 <Sparkles className="h-4 w-4" />
-               </div>
-               <div>
-                  <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{lead.materialType}</p>
-                  <p className="text-[10px] text-slate-400 font-bold">{lead.quantity.toLocaleString()} kg @ ₹{lead.pricePerKg}/kg</p>
-               </div>
-            </div>
-            <Button variant="ghost" size="icon" className="text-slate-300 group-hover:text-primary" onClick={() => navigate(`/lead/${lead.id}`)}>
-               <ArrowLeft className="h-4 w-4 rotate-180" />
-            </Button>
+          <div className="bg-secondary rounded-lg p-3 mb-2">
+            <p className="text-[10px] text-muted-foreground">Re: {lead.materialType} — {lead.quantity.toLocaleString()} kg @ ₹{lead.pricePerKg}/kg</p>
           </div>
         )}
-
-        {isMsgsLoading && (
-          <div className="flex justify-center py-10">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-200" />
-          </div>
-        )}
-
-        {messages.map((msg: any) => {
-          const isMe = msg.sender_id === user.id;
+        {messages.map((msg) => {
+          const isMe = msg.senderId === user.id;
           return (
-            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2`}>
-              <div className={`max-w-[85%] px-4 py-3 rounded-[1.5rem] shadow-sm text-sm font-medium leading-relaxed ${
-                isMe 
-                ? "bg-slate-900 text-white rounded-br-none" 
-                : "bg-white text-slate-700 rounded-bl-none border border-slate-100"
+            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
+                isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-secondary text-foreground rounded-bl-sm"
               }`}>
                 {msg.text}
-                <div className={`text-[9px] mt-1.5 flex items-center gap-1 ${isMe ? "text-white/40 justify-end" : "text-slate-300"}`}>
-                   {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                   {isMe && <ShieldCheck className="h-2.5 w-2.5" />}
-                </div>
+                <p className={`text-[9px] mt-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] relative z-20">
-        <div className="flex gap-2 max-w-md mx-auto">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your secure message..."
-            className="flex-1 h-12 bg-slate-50 border-none rounded-2xl px-5 text-sm font-medium focus:ring-2 ring-primary/20"
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          />
-          <Button 
-            onClick={handleSend} 
-            disabled={!message.trim() || !threadId}
-            size="icon" 
-            className="bg-slate-900 hover:bg-black text-white shrink-0 h-12 w-12 rounded-2xl shadow-xl transition-all active:scale-90"
-          >
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
-        <p className="text-[9px] text-center text-slate-300 mt-3 font-bold uppercase tracking-widest">
-          Verified Channel • Handled by HiTex Cloud
-        </p>
+      <div className="border-t border-border p-3 flex gap-2">
+        <Input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={t("chat.typePlaceholder")}
+          className="flex-1"
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+        />
+        <Button onClick={handleSend} size="icon" className="bg-primary shrink-0">
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

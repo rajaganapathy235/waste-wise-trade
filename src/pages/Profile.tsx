@@ -3,197 +3,177 @@ import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, ArrowLeft, Loader2, Sparkles, UserCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Shield, Crown, MapPin, FileText, LogOut, Upload, Ban, Star, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { ReviewsList } from "./Reviews";
-import { useReviews } from "@/hooks/useReviews";
 
 export default function Profile() {
-  const { user, setUser } = useApp();
+  const { user, setUser, setIsLoggedIn, reviews } = useApp();
   const { t } = useI18n();
   const navigate = useNavigate();
 
-  const { data: reviews = [], isLoading: isReviewsLoading } = useReviews(user.id);
-  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
+  const myReviews = reviews.filter((r) => r.revieweeId === user.id);
+  const avgRating = myReviews.length > 0 ? (myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length).toFixed(1) : null;
 
-  const handleSubmitVerification = async () => {
-    const { error } = await supabase
-        .from("profiles")
-        .update({ verification_status: "pending" })
-        .eq("id", user.id);
-    
-    if (error) {
-        toast.error(`Error: ${error.message}`);
-        return;
-    }
-    
+  const handleSubmitVerification = () => {
     setUser((u) => ({ ...u, verificationStatus: "pending" }));
     toast.success(t("profile.verificationSubmitted"));
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/onboarding");
-  };
-
   return (
-    <div className="px-6 pt-8 pb-12 max-w-md mx-auto animate-fade-in bg-slate-50 min-h-screen">
-      <div className="flex items-center justify-between mb-8">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-400 hover:text-slate-900 transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl font-black tracking-tight text-slate-900">{t("profile.title")}</h1>
-        <div className="w-9" /> {/* Spacer */}
-      </div>
+    <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+        <ArrowLeft className="h-4 w-4" /> {t("lead.back")}
+      </button>
+      <h1 className="text-lg font-bold mb-4">{t("profile.title")}</h1>
 
-      {/* Premium Business Card */}
-      <Card className="mb-6 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden relative">
-        <div className="absolute top-0 right-0 h-32 w-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-        <CardContent className="p-8">
-          <div className="flex items-center gap-5 mb-8">
-             <div className="h-16 w-16 rounded-[1.5rem] bg-slate-900 flex items-center justify-center text-white shadow-lg">
-                <UserCircle className="h-8 w-8" />
-             </div>
-             <div className="flex-1">
-               <div className="flex items-center gap-2 flex-wrap">
-                 <h2 className="text-xl font-black text-slate-900 leading-tight">{user.businessName}</h2>
-                 {user.verificationStatus === "verified" ? (
-                   <Shield className="h-4 w-4 text-emerald fill-emerald/10" title={t("profile.verified")} />
-                 ) : user.verificationStatus === "pending" ? (
-                   <Badge className="bg-amber-100 text-amber-600 border-none text-[8px] font-black uppercase tracking-widest">PENDING</Badge>
-                 ) : null}
-               </div>
-               <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-widest">{user.phone || user.email}</p>
-             </div>
+      {/* Business Card */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h2 className="font-bold text-foreground">{user.businessName}</h2>
+              <p className="text-xs text-muted-foreground">{user.phone}</p>
+            </div>
+            {user.verificationStatus === "verified" ? (
+              <Badge className="bg-emerald/10 text-emerald border-emerald/20 text-[10px]">
+                <Shield className="h-3 w-3 mr-0.5" /> {t("profile.verified")}
+              </Badge>
+            ) : user.verificationStatus === "pending" ? (
+              <Badge variant="secondary" className="text-[10px]">⏳ {t("profile.pending")}</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[10px]">{t("profile.unverified")}</Badge>
+            )}
           </div>
-
-          <div className="grid grid-cols-1 gap-3">
-             <div className="flex items-start gap-4 p-4 rounded-3xl bg-slate-50 border border-slate-100/50">
-                <div className="p-2 rounded-xl bg-white text-slate-400 shadow-sm">
-                   <MapPin className="h-4 w-4" />
-                </div>
-                <div>
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-0.5">District</p>
-                   <p className="text-sm font-bold text-slate-700">{user.locationDistrict}, Tamil Nadu</p>
-                </div>
-             </div>
-             {user.roles && user.roles.length > 0 && (
-               <div className="flex items-center gap-2 flex-wrap mt-2">
-                 {user.roles.map((role) => (
-                   <Badge key={role} variant="secondary" className="bg-slate-200/50 text-slate-500 border-none text-[10px] px-3 py-1 font-bold">
-                     {role.toUpperCase()}
-                   </Badge>
-                 ))}
-               </div>
-             )}
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <FileText className="h-3.5 w-3.5" />
+              <span className="text-xs">GST: {user.gstNumber}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" />
+              <span className="text-xs">{user.locationDistrict}, Tamil Nadu</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {user.roles.map((role) => (
+              <Badge key={role} variant="outline" className="text-[10px]">{role}</Badge>
+            ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Trust & Reputation */}
-      <div className="mb-6">
-        <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-4 ml-1">REPUTATION</h3>
-        <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-gold/10 text-gold">
-                  <Star className="h-4 w-4 fill-gold" />
-                </div>
-                <h2 className="text-sm font-black text-slate-800 tracking-tight">{t("profile.trustScore")}</h2>
+      {/* Trust Score */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold flex items-center gap-1.5">
+              <Star className="h-4 w-4 fill-gold text-gold" /> {t("profile.trustScore")}
+            </h2>
+            {avgRating ? (
+              <div className="flex items-center gap-1">
+                <span className="text-lg font-bold">{avgRating}</span>
+                <span className="text-xs text-muted-foreground">/ 5</span>
+                <span className="text-[10px] text-muted-foreground ml-1">({myReviews.length} {t("profile.reviews")})</span>
               </div>
-              {avgRating ? (
-                <div className="text-right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span className="text-2xl font-black text-slate-900">{avgRating}</span>
-                    <span className="text-xs font-bold text-slate-300">/ 5.0</span>
-                  </div>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Based on {reviews.length} reviews</p>
-                </div>
-              ) : (
-                <Badge variant="outline" className="text-[10px] border-slate-100 text-slate-400">NEW TRADER</Badge>
-              )}
+            ) : (
+              <span className="text-xs text-muted-foreground">{t("profile.noReviews")}</span>
+            )}
+          </div>
+          {avgRating && (
+            <div className="flex gap-0.5 mb-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star key={n} className={`h-4 w-4 ${n <= Math.round(Number(avgRating)) ? "fill-gold text-gold" : "text-muted-foreground/20"}`} />
+              ))}
             </div>
-            
-            <div className="pt-4 border-t border-slate-50">
-               <h4 className="text-[11px] font-black text-slate-900 flex items-center gap-1.5 mb-4">
-                  <MessageCircle className="h-3.5 w-3.5 text-primary" /> RECENT FEEDBACK
-               </h4>
-               <ReviewsList userId={user.id} />
+          )}
+          {myReviews.length > 0 && (
+            <div className="mt-2">
+              <ReviewsList userId={user.id} />
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Verification Section */}
+      {user.verificationStatus === "none" && (
+        <Card className="mb-4 border-emerald/20">
+          <CardContent className="p-4">
+            <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+              <Shield className="h-4 w-4 text-emerald" /> {t("profile.getVerified")}
+            </h2>
+            <p className="text-xs text-muted-foreground mb-3">{t("profile.uploadDocs")}</p>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {["GST Cert", "Incorp Cert", "Tax Docs"].map((doc) => (
+                <button key={doc} className="flex flex-col items-center gap-1 p-3 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
+                  <Upload className="h-4 w-4" /><span className="text-[8px]">{doc}</span>
+                </button>
+              ))}
+            </div>
+            <Button onClick={handleSubmitVerification} size="sm" className="w-full bg-emerald hover:bg-emerald/90 text-emerald-foreground">
+              {t("profile.submitVerification")}
+            </Button>
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* Subscription & Verification */}
-      <div className="grid grid-cols-1 gap-4 mb-6">
-        <Card 
-          onClick={() => navigate("/subscribe")}
-          className={`border-none shadow-sm rounded-[2rem] p-6 cursor-pointer group active:scale-[0.98] transition-all overflow-hidden relative ${user.isSubscribed ? 'bg-navy text-white' : 'bg-white text-slate-900'}`}
-        >
-          {user.isSubscribed && (
-            <div className="absolute top-0 right-0 h-32 w-32 bg-gold/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-          )}
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3">
-               <div className={`p-2.5 rounded-2xl ${user.isSubscribed ? 'bg-white/10 text-gold' : 'bg-gold/10 text-gold'}`}>
-                  <Crown className="h-5 w-5" />
-               </div>
-               <div>
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${user.isSubscribed ? 'text-white/40' : 'text-slate-400'}`}>PLAN STATUS</p>
-                  <p className="font-black tracking-tight">{user.isSubscribed ? 'PREMIUM ACCESS' : 'FREE BASICS'}</p>
-               </div>
-            </div>
-            <ArrowLeft className={`h-4 w-4 rotate-180 transition-transform group-hover:translate-x-1 ${user.isSubscribed ? 'text-white/20' : 'text-slate-200'}`} />
-          </div>
+      {user.verificationStatus === "pending" && (
+        <Card className="mb-4 border-gold/20 bg-gold/5">
+          <CardContent className="p-4 text-center">
+            <p className="text-sm font-medium">{t("profile.verificationPending")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("profile.verificationTime")}</p>
+          </CardContent>
         </Card>
+      )}
 
-        {user.verificationStatus === "none" && (
-          <Card 
-            onClick={handleSubmitVerification}
-            className="border-none shadow-sm rounded-[2.5rem] p-8 cursor-pointer group hover:bg-emerald/5 transition-all text-center border-2 border-emerald/10"
-          >
-            <div className="p-4 rounded-[1.5rem] bg-emerald/10 text-emerald w-fit mx-auto mb-4 group-hover:scale-110 transition-transform">
-               <Shield className="h-8 w-8" />
-            </div>
-            <h3 className="font-black text-slate-900 italic mb-1">{t("profile.getVerified")}</h3>
-            <p className="text-xs text-slate-400 mb-6 px-4">{t("profile.uploadDocs")}</p>
-            <Button className="w-full bg-emerald hover:bg-emerald/90 text-white font-black h-12 rounded-xl shadow-lg shadow-emerald/10">
-               <Sparkles className="h-4 w-4 mr-2" /> SUBMIT FOR KYC
+      {/* Subscription */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold flex items-center gap-1.5">
+              <Crown className="h-4 w-4 text-gold" /> {t("profile.subscription")}
+            </h2>
+            <Badge className={user.isSubscribed ? "bg-emerald/10 text-emerald border-emerald/20 text-[10px]" : "text-[10px]"} variant={user.isSubscribed ? "outline" : "secondary"}>
+              {user.isSubscribed ? t("profile.active") : t("profile.free")}
+            </Badge>
+          </div>
+          {!user.isSubscribed && (
+            <Button className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold mt-2">
+              <Crown className="h-4 w-4 mr-1" /> {t("profile.upgradePrice")}
             </Button>
-          </Card>
-        )}
-        
-        {user.verificationStatus === "pending" && (
-           <Card className="border-none shadow-sm rounded-[2rem] p-6 bg-amber-500/10 text-amber-600 text-center">
-              <p className="text-xs font-black tracking-tight uppercase">{t("profile.verificationPending")}</p>
-              <p className="text-[10px] font-bold mt-1 opacity-60">Estimation: 24-48 business hours</p>
-           </Card>
-        )}
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Blocked Users */}
+      {user.blockedUsers.length > 0 && (
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <h2 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+              <Ban className="h-4 w-4 text-destructive" /> {t("profile.blockedUsers")}
+            </h2>
+            <p className="text-xs text-muted-foreground">{user.blockedUsers.length} {t("profile.blockedCount")}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Demo toggles */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
+          <span className="text-xs text-muted-foreground">{t("profile.demoSub")}</span>
+          <Switch checked={user.isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
+        </div>
+        <div className="flex items-center justify-between bg-secondary rounded-lg p-3">
+          <span className="text-xs text-muted-foreground">{t("profile.demoVerified")}</span>
+          <Switch checked={user.verificationStatus === "verified"} onCheckedChange={(v) => setUser((u) => ({ ...u, verificationStatus: v ? "verified" : "none" }))} />
+        </div>
       </div>
 
-      {/* Utility Actions */}
-      <div className="space-y-4 pt-4">
-        {user.roles.includes('admin') && (
-           <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 font-bold text-slate-900 group" onClick={() => navigate("/admin/dashboard")}>
-              <Shield className="h-4 w-4 mr-2 text-primary transition-transform group-hover:scale-110" /> ADMIN PORTAL
-           </Button>
-        )}
-        
-        <Button 
-          variant="outline" 
-          className="w-full h-14 rounded-2xl border-slate-200 font-bold text-red-500 hover:bg-red-50 hover:border-red-100 group" 
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" /> {t("profile.logout")}
-        </Button>
-      </div>
-
-      <p className="text-[9px] text-center text-slate-300 mt-12 font-bold uppercase tracking-[0.3em]">
-        Hi<span className="text-emerald">Tex</span> Secure Protocol V5.2.0
-      </p>
+      <Button variant="outline" className="w-full text-destructive" onClick={() => setIsLoggedIn(false)}>
+        <LogOut className="h-4 w-4 mr-1" /> {t("profile.logout")}
+      </Button>
     </div>
   );
 }

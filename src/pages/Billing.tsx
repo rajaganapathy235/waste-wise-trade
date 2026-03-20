@@ -3,29 +3,60 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
 import {
   Send, Users, Home, FileText, Package,
-  FileSpreadsheet, TrendingUp, Plus, Search, Loader2, IndianRupee, ArrowRight
+  FileSpreadsheet, TrendingUp, Plus, Search
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import BillingHeader from "@/components/BillingHeader";
-import { useProducts, useParties, useBills } from "@/hooks/useBilling";
 
 type BillType = "Sales" | "Purchase" | "Quotation";
 type BillingTab = "home" | "send" | "party" | "center" | "bills" | "products";
+
+interface SendEntry {
+  id: string;
+  name: string;
+  month: string;
+  date: string;
+  billCount: number;
+}
+
+const MOCK_SEND_ENTRIES: SendEntry[] = [
+  { id: "s1", name: "Raja", month: "January-2026", date: "22 Jan,2026", billCount: 10 },
+];
+
+interface Product {
+  id: string;
+  name: string;
+  sellPrice: number;
+  purchasePrice: number;
+  salesStock: number;
+  purchaseStock: number;
+}
+
+const MOCK_PRODUCTS: Product[] = [
+  { id: "1", name: "JOB WORK FOR RECYCLED BANIAN CLOTH WASTE COTTONS", sellPrice: 8.70, purchasePrice: 8.00, salesStock: 9682, purchaseStock: 0 },
+  { id: "2", name: "JOB WORK FOR RECYCLED BANIAN CLOTH WASTE COTTON", sellPrice: 9.75, purchasePrice: 9.50, salesStock: 369684, purchaseStock: 369684 },
+];
 
 export default function Billing() {
   const navigate = useNavigate();
   const { user } = useApp();
   const [activeTab, setActiveTab] = useState<BillingTab>("home");
   const [sendSearch, setSendSearch] = useState("");
+  const [sendSubTab, setSendSubTab] = useState<"send" | "overview">("send");
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+      return saved.length > 0 ? saved.map((p: any) => ({
+        id: p.id, name: p.name, sellPrice: p.sellPrice, purchasePrice: p.buyingPrice || p.purchasePrice,
+        salesStock: p.salesStock || 0, purchaseStock: p.purchaseStock || 0,
+      })) : MOCK_PRODUCTS;
+    } catch { return MOCK_PRODUCTS; }
+  });
+
   const [billType, setBillType] = useState<BillType>("Sales");
   const billTypes: BillType[] = ["Sales", "Purchase", "Quotation"];
-
-  const { data: products = [], isLoading: isProductsLoading } = useProducts(user.id);
-  const { data: bills = [], isLoading: isBillsLoading } = useBills(user.id);
-  const { data: parties = [], isLoading: isPartiesLoading } = useParties(user.id);
 
   const TABS: { id: BillingTab; label: string; icon: React.ElementType }[] = [
     { id: "send", label: "Send", icon: Send },
@@ -37,218 +68,206 @@ export default function Billing() {
 
   // ─── Home Tab (Default - Generate Bill) ───
   const renderHomeTab = () => (
-    <div className="space-y-4 animate-fade-in pb-20">
-      <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
-              <FileSpreadsheet className="h-6 w-6" />
+    <div className="space-y-4">
+      <Card className="border-border shadow-sm">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gold/20 flex items-center justify-center">
+              <FileSpreadsheet className="h-5 w-5 text-gold" />
             </div>
-            <div>
-              <h2 className="text-lg font-black text-slate-900 tracking-tight">Create Invoice</h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">New Transaction</p>
-            </div>
+            <h2 className="text-base font-bold text-foreground">New Bill</h2>
           </div>
-          <div className="pt-2">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-4">BILLING CATEGORY</p>
-            <div className="flex items-center gap-3">
+          <div className="border-t border-border pt-3">
+            <p className="text-sm text-muted-foreground mb-2">Bill Type</p>
+            <div className="flex items-center gap-6">
               {billTypes.map((bt) => (
-                <button 
-                    key={bt} 
-                    onClick={() => setBillType(bt)}
-                    className={`flex-1 py-3 rounded-2xl text-[11px] font-black transition-all border ${billType === bt ? 'bg-slate-900 text-white border-transparent shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
-                >
-                    {bt.toUpperCase()}
-                </button>
+                <label key={bt} className="flex items-center gap-2 cursor-pointer" onClick={() => setBillType(bt)}>
+                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${billType === bt ? "border-emerald" : "border-muted-foreground/40"}`}>
+                    {billType === bt && <div className="h-2.5 w-2.5 rounded-full bg-emerald" />}
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{bt}</span>
+                </label>
               ))}
             </div>
           </div>
-          <Button className="w-full h-14 text-sm font-black rounded-2xl bg-emerald hover:bg-emerald/90 text-white shadow-xl shadow-emerald/10 transition-all active:scale-[0.98]">
-            <Plus className="h-5 w-5 mr-2" /> GENERATE {billType.toUpperCase()}
+          <Button className="w-full h-12 text-base font-bold rounded-lg bg-gold hover:bg-gold/90 text-gold-foreground">
+            Generate Bill
           </Button>
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-sm rounded-[2rem] bg-white">
-        <CardContent className="p-6">
+      <Card className="border-border shadow-sm">
+        <CardContent className="p-4 space-y-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-               <div className={`h-2.5 w-2.5 rounded-full ${user.isSubscribed ? "bg-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-slate-200"}`} />
-               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">License Status</p>
+            <p className="text-sm font-semibold text-emerald">Licence Activation Status</p>
+            <div className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${user.isSubscribed ? "bg-emerald" : "bg-destructive"}`} />
+              <p className="text-sm font-bold text-foreground">{user.isSubscribed ? "Activated" : "Not Active"}</p>
             </div>
-            <p className={`text-sm font-black ${user.isSubscribed ? "text-emerald" : "text-slate-300 text-[10px]"}`}>
-                {user.isSubscribed ? "PREMIUM ACTIVATED" : "FREE VERSION"}
-            </p>
           </div>
+          {user.isSubscribed && user.subscriptionExpiry && (
+            <p className="text-[10px] text-muted-foreground">Expires: {user.subscriptionExpiry}</p>
+          )}
           {!user.isSubscribed && (
-            <Button 
-                onClick={() => navigate("/subscribe")} 
-                className="w-full mt-4 h-12 bg-gold hover:bg-gold/90 text-navy font-black rounded-[1.2rem] text-xs shadow-lg"
-            >
-              UPGRADE FOR UNLIMITED BILLING →
-            </Button>
+            <button onClick={() => navigate("/profile")} className="text-xs text-primary font-semibold">
+              Subscribe Now →
+            </button>
           )}
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
-          <Card className="border-none shadow-sm rounded-[2rem] bg-primary text-white overflow-hidden p-6 relative group cursor-pointer active:scale-95 transition-transform" onClick={() => setActiveTab('bills')}>
-            <div className="absolute top-0 right-0 h-16 w-16 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
-            <TrendingUp className="h-6 w-6 opacity-40 mb-3" />
-            <p className="text-xl font-black">{bills.length}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Total Bills</p>
-          </Card>
-          <Card className="border-none shadow-sm rounded-[2rem] bg-navy text-white overflow-hidden p-6 relative group cursor-pointer active:scale-95 transition-transform" onClick={() => setActiveTab('products')}>
-             <div className="absolute top-0 right-0 h-16 w-16 bg-white/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
-             <Package className="h-6 w-6 opacity-40 mb-3" />
-             <p className="text-xl font-black">{products.length}</p>
-             <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Products</p>
-          </Card>
-      </div>
+      <Card className="border-border shadow-sm">
+        <CardContent className="p-4 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-gold/20 flex items-center justify-center">
+            <FileSpreadsheet className="h-6 w-6 text-gold" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-foreground">Logo | Signature | Stamp</p>
+            <p className="text-sm text-muted-foreground">Colorful Bill</p>
+          </div>
+        </CardContent>
+      </Card>
 
-      <Button variant="ghost" className="w-full h-12 rounded-2xl text-[11px] font-black text-slate-400 group" onClick={() => navigate("/")}>
-        <span className="group-hover:-translate-x-1 transition-transform mr-1">←</span> BACK TO MARKETPLACE
+      <Card className="border-0 shadow-sm bg-primary overflow-hidden">
+        <CardContent className="p-4 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
+            <FileSpreadsheet className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <div className="flex-1">
+            <p className="text-base font-bold text-primary-foreground">Monthly Report</p>
+            <p className="text-sm text-primary-foreground/80">Sales | Purchase</p>
+          </div>
+          <TrendingUp className="h-6 w-6 text-primary-foreground/60" />
+        </CardContent>
+      </Card>
+
+      <Card className="border-0 shadow-sm bg-navy overflow-hidden">
+        <CardContent className="p-4 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-navy-foreground/20 flex items-center justify-center">
+            <FileSpreadsheet className="h-6 w-6 text-navy-foreground" />
+          </div>
+          <div className="flex-1">
+            <p className="text-base font-bold text-navy-foreground">Tax Report</p>
+            <p className="text-sm text-navy-foreground/80">GST Summary</p>
+          </div>
+          <TrendingUp className="h-6 w-6 text-navy-foreground/60" />
+        </CardContent>
+      </Card>
+
+      <Button variant="outline" className="w-full mt-2" onClick={() => navigate("/")}>
+        ← Back to Marketplace
       </Button>
     </div>
   );
 
+  // ─── Send Tab (Party list for sending bills) ───
+  const filteredSendEntries = MOCK_SEND_ENTRIES.filter(e =>
+    !sendSearch || e.name.toLowerCase().includes(sendSearch.toLowerCase())
+  );
+
   const renderSendTab = () => (
-    <div className="animate-fade-in pb-20">
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+    <div className="relative min-h-[60vh]">
+      {/* Search */}
+      <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
+        <Search className="h-5 w-5 text-muted-foreground shrink-0" />
         <Input
           value={sendSearch}
           onChange={e => setSendSearch(e.target.value)}
-          placeholder="Search parties..."
-          className="pl-12 h-14 bg-white border-none rounded-2xl shadow-sm text-sm focus:ring-2 ring-primary/20"
+          placeholder="Search Here"
+          className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto py-0 text-sm"
         />
       </div>
 
-      {isPartiesLoading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-slate-100" /></div>
-      ) : parties.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-100">
-             <Users className="h-10 w-10 mx-auto mb-3 text-slate-200" />
-             <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">No parties added yet</p>
-          </div>
-      ) : (
-        <div className="space-y-3">
-          {parties.filter((p: any) => !sendSearch || p.name.toLowerCase().includes(sendSearch.toLowerCase())).map((party: any) => (
-            <Card key={party.id} className="border-none shadow-sm rounded-2xl hover:shadow-lg transition-all cursor-pointer">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                   <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-primary font-black text-lg">
-                      {party.initials || party.name[0]}
-                   </div>
-                   <div>
-                      <p className="text-sm font-black text-slate-800">{party.name}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{party.location || 'Local'}</p>
-                   </div>
-                </div>
-                <ArrowRight className="h-4 w-4 text-slate-200" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderProductsTab = () => (
-    <div className="animate-fade-in pb-20">
-      <div className="flex items-center justify-between mb-6">
-         <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest ml-1">Inventory</h2>
-         <Button onClick={() => navigate("/billing/add-product")} size="sm" className="bg-emerald hover:bg-emerald/90 text-white rounded-xl h-9 px-4 font-black text-xs shadow-lg shadow-emerald/10">
-            <Plus className="h-4 w-4 mr-1.5" /> ADD NEW
-         </Button>
-      </div>
-      
-      {isProductsLoading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-slate-100" /></div>
-      ) : products.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-100">
-             <Package className="h-10 w-10 mx-auto mb-3 text-slate-200" />
-             <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Your catalog is empty</p>
-          </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {products.map((product: any) => (
-            <Card key={product.id} onClick={() => navigate(`/billing/product/${product.id}`)} className="border-none shadow-sm rounded-3xl hover:shadow-xl transition-all group cursor-pointer active:scale-[0.98]">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  <div className="h-16 w-16 rounded-2xl bg-gold/5 flex items-center justify-center text-gold group-hover:bg-gold transition-colors group-hover:text-white">
-                    <Package className="h-8 w-8" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-base font-black text-slate-800 leading-tight mb-3 group-hover:text-gold transition-colors">{product.name}</h3>
-                    <div className="grid grid-cols-2 gap-4 border-t border-slate-50 pt-3">
-                       <div>
-                          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">SELL PRICE</p>
-                          <div className="flex items-center gap-1 text-emerald font-black">
-                             <IndianRupee className="h-3 w-3" />
-                             <span>{product.sale_price || 0}</span>
-                             <span className="text-[10px] text-slate-400 font-normal">/{product.unit || 'kg'}</span>
-                          </div>
-                       </div>
-                       <div>
-                          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">STOCK</p>
-                          <p className="text-sm font-black text-slate-700">{product.stock || 0} {product.unit || 'kg'}</p>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPartiesTab = () => (
-     <div className="animate-fade-in pb-20">
-        <div className="flex items-center justify-between mb-6">
-           <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest ml-1">Customers & Vendors</h2>
-           <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl h-9 px-4 font-black text-xs shadow-lg">
-              <Plus className="h-4 w-4 mr-1.5" /> NEW PARTY
-           </Button>
-        </div>
-        {renderSendTab()}
-     </div>
-  );
-
-  const renderBillsTab = () => (
-      <div className="animate-fade-in pb-20">
-        <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest ml-1 mb-6">Past Invoices</h2>
-        {isBillsLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-slate-100" /></div>
-        ) : bills.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-100">
-               <FileText className="h-10 w-10 mx-auto mb-3 text-slate-200" />
-               <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">No bills generated yet</p>
+      {/* Entries */}
+      <div className="space-y-1">
+        {filteredSendEntries.map((entry) => (
+          <div key={entry.id} className="flex items-center gap-3 py-3 cursor-pointer active:bg-muted/50 transition-colors">
+            <div className="h-11 w-11 rounded-full bg-gold flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="h-5 w-5 text-gold-foreground" />
             </div>
-        ) : (
-          <div className="space-y-3">
-            {bills.map((bill: any) => (
-              <Card key={bill.id} className="border-none shadow-sm rounded-2xl p-4 flex items-center justify-between group cursor-pointer hover:shadow-md">
-                 <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                       <FileText className="h-5 w-5" />
-                    </div>
-                    <div>
-                       <p className="text-sm font-black text-slate-800">{bill.parties?.name || 'Cash Party'}</p>
-                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">BILL #{bill.bill_no} • {new Date(bill.date).toLocaleDateString()}</p>
-                    </div>
-                 </div>
-                 <div className="text-right">
-                    <p className="text-sm font-black text-emerald">₹{bill.total}</p>
-                    <Badge variant="outline" className="text-[8px] border-slate-100 text-slate-300 font-bold">{bill.bill_type.toUpperCase()}</Badge>
-                 </div>
-              </Card>
-            ))}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">{entry.name}</p>
+              <p className="text-xs text-muted-foreground">{entry.month}</p>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-xs text-muted-foreground">{entry.date}</p>
+              <span className="h-5 min-w-[20px] rounded-full bg-emerald text-emerald-foreground text-[10px] font-bold flex items-center justify-center px-1.5">
+                {entry.billCount}
+              </span>
+            </div>
           </div>
+        ))}
+        {filteredSendEntries.length === 0 && (
+          <p className="text-center text-muted-foreground text-sm py-8">No entries found</p>
         )}
       </div>
+
+      {/* Send / Overview toggle */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20">
+        <div className="flex border border-emerald rounded-full overflow-hidden">
+          <button
+            onClick={() => setSendSubTab("send")}
+            className={`px-6 py-2 text-sm font-semibold transition-colors ${sendSubTab === "send" ? "bg-emerald text-emerald-foreground" : "bg-card text-foreground"}`}
+          >
+            Send
+          </button>
+          <button
+            onClick={() => setSendSubTab("overview")}
+            className={`px-6 py-2 text-sm font-semibold transition-colors ${sendSubTab === "overview" ? "bg-emerald text-emerald-foreground" : "bg-card text-foreground"}`}
+          >
+            Overview
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Add Button */}
+      <button className="fixed bottom-28 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg flex items-center justify-center z-20">
+        <Plus className="h-7 w-7" />
+      </button>
+    </div>
+  );
+
+  // ─── Products Tab ───
+  const renderProductsTab = () => (
+    <div className="relative min-h-[60vh]">
+      <div className="divide-y divide-border">
+        {products.map((product) => (
+          <div key={product.id} onClick={() => navigate(`/billing/product/${product.id}`)} className="flex items-start gap-3 py-4 cursor-pointer active:bg-muted/50 transition-colors">
+            <div className="h-14 w-14 rounded-lg bg-gold/20 flex items-center justify-center shrink-0">
+              <Package className="h-7 w-7 text-gold" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground leading-tight">{product.name}</p>
+              <div className="mt-1.5 space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-28">Sell Price:</span>
+                  <span className="text-sm font-semibold text-emerald">₹ {product.sellPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-28">Purchase Price:</span>
+                  <span className="text-sm font-semibold text-emerald">₹ {product.purchasePrice.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-28">Stock</span>
+                  <span className="text-sm font-semibold text-emerald">{product.salesStock} / {product.purchaseStock}</span>
+                  <span className="text-[10px] text-muted-foreground">( sales / purchase )</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={() => navigate("/billing/add-product")} className="fixed bottom-24 right-6 max-w-md h-14 w-14 rounded-full bg-emerald hover:bg-emerald/90 text-emerald-foreground shadow-lg flex items-center justify-center z-20">
+        <Plus className="h-7 w-7" />
+      </button>
+    </div>
+  );
+
+  // ─── Placeholder tabs ───
+  const renderPlaceholder = (label: string) => (
+    <div className="flex-1 flex items-center justify-center p-8">
+      <p className="text-muted-foreground text-center">{label} tab — share screenshot to build</p>
+    </div>
   );
 
   const renderContent = () => {
@@ -256,23 +275,24 @@ export default function Billing() {
       case "home": return renderHomeTab();
       case "send": return renderSendTab();
       case "products": return renderProductsTab();
-      case "party": return renderPartiesTab();
-      case "bills": return renderBillsTab();
+      case "party": return renderPlaceholder("Party");
+      case "bills": return renderPlaceholder("Bills");
       default: return null;
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-slate-50 relative overflow-x-hidden">
+    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background relative">
       <BillingHeader />
 
-      <main className="flex-1 overflow-y-auto px-6 pt-6">
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto pb-24 px-4 pt-4">
         {renderContent()}
       </main>
 
-      {/* Modern Bottom Navigation */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-slate-100 pb-safe z-50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center justify-around py-4">
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-card border-t border-border z-30">
+        <div className="flex items-center justify-around py-2">
           {TABS.map(({ id, label, icon: Icon }) => {
             const isActive = activeTab === id;
             const isCenter = id === "center";
@@ -282,11 +302,11 @@ export default function Billing() {
                 <button
                   key={id}
                   onClick={() => navigate("/")}
-                  className="relative -mt-10 flex flex-col items-center group"
+                  className="relative -mt-6 flex flex-col items-center group"
                 >
-                  <div className="h-16 w-16 rounded-[1.5rem] bg-slate-900 flex items-center justify-center shadow-2xl ring-8 ring-white transition-all group-active:scale-90 rotate-45 group-hover:rotate-0">
-                    <span className="text-[10px] font-black text-white tracking-tight -rotate-45 group-hover:rotate-0 transition-transform">
-                      HITEX
+                  <div className="h-[60px] w-[60px] rounded-full bg-navy flex items-center justify-center shadow-lg ring-4 ring-card transition-transform group-active:scale-95">
+                    <span className="text-base font-bold text-navy-foreground tracking-tight leading-none">
+                      Hi<span className="text-emerald">Tex</span>
                     </span>
                   </div>
                 </button>
@@ -297,12 +317,12 @@ export default function Billing() {
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex flex-col items-center gap-1.5 px-3 transition-all ${
-                  isActive ? "text-primary scale-110" : "text-slate-300 hover:text-slate-500"
+                className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
-                <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-0'}`}>{label}</span>
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{label}</span>
               </button>
             );
           })}

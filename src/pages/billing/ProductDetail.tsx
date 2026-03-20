@@ -1,192 +1,171 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useSafeBack } from "@/hooks/use-safe-back";
-import { FileText, Trash2, IndianRupee, Package, ArrowLeft, MoreHorizontal, Loader2, Sparkles, TrendingUp, History } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import BillingHeader from "@/components/BillingHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useProduct, useDeleteProduct, useBillHistory } from "@/hooks/useBilling";
+
+interface Product {
+  id: string;
+  name: string;
+  sellPrice: number;
+  buyingPrice?: number;
+  purchasePrice?: number;
+  mrp?: number;
+  unit?: string;
+  salesStock?: number;
+  purchaseStock?: number;
+}
+
+interface Invoice {
+  invoiceNo: string;
+  date: string;
+  rate: number;
+  quantity: number;
+}
+
+// Mock sell history
+const MOCK_HISTORY: Record<string, Invoice[]> = {
+  "1": [
+    { invoiceNo: "52", date: "29/11/2025", rate: 74332, quantity: 8137 },
+    { invoiceNo: "62", date: "22/12/2025", rate: 14114, quantity: 1545 },
+  ],
+  "2": [
+    { invoiceNo: "48", date: "15/10/2025", rate: 360000, quantity: 369684 },
+  ],
+};
 
 export default function ProductDetail() {
   const { productId } = useParams();
   const goBack = useSafeBack("/billing");
   const navigate = useNavigate();
 
-  const { data: product, isLoading: isFetching } = useProduct(productId);
-  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
-  const { data: history = [], isLoading: isHistoryLoading } = useBillHistory(productId);
+  // Load product from localStorage or mock
+  let product: Product | null = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+    const found = saved.find((p: any) => p.id === productId);
+    if (found) product = found;
+  } catch {}
 
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      deleteProduct(productId!, {
-        onSuccess: () => {
-          toast.success("Product deleted");
-          goBack();
-        },
-        onError: (err: any) => toast.error(err.message)
-      });
-    }
-  };
-
-  if (isFetching) {
-    return (
-      <div className="flex flex-col min-h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
-      </div>
-    );
+  if (!product) {
+    // Fallback mock
+    const mocks: Product[] = [
+      { id: "1", name: "JOB WORK FOR RECYCLED BANIAN CLOTH WASTE COTTONS", sellPrice: 8.70, buyingPrice: 8.00, unit: "Kgs", salesStock: 9682 },
+      { id: "2", name: "JOB WORK FOR RECYCLED BANIAN CLOTH WASTE COTTON", sellPrice: 9.75, buyingPrice: 9.50, unit: "Kgs", salesStock: 369684 },
+    ];
+    product = mocks.find(p => p.id === productId) || null;
   }
 
   if (!product) {
     return (
-      <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-slate-50">
+      <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
         <BillingHeader title="Not Found" showBack onBack={goBack} />
-        <div className="p-8 text-center bg-white rounded-3xl m-4 shadow-sm">
-            <h2 className="text-lg font-black text-slate-800">Product not found.</h2>
-            <Button variant="outline" className="mt-4 rounded-xl" onClick={goBack}>Return to Inventory</Button>
-        </div>
       </div>
     );
   }
 
-  const buyPrice = product.purchase_price || 0;
-  const sellPrice = product.sale_price || 0;
+  const buyPrice = product.buyingPrice ?? product.purchasePrice ?? 0;
+  const history = MOCK_HISTORY[product.id] || [];
+  const totalQty = history.reduce((s, h) => s + h.quantity, 0);
   const truncatedName = product.name.length > 20 ? product.name.slice(0, 20) + "..." : product.name;
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-slate-50 animate-fade-in pb-20 relative overflow-x-hidden">
+    <div className="flex flex-col min-h-screen max-w-lg mx-auto bg-background">
       <BillingHeader
         title={truncatedName}
         showBack
         onBack={goBack}
-        rightAction={
-            <button onClick={() => navigate(`/billing/add-product?edit=${product.id}`)} className="text-xs font-black text-slate-900 group flex items-center gap-1.5 p-2 bg-white/50 backdrop-blur-sm rounded-xl">
-                 EDIT <MoreHorizontal className="h-4 w-4" />
-            </button>
-        }
+        rightAction={<button onClick={() => navigate(`/billing/add-product?edit=${product.id}`)} className="text-xs font-semibold text-navy-foreground">Edit</button>}
       />
 
-      <div className="px-6 pt-8 space-y-6">
-        {/* Product Identity Card */}
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative">
-            <div className="absolute top-0 right-0 h-40 w-40 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <CardContent className="p-8 relative z-10">
-                <div className="flex items-start gap-4 mb-8">
-                    <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center text-primary backdrop-blur-md border border-white/10">
-                        <Package className="h-8 w-8" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">Stock Item</p>
-                        <h2 className="text-lg font-black leading-tight tracking-tight">{product.name}</h2>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-8 border-t border-white/5 pt-6">
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-2">SELLING PRICE</p>
-                        <div className="flex items-center gap-1 text-xl font-black text-primary">
-                            <IndianRupee className="h-4 w-4" />
-                            <span>{sellPrice.toLocaleString()}</span>
-                            <span className="text-[10px] opacity-40 font-normal">/{product.unit}</span>
-                        </div>
-                    </div>
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-2">AVAILABILITY</p>
-                        <div className="flex items-center gap-1 text-xl font-black text-emerald">
-                            <span>{product.stock || 0}</span>
-                            <span className="text-[10px] opacity-40 font-normal uppercase">{product.unit}</span>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
+      <div className="flex-1 px-4 pt-4 pb-8 space-y-4">
+        {/* Product Info Card */}
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex gap-3">
+              <span className="text-sm text-muted-foreground shrink-0 w-16">Name</span>
+              <span className="text-sm font-bold text-foreground">{product.name}</span>
+            </div>
+            <div className="border-t border-border" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Mrp</span>
+                <span className="text-sm font-semibold text-foreground">₹ {product.mrp ?? ""}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Unit</span>
+                <span className="text-sm font-semibold text-foreground">{product.unit || "Kgs"}</span>
+              </div>
+            </div>
+            <div className="border-t border-border" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Buying Price</span>
+              <span className="text-sm font-semibold text-foreground">₹ {buyPrice}</span>
+            </div>
+            <div className="border-t border-border" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Selling Price</span>
+              <span className="text-sm font-semibold text-foreground">₹ {product.sellPrice}</span>
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Detailed Info */}
-        <div className="grid grid-cols-1 gap-4">
-             <Card className="border-none shadow-sm rounded-[2rem] bg-white p-5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                   <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600">
-                      <TrendingUp className="h-4 w-4" />
-                   </div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Buying Price</p>
-                </div>
-                <div className="flex items-center gap-1 text-sm font-black text-slate-800">
-                    <IndianRupee className="h-3 w-3" />
-                    <span>{buyPrice}</span>
-                </div>
-             </Card>
-             
-             <Card className="border-none shadow-sm rounded-[2rem] bg-white p-5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                   <div className="p-2.5 rounded-2xl bg-primary/10 text-primary">
-                      <FileText className="h-4 w-4" />
-                   </div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tax Slab (GST)</p>
-                </div>
-                <Badge className="bg-emerald/10 text-emerald border-none text-[10px] font-black px-4">{product.tax_rate || 0}%</Badge>
-             </Card>
+        {/* Sell History */}
+        {history.length > 0 && (
+          <Card className="border-0 shadow-sm bg-emerald overflow-hidden">
+            <CardContent className="p-0">
+              {/* Header */}
+              <div className="px-4 py-3 text-center">
+                <p className="text-base font-bold text-emerald-foreground">Sell History</p>
+              </div>
+              <div className="flex items-center justify-between px-4 pb-3">
+                <p className="text-sm font-medium text-emerald-foreground/90">Total Invoice : {history.length}</p>
+                <p className="text-sm font-medium text-emerald-foreground/90">Total Quantity : {totalQty}</p>
+              </div>
 
-             {product.hsn_code && (
-                <Card className="border-none shadow-sm rounded-[2rem] bg-white p-5 flex items-center justify-between">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-2xl bg-slate-100 text-slate-400">
-                         <Sparkles className="h-4 w-4" />
+              {/* Invoice rows */}
+              <div className="bg-card divide-y divide-border">
+                {history.map((inv, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded bg-destructive/10 flex items-center justify-center shrink-0">
+                      <FileText className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold text-foreground">Invoice No. {inv.invoiceNo}</p>
+                        <p className="text-xs text-muted-foreground">{inv.date}</p>
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">HSN Code</p>
-                   </div>
-                   <p className="text-sm font-black text-slate-800">#{product.hsn_code}</p>
-                </Card>
-             )}
-        </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="text-sm">Rate <span className="font-semibold text-emerald">₹{inv.rate.toLocaleString("en-IN")}.00</span></p>
+                        <p className="text-sm">Quantity <span className="font-semibold text-emerald">{inv.quantity}</span></p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Transaction History Section */}
-        <div className="pt-4">
-             <div className="flex items-center gap-2 mb-6 ml-1">
-                <History className="h-4 w-4 text-slate-300" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">TRANSACTION HISTORY</h3>
-             </div>
-             
-             {isHistoryLoading ? (
-                 <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-slate-100" /></div>
-             ) : history.length === 0 ? (
-                 <div className="text-center py-12 rounded-[2.5rem] bg-white border border-dashed border-slate-100">
-                     <History className="h-8 w-8 mx-auto mb-3 opacity-10" />
-                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No transaction logs available</p>
-                 </div>
-             ) : (
-                <div className="space-y-3">
-                   {history.map((h: any, i: number) => (
-                      <Card key={i} className="border-none shadow-sm bg-white p-4 flex items-center justify-between rounded-2xl">
-                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Invoice #{h.invoiceNo}</p>
-                            <p className="text-sm font-bold text-slate-800">{h.partyName || 'Cash Party'}</p>
-                         </div>
-                         <div className="text-right">
-                             <p className="text-sm font-black text-primary">₹{h.total}</p>
-                             <p className="text-[10px] font-bold text-slate-300">{h.date}</p>
-                         </div>
-                      </Card>
-                   ))}
-                </div>
-             )}
-        </div>
-
-        {/* Destructive Actions */}
-        <div className="pt-8">
-            <Button
-                variant="outline"
-                disabled={isDeleting}
-                className="w-full h-14 rounded-2xl border-red-100 text-red-500 hover:bg-red-50 hover:text-red-600 font-bold transition-all text-xs tracking-widest group"
-                onClick={handleDelete}
-            >
-                {isDeleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Trash2 className="h-4 w-4 mr-2 group-hover:shake" /> DELETE FROM INVENTORY</>}
-            </Button>
-        </div>
+        <Button
+          variant="destructive"
+          className="w-full h-12 text-base font-bold"
+          onClick={() => {
+            try {
+              const saved = JSON.parse(localStorage.getItem("billing_products") || "[]");
+              const updated = saved.filter((p: any) => p.id !== product.id);
+              localStorage.setItem("billing_products", JSON.stringify(updated));
+            } catch {}
+            toast.success("Product deleted");
+            goBack();
+          }}
+        >
+          <Trash2 className="h-5 w-5 mr-2" />
+          Delete Product
+        </Button>
       </div>
-      
-      <p className="text-[9px] text-center text-slate-200 mt-12 font-black uppercase tracking-[0.3em]">
-          HiTex Ledger Engine • Verified
-      </p>
     </div>
   );
 }

@@ -1,5 +1,7 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
 import { useApp } from "@/lib/appContext";
+import { supabase } from "@/integrations/supabase/client";
 import AppShell from "@/components/AppShell";
 import Index from "./pages/Index";
 import LeadDetail from "./pages/LeadDetail";
@@ -22,79 +24,65 @@ import AddProduct from "./pages/billing/AddProduct";
 import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
 import Catalog from "./pages/Catalog";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import UserManager from "./pages/admin/UserManager";
-import LeadManager from "./pages/admin/LeadManager";
-import SubscriptionManager from "./pages/admin/SubscriptionManager";
-import TransactionLogs from "./pages/admin/TransactionLogs";
-import ApiKeyManager from "./pages/admin/ApiKeyManager";
-import AdminSettings from "./pages/admin/AdminSettings";
-import ContentManager from "./pages/admin/ContentManager";
-import SubscriptionCheckout from "./pages/SubscriptionCheckout";
-import ProtectedRoute from "./components/ProtectedRoute";
+import Landing from "./pages/Landing";
 
 function AppRoutes() {
-  const { isLoggedIn, loading } = useApp();
+  const { isLoggedIn, setIsLoggedIn } = useApp();
+  const [authChecked, setAuthChecked] = useState(false);
 
-  if (loading) {
-    return null;
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session);
+      setAuthChecked(true);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+      setAuthChecked(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setIsLoggedIn]);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (
     <Routes>
       <Route path="/catalog/:userId" element={<Catalog />} />
-      <Route path="/onboarding" element={!isLoggedIn ? <Onboarding /> : <Navigate to="/" />} />
-      <Route path="/admin/login" element={!isLoggedIn ? <AdminLogin /> : <Navigate to="/admin/dashboard" />} />
-      <Route path="/subscribe" element={<ProtectedRoute><SubscriptionCheckout /></ProtectedRoute>} />
-
-      {/* Admin Panel (Protected) */}
-      <Route 
-        path="/admin" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } 
-      >
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={null} /> {/* Handled inside AdminDashboard */}
-        <Route path="users" element={<UserManager />} />
-        <Route path="leads" element={<LeadManager />} />
-        <Route path="subscriptions" element={<SubscriptionManager />} />
-        <Route path="payments" element={<TransactionLogs />} />
-        <Route path="api-keys" element={<ApiKeyManager />} />
-        <Route path="settings" element={<AdminSettings />} />
-        <Route path="content-manager" element={<ContentManager />} />
-      </Route>
-
-      {/* User Marketplace (Protected) */}
-      <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
-        <Route path="/" element={<Index />} />
-        <Route path="/my-leads" element={<MyLeads />} />
-        <Route path="/chats" element={<ChatList />} />
-        <Route path="/job-work" element={<JobWork />} />
-        <Route path="/services" element={<Services />} />
-      </Route>
-
-      <Route element={<ProtectedRoute><></></ProtectedRoute>}>
-        <Route path="/lead/:id" element={<LeadDetail />} />
-        <Route path="/post-lead" element={<PostLead />} />
-        <Route path="/market-pulse" element={<MarketPulse />} />
-        <Route path="/chat/:leadId" element={<ChatThread />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/demand-heatmap" element={<DemandHeatmap />} />
-        <Route path="/transport" element={<Transport />} />
-        <Route path="/tneb" element={<TNEB />} />
-        <Route path="/billing" element={<Billing />} />
-        <Route path="/billing/add-product" element={<AddProduct />} />
-        <Route path="/billing/product/:productId" element={<ProductDetail />} />
-        <Route path="/billing/tax-details" element={<TaxDetails />} />
-        <Route path="/review/:leadId" element={<WriteReview />} />
-        <Route path="/profile" element={<Profile />} />
-      </Route>
-
-      <Route path="*" element={<NotFound />} />
+      {!isLoggedIn ? (
+        <Route path="*" element={<Landing />} />
+      ) : (
+        <>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/my-leads" element={<MyLeads />} />
+            <Route path="/chats" element={<ChatList />} />
+            <Route path="/job-work" element={<JobWork />} />
+            <Route path="/services" element={<Services />} />
+          </Route>
+          <Route path="/lead/:id" element={<LeadDetail />} />
+          <Route path="/post-lead" element={<PostLead />} />
+          <Route path="/market-pulse" element={<MarketPulse />} />
+          <Route path="/chat/:leadId" element={<ChatThread />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/demand-heatmap" element={<DemandHeatmap />} />
+          <Route path="/transport" element={<Transport />} />
+          <Route path="/tneb" element={<TNEB />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/billing/add-product" element={<AddProduct />} />
+          <Route path="/billing/product/:productId" element={<ProductDetail />} />
+          <Route path="/billing/tax-details" element={<TaxDetails />} />
+          <Route path="/review/:leadId" element={<WriteReview />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<NotFound />} />
+        </>
+      )}
     </Routes>
   );
 }
