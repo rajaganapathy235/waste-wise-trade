@@ -371,10 +371,12 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          free_credits_used: number
           gstin: string | null
           id: string
           is_subscribed: boolean | null
           location: string | null
+          max_free_credits: number
           phone: string | null
           subscription_expiry: string | null
           total_reviews: number | null
@@ -391,10 +393,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          free_credits_used?: number
           gstin?: string | null
           id?: string
           is_subscribed?: boolean | null
           location?: string | null
+          max_free_credits?: number
           phone?: string | null
           subscription_expiry?: string | null
           total_reviews?: number | null
@@ -411,10 +415,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          free_credits_used?: number
           gstin?: string | null
           id?: string
           is_subscribed?: boolean | null
           location?: string | null
+          max_free_credits?: number
           phone?: string | null
           subscription_expiry?: string | null
           total_reviews?: number | null
