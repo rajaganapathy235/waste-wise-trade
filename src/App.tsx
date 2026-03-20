@@ -64,7 +64,7 @@ function AppRoutes() {
             <Route path="/my-leads" element={<MyLeads />} />
             <Route path="/chats" element={<ChatList />} />
             <Route path="/job-work" element={<JobWork />} />
-            <Route path="/services" element={<Services />} />
+            <Route path="/more" element={<Services />} />
           </Route>
           <Route path="/lead/:id" element={<LeadDetail />} />
           <Route path="/post-lead" element={<PostLead />} />
