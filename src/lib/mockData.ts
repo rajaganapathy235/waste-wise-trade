@@ -10,20 +10,23 @@ export interface Lead {
   materialType: string;
   pricePerKg: number;
   quantity: number;
-  specs: {
+  specs?: {
     color?: string;
     trashPercent?: number;
     count?: string;
   };
   status: LeadStatus;
   posterName: string;
-  posterPhone: string;
-  posterRole: UserRole;
+  posterPhone?: string;
+  posterRole?: UserRole;
   posterId: string;
   locationDistrict: string;
-  postedAt: string;
-  views: number;
-  inquiries: number;
+  postedAt?: string;
+  createdAt?: string;
+  views?: number;
+  inquiries?: number;
+  description?: string;
+  images?: string[];
 }
 
 export interface ChatMessage {

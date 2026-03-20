@@ -1,34 +1,38 @@
 import { useState } from "react";
-import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
 import { LeadCategory, LeadType } from "@/lib/mockData";
 import LeadCard from "@/components/LeadCard";
 import { Input } from "@/components/ui/input";
-import { Search, Megaphone } from "lucide-react";
+import { Search, Megaphone, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useLeads } from "@/hooks/useLeads";
+import { useContent } from "@/hooks/useContent";
 
 const CATEGORIES: (LeadCategory | "All")[] = ["All", "Waste", "Fiber", "Yarn"];
 const LEAD_TYPES: (LeadType | "All")[] = ["All", "Buy", "Sell"];
 
 export default function Index() {
-  const { leads } = useApp();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<LeadCategory | "All">("All");
   const [activeType, setActiveType] = useState<LeadType | "All">("All");
 
-  const filtered = leads.filter((l) => {
-    const matchCategory = activeCategory === "All" || l.category === activeCategory;
-    const matchType = activeType === "All" || l.leadType === activeType;
-    const matchSearch =
-      !search ||
-      l.materialType.toLowerCase().includes(search.toLowerCase()) ||
-      l.locationDistrict.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchType && matchSearch;
+  const { data: leads = [], isLoading, error } = useLeads({
+    category: activeCategory,
+    type: activeType,
+    search: search
   });
+
+  const { data: content = {} } = useContent();
+
+  const filtered = leads.filter(l => 
+    !search || 
+    l.materialType.toLowerCase().includes(search.toLowerCase()) ||
+    l.locationDistrict.toLowerCase().includes(search.toLowerCase())
+  );
 
   const typeLabel = (type: LeadType | "All") => {
     if (type === "All") return t("home.all");
@@ -43,18 +47,25 @@ export default function Index() {
 
   return (
     <div className="px-4 pt-4">
-      {/* Ad Banner */}
-      <Card className="mb-3 border-gold/30 bg-gradient-to-r from-gold/10 via-gold/5 to-emerald/10 overflow-hidden">
-        <CardContent className="p-3 flex items-center gap-3">
-          <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-gold/20 flex items-center justify-center">
-            <Megaphone className="h-5 w-5 text-gold" />
+      {/* Dynamic Ad Banner from CMS */}
+      <Card className="mb-3 border-primary/20 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 overflow-hidden text-white shadow-xl shadow-indigo-500/10">
+        <CardContent className="p-4 flex items-center gap-4 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-125 transition-transform duration-1000">
+              <Megaphone className="h-20 w-20" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-foreground truncate">{t("home.adTitle")}</p>
-            <p className="text-[10px] text-muted-foreground line-clamp-2">{t("home.adDesc")}</p>
+          <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center text-primary shadow-2xl relative z-10">
+            <Megaphone className="h-5 w-5 animate-bounce" />
           </div>
-          <Button size="sm" variant="outline" className="shrink-0 text-[10px] h-7 px-2 border-gold/30 text-gold hover:bg-gold/10">
-            {t("home.adCta")}
+          <div className="flex-1 min-w-0 relative z-10">
+            <p className="text-xs font-black tracking-tighter uppercase italic">{content['hero_banner_title'] || t("home.adTitle")}</p>
+            <p className="text-[10px] text-white/50 font-medium line-clamp-1 uppercase tracking-widest">{content['hero_banner_description'] || t("home.adDesc")}</p>
+          </div>
+          <Button 
+            size="sm" 
+            className="shrink-0 text-[10px] font-black h-8 px-4 bg-primary text-white border-none rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+            onClick={() => navigate('/subscribe')}
+          >
+            {content['hero_banner_button'] || t("home.adCta")}
           </Button>
         </CardContent>
       </Card>
@@ -106,7 +117,14 @@ export default function Index() {
 
       {/* Feed */}
       <div className="space-y-3 pb-4">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+            <p className="text-sm text-muted-foreground animate-pulse">Syncing live marketplace...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-red-500 text-sm">Error loading leads. Please try again.</div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">{t("home.noListings")}</div>
         ) : (
           filtered.map((lead) => <LeadCard key={lead.id} lead={lead} />)
