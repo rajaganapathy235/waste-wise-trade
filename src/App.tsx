@@ -25,6 +25,8 @@ import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
 import Catalog from "./pages/Catalog";
 import Landing from "./pages/Landing";
+import Subscription from "./pages/Subscription";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 
 function AppRoutes() {
   const { isLoggedIn, setIsLoggedIn } = useApp();
@@ -80,6 +82,8 @@ function AppRoutes() {
           <Route path="/billing/tax-details" element={<TaxDetails />} />
           <Route path="/review/:leadId" element={<WriteReview />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/subscription-success" element={<SubscriptionSuccess />} />
           <Route path="*" element={<NotFound />} />
         </>
       )}
