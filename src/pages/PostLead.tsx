@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useCredits } from "@/hooks/use-credits";
+import CreditLimitModal from "@/components/CreditLimitModal";
 
 export default function PostLead() {
   const navigate = useNavigate();
