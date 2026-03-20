@@ -25,6 +25,8 @@ import ProductDetail from "./pages/billing/ProductDetail";
 import TaxDetails from "./pages/billing/TaxDetails";
 import Catalog from "./pages/Catalog";
 import Landing from "./pages/Landing";
+import Subscription from "./pages/Subscription";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 
 function AppRoutes() {
   const { isLoggedIn, setIsLoggedIn } = useApp();

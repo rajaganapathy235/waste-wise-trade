@@ -9,10 +9,20 @@ import { UserRole, DISTRICTS } from "@/lib/mockData";
 import { useApp } from "@/lib/appContext";
 import { useI18n } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Phone, Briefcase, Building2, Upload, ShoppingCart, Tag, Crown, MessageCircle, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, Phone, Briefcase, Building2, Upload, Crown, Shield, Sparkles, Handshake, Rocket } from "lucide-react";
 import { toast } from "sonner";
 
 const ALL_ROLES: UserRole[] = ["Waste Trader", "Recycling Mill", "OE Mill", "Job Worker"];
+
+function StepIndicator({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex gap-1 px-6 py-4">
+      {Array.from({ length: total }, (_, i) => i + 1).map((s) => (
+        <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${s <= current ? "bg-primary" : "bg-secondary"}`} />
+      ))}
+    </div>
+  );
+}
 
 export default function Onboarding() {
   const { setUser, setIsLoggedIn } = useApp();
@@ -26,7 +36,7 @@ export default function Onboarding() {
   const [gstNumber, setGstNumber] = useState("");
   const [district, setDistrict] = useState("");
 
-  const totalSteps = 6;
+  const totalSteps = 5;
 
   const handleSendOtp = () => {
     if (phone.length < 10) { toast.error(t("onboarding.validPhone")); return; }
@@ -48,7 +58,7 @@ export default function Onboarding() {
   const handleComplete = () => {
     setUser((u) => ({ ...u, phone: `+91 ${phone}`, businessName, gstNumber, locationDistrict: district, roles, isVerified: false, verificationStatus: "none" }));
     setIsLoggedIn(true);
-    toast.success(t("onboarding.welcome"));
+    toast.success("Welcome to the Network! 🤝");
   };
   const toggleRole = (role: UserRole) => {
     setRoles((prev) => prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]);
@@ -58,16 +68,13 @@ export default function Onboarding() {
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
       <div className="bg-navy text-navy-foreground px-6 pt-12 pb-8">
         <h1 className="text-2xl font-bold">Hi<span className="text-emerald">Tex</span></h1>
-        <p className="text-sm text-navy-foreground/70 mt-1">{t("app.tagline")}</p>
+        <p className="text-sm text-navy-foreground/70 mt-1">India's #1 Textile Recycling Network</p>
       </div>
 
-      <div className="flex gap-1 px-6 py-4">
-        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
-          <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${s <= step ? "bg-primary" : "bg-secondary"}`} />
-        ))}
-      </div>
+      <StepIndicator current={step} total={totalSteps} />
 
       <div className="flex-1 px-6 pb-8 overflow-y-auto">
+        {/* Step 1: Phone OTP */}
         {step === 1 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-1">
@@ -102,6 +109,7 @@ export default function Onboarding() {
           </div>
         )}
 
+        {/* Step 2: Role Selection */}
         {step === 2 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-1">
@@ -123,6 +131,7 @@ export default function Onboarding() {
           </div>
         )}
 
+        {/* Step 3: Business Details + KYC */}
         {step === 3 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-1">
@@ -147,13 +156,13 @@ export default function Onboarding() {
                 </Select>
               </div>
               <div className="space-y-3">
-                <Label className="text-xs">{t("onboarding.documents")}</Label>
+                <Label className="text-xs">Upload GST / Trade License</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-lg text-muted-foreground hover:border-primary transition-colors">
-                    <Upload className="h-5 w-5" /><span className="text-[10px]">{t("onboarding.selfie")}</span>
-                  </button>
-                  <button className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-lg text-muted-foreground hover:border-primary transition-colors">
+                  <button className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-lg text-muted-foreground hover:border-primary transition-colors active:scale-[0.97]">
                     <Upload className="h-5 w-5" /><span className="text-[10px]">{t("onboarding.gstCert")}</span>
+                  </button>
+                  <button className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-lg text-muted-foreground hover:border-primary transition-colors active:scale-[0.97]">
+                    <Upload className="h-5 w-5" /><span className="text-[10px]">{t("onboarding.selfie")}</span>
                   </button>
                 </div>
               </div>
@@ -162,102 +171,116 @@ export default function Onboarding() {
           </div>
         )}
 
+        {/* Step 4: Welcome to the Network */}
         {step === 4 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-5 w-5 text-gold" />
-              <h2 className="text-lg font-bold">{t("onboarding.howItWorks")}</h2>
+              <Handshake className="h-5 w-5 text-emerald" />
+              <h2 className="text-lg font-bold">Welcome to the Network! 🤝</h2>
             </div>
-            <p className="text-xs text-muted-foreground mb-6">{t("onboarding.leadTypes")}</p>
+            <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+              We connect the biggest <strong>Recycling Mills</strong> and <strong>Waste Traders</strong> across India.
+              To maintain a <strong>100% Fraud-Free</strong> marketplace, all members undergo a quick Admin Verification.
+            </p>
+
             <Card className="mb-4 border-emerald/30 bg-emerald/5">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2"><Tag className="h-5 w-5 text-emerald" /><h3 className="font-semibold text-sm">{t("onboarding.sellLeads")}</h3></div>
-                <p className="text-xs text-muted-foreground">{t("onboarding.sellDesc")}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-5 w-5 text-emerald" />
+                  <h3 className="font-semibold text-sm">Admin Verification</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your GST / Trade License is being reviewed. You'll be verified within 24 hours.
+                </p>
               </CardContent>
             </Card>
+
             <Card className="mb-4 border-primary/30 bg-primary/5">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2"><ShoppingCart className="h-5 w-5 text-primary" /><h3 className="font-semibold text-sm">{t("onboarding.buyLeads")}</h3></div>
-                <p className="text-xs text-muted-foreground">{t("onboarding.buyDesc")}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-sm">3 Free Credits to Explore</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  While you wait, you have <strong>3 free credits</strong> to explore the market, post leads,
+                  and connect with traders. Let's get your first load moved!
+                </p>
               </CardContent>
             </Card>
+
             <div className="bg-secondary rounded-lg p-3 mb-6">
-              <p className="text-xs text-muted-foreground">💡 <strong>{t("onboarding.tip")}</strong> {t("onboarding.tipText")}</p>
+              <p className="text-xs text-muted-foreground">
+                💡 <strong>Pro Tip:</strong> Verified posts get 5x more inquiries than standard ones.
+                Post your current stock as soon as you're in!
+              </p>
             </div>
-            <Button onClick={() => setStep(5)} className="w-full bg-primary">{t("onboarding.gotIt")} <ArrowRight className="h-4 w-4 ml-1" /></Button>
+
+            <Button onClick={() => setStep(5)} className="w-full bg-primary">
+              Got It — Let's Go! <Rocket className="h-4 w-4 ml-1" />
+            </Button>
           </div>
         )}
 
+        {/* Step 5: Premium Upgrade Pitch */}
         {step === 5 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-1">
               <Crown className="h-5 w-5 text-gold" />
-              <h2 className="text-lg font-bold">{t("onboarding.goPremium")}</h2>
+              <h2 className="text-lg font-bold">Become a Trusted Partner 🛡️</h2>
             </div>
-            <p className="text-xs text-muted-foreground mb-6">{t("onboarding.unlockPower")}</p>
-            <div className="space-y-3 mb-6">
-              <Card className="border-gold/30 bg-gold/5">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <MessageCircle className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-                  <div><h3 className="font-semibold text-sm">{t("onboarding.directChat")}</h3><p className="text-xs text-muted-foreground">{t("onboarding.directChatDesc")}</p></div>
-                </CardContent>
-              </Card>
-              <Card className="border-gold/30 bg-gold/5">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-                  <div><h3 className="font-semibold text-sm">{t("onboarding.unlockContact")}</h3><p className="text-xs text-muted-foreground">{t("onboarding.unlockContactDesc")}</p></div>
-                </CardContent>
-              </Card>
-              <Card className="border-gold/30 bg-gold/5">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-                  <div><h3 className="font-semibold text-sm">{t("onboarding.verifiedBadge")}</h3><p className="text-xs text-muted-foreground">{t("onboarding.verifiedBadgeDesc")}</p></div>
-                </CardContent>
-              </Card>
-            </div>
-            <Button className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold mb-3">
-              <Crown className="h-4 w-4 mr-1" /> {t("onboarding.subscribe")}
-            </Button>
-            <Button variant="ghost" onClick={() => setStep(6)} className="w-full text-muted-foreground text-xs">{t("onboarding.skip")}</Button>
-          </div>
-        )}
+            <p className="text-xs text-muted-foreground mb-5">
+              Unlock <strong>unlimited access</strong> and the <strong className="text-gold">Gold Verification Badge</strong>.
+            </p>
 
-        {step === 6 && (
-          <div className="animate-fade-in">
-            <div className="flex items-center gap-2 mb-1">
-              <Shield className="h-5 w-5 text-emerald" />
-              <h2 className="text-lg font-bold">{t("onboarding.getVerified")}</h2>
+            <div className="space-y-3 mb-6">
+              {/* Annual */}
+              <Card className="border-gold/40 bg-gold/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-gold text-gold-foreground text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">BEST VALUE</div>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">👑</span>
+                    <h3 className="font-bold text-sm">Annual Leader</h3>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-bold">₹9,999</span>
+                    <span className="text-xs text-muted-foreground">/ year (Incl. GST)</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Effective: only ₹833/month · For Big Mills & High-Volume Traders</p>
+                </CardContent>
+              </Card>
+
+              {/* Quarterly */}
+              <Card className="border-border">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">💳</span>
+                    <h3 className="font-bold text-sm">Quarterly Pro</h3>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-bold">₹3,600</span>
+                    <span className="text-xs text-muted-foreground">/ 3 months (Incl. GST)</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Best for testing the platform</p>
+                </CardContent>
+              </Card>
             </div>
-            <p className="text-xs text-muted-foreground mb-6">{t("onboarding.buildTrust")}</p>
-            <Card className="mb-4">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-3">{t("onboarding.uploadInfo")}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-5 h-5 rounded-full bg-emerald/10 flex items-center justify-center text-emerald text-[10px]">1</div>
-                    <span>{t("onboarding.gstCert")}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-5 h-5 rounded-full bg-emerald/10 flex items-center justify-center text-emerald text-[10px]">2</div>
-                    <span>{t("onboarding.businessReg")}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-5 h-5 rounded-full bg-emerald/10 flex items-center justify-center text-emerald text-[10px]">3</div>
-                    <span>{t("onboarding.taxDocsOptional")}</span>
-                  </div>
+
+            {/* Benefits */}
+            <div className="space-y-2 mb-6">
+              {["Unlimited Posting & Contacts", "Gold Badge — Mills prefer Verified Traders", "Instant Approval — Skip the Admin queue"].map((b) => (
+                <div key={b} className="flex items-center gap-2 text-xs">
+                  <span className="text-emerald">✅</span>
+                  <span>{b}</span>
                 </div>
-              </CardContent>
-            </Card>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <button className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
-                <Upload className="h-5 w-5" /><span className="text-[10px]">{t("onboarding.incorpCert")}</span>
-              </button>
-              <button className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-lg text-muted-foreground hover:border-emerald transition-colors">
-                <Upload className="h-5 w-5" /><span className="text-[10px]">{t("onboarding.taxDocs")}</span>
-              </button>
+              ))}
             </div>
-            <Button onClick={handleComplete} className="w-full bg-emerald hover:bg-emerald/90 text-emerald-foreground font-semibold mb-3">{t("onboarding.completeSetup")}</Button>
-            <Button variant="ghost" onClick={handleComplete} className="w-full text-muted-foreground text-xs">{t("onboarding.skipVerification")}</Button>
+
+            <Button className="w-full bg-gold hover:bg-gold/90 text-gold-foreground font-semibold mb-3" onClick={() => { toast.success("Redirecting to payment..."); }}>
+              <Crown className="h-4 w-4 mr-1" /> Subscribe — ₹9,999/year
+            </Button>
+            <Button variant="ghost" onClick={handleComplete} className="w-full text-muted-foreground text-xs">
+              Start with 3 Free Credits →
+            </Button>
           </div>
         )}
       </div>
