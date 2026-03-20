@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ReviewsList } from "./Reviews";
 import LeadImageCarousel from "@/components/LeadImageCarousel";
+import { useCredits } from "@/hooks/use-credits";
+import CreditLimitModal from "@/components/CreditLimitModal";
 
 export default function LeadDetail() {
   const { id } = useParams();

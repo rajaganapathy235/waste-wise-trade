@@ -121,6 +121,7 @@ export default function PostLead() {
           {t("postLead.post")} {leadType} {t("postLead.lead")}
         </Button>
       </div>
+      <CreditLimitModal open={showLimitModal} onOpenChange={setShowLimitModal} />
     </div>
   );
 }
