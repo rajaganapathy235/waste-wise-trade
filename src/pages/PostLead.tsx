@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useCredits } from "@/hooks/use-credits";
+import CreditLimitModal from "@/components/CreditLimitModal";
 
 export default function PostLead() {
   const navigate = useNavigate();
@@ -23,11 +25,18 @@ export default function PostLead() {
   const [trash, setTrash] = useState("");
   const [count, setCount] = useState("");
 
-  const handleSubmit = () => {
+  const { checkAndUseCredit, showLimitModal, setShowLimitModal } = useCredits();
+
+  const handleSubmit = async () => {
     if (!materialType || !price || !quantity) {
       toast.error(t("postLead.fillRequired"));
       return;
     }
+
+    // Check credits before posting
+    const canProceed = await checkAndUseCredit();
+    if (!canProceed) return;
+
     const newLead: Lead = {
       id: Date.now().toString(),
       leadType, category, materialType,
@@ -112,6 +121,7 @@ export default function PostLead() {
           {t("postLead.post")} {leadType} {t("postLead.lead")}
         </Button>
       </div>
+      <CreditLimitModal open={showLimitModal} onOpenChange={setShowLimitModal} />
     </div>
   );
 }

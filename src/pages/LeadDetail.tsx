@@ -9,12 +9,15 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ReviewsList } from "./Reviews";
 import LeadImageCarousel from "@/components/LeadImageCarousel";
+import { useCredits } from "@/hooks/use-credits";
+import CreditLimitModal from "@/components/CreditLimitModal";
 
 export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { leads, user, setUser, reviews } = useApp();
   const { t } = useI18n();
+  const { checkAndUseCredit, showLimitModal, setShowLimitModal } = useCredits();
   const lead = leads.find((l) => l.id === id);
 
   if (!lead) {
@@ -40,8 +43,9 @@ export default function LeadDetail() {
     setUser((u) => ({ ...u, blockedUsers: u.blockedUsers.filter((bid) => bid !== lead.posterId) }));
     toast.success(t("lead.userUnblocked"));
   };
-  const handleChat = () => {
-    if (!isSubscribed) { toast.error(t("lead.premiumRequired")); return; }
+  const handleChat = async () => {
+    const canProceed = await checkAndUseCredit();
+    if (!canProceed) return;
     navigate(`/chat/${lead.id}`);
   };
 
@@ -218,6 +222,7 @@ export default function LeadDetail() {
         <span className="text-xs text-muted-foreground">{t("lead.demoToggle")}</span>
         <Switch checked={isSubscribed} onCheckedChange={(v) => setUser((u) => ({ ...u, isSubscribed: v }))} />
       </div>
+      <CreditLimitModal open={showLimitModal} onOpenChange={setShowLimitModal} />
     </div>
   );
 }
