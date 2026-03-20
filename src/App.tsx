@@ -82,6 +82,8 @@ function AppRoutes() {
           <Route path="/billing/tax-details" element={<TaxDetails />} />
           <Route path="/review/:leadId" element={<WriteReview />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/subscription-success" element={<SubscriptionSuccess />} />
           <Route path="*" element={<NotFound />} />
         </>
       )}
